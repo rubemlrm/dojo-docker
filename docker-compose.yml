@@ -1,0 +1,116 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:v2.2
+    container_name: traefik
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.network=discovery"
+      - "--providers.docker.exposedbydefault=false"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--entrypoints.http.address=:80"
+      - "--log.level=ERROR"
+    networks:
+      - default
+      - discovery
+    dns:
+      - ${TRAEFIK_DNS1}
+      - ${TRAEFIK_DNS2}
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    networks:
+      - discovery
+    ports:
+      - '0.0.0.0:53:53/tcp'
+      - '0.0.0.0:53:53/udp'
+      - '0.0.0.0:67:67/udp'
+      - '0.0.0.0:8053:80/tcp'
+    volumes:
+      - ./configs/pihole/etc-pihole/:/etc/pihole/
+      - ./configs/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
+    environment:
+      ServerIP: ${PIHOLE_IP}
+      TZ: ${TIMEZONE}
+      WEBPASSWORD: ${PIHOLE_PASS}
+      PROXY_LOCATION: pihole
+      VIRTUAL_HOST: ${PIHOLE_DOMAIN}
+      VIRTUAL_PORT: ${PIHOLE_PORT}
+      DNS1: ${PIHOLE_DNS1}
+      DNS2: ${PIHOLE_DNS2}
+    labels:
+       - "traefik.enable=true"
+       - "traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)"
+       - "traefik.http.routers.pihole.entrypoints=http"
+       - "traefik.docker.network=discovery"
+       - "traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}"
+  znc:
+    image: linuxserver/znc
+    container_name: znc
+    restart: unless-stopped
+    ports:
+      - 6501:6501
+    volumes:
+      - ${CONFIG_PATH}/znc/:/config
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TIMEZONE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.znc.rule=Host(`${ZNC_DOMAIN}`)"
+      - "traefik.http.routers.znc.entrypoints=http"
+  redis:
+    image: redis:latest
+    container_name: dojoRedis
+    restart: always
+    volumes:
+      - ${DATA_PATH}/redis:/var/lib/redis
+
+  whoami:
+    image: "containous/whoami"
+    container_name: dojoWhoAmI
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`${WHOAMI_DOMAIN}`)"
+      - "traefik.http.routers.whoami.entrypoints=http"
+  samba:
+    image: dperson/samba
+    environment:
+      TZ: ${TIMEZONE}
+    networks:
+      - shareNetwork
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${SAMBA_HOST_VOLUME}:/mnt:z
+    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p -w "${SAMBA_WORKGROUP}"'
+
+networks:
+  shareNetwork:
+  # Discovery is manually created to avoid forcing any order of docker-compose stack creation (`docker network create discovery`)
+  # allows other compose files to be seen by proxy
+  # Not required if you aren't using multiple docker-compose files...
+  discovery:
+    external: true
