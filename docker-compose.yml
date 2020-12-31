@@ -1,15 +1,29 @@
 version: '3'
 
 services:
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --label-enable --cleanup --interval 300
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
   traefik:
-    image: traefik:v2.2
+    image: traefik:v2.3
     container_name: traefik
+    depends_on:
+      - watchtower
     domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
+    environment:
+      NAMECHEAP_API_USER: ${PIHOLE_IP}
+      NAMECHEAP_API_KEY: ${TIMEZONE}
     ports:
       - 80:80
       - 443:443
       - 8080:8080
+      - 7000:7000
+      - 7001:7001
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command:
@@ -20,15 +34,44 @@ services:
       - "--api.dashboard=true"
       - "--entrypoints.http.address=:80"
       - "--log.level=ERROR"
+      - "--entryPoints.irc.address=:7001"
+      - "--entrypoints.websecure.address=:443"
     networks:
       - default
       - discovery
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  znc:
+    image: znc
+    container_name: znc
+    volumes:
+      - ${CONFIG_PATH}/znc:/znc-data
+    networks:
+      - discovery
+    ports:
+      - 6501:6501
+      - 6502:6502
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.znc.rule=Host(`${ZNC_DOMAIN}`)"
+      - "traefik.http.routers.znc.entryPoints=websecure"
+      - "traefik.http.routers.znc.tls=true"
+      - "traefik.http.services.znc.loadbalancer.server.port=6501"
+      - "traefik.tcp.routers.znc.rule=HostSNI(`${ZNC_DOMAIN}`)"
+      - "traefik.tcp.routers.znc.entryPoints=irc"
+      - "traefik.tcp.routers.znc.tls=true"
+      - "traefik.tcp.services.znc.loadbalancer.server.port=6502"
+      - "traefik.docker.network=discovery"
+      - "com.centurylinklabs.watchtower.enable=true"
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
+    depends_on:
+      - watchtower
     domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
     networks:
@@ -38,6 +81,7 @@ services:
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
       - '0.0.0.0:8053:80/tcp'
+      - "0.0.0.0:8054:443/tcp"
     volumes:
       - ./configs/pihole/etc-pihole/:/etc/pihole/
       - ./configs/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
@@ -56,29 +100,13 @@ services:
        - "traefik.http.routers.pihole.entrypoints=http"
        - "traefik.docker.network=discovery"
        - "traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}"
-  znc:
-    image: linuxserver/znc
-    container_name: znc
-    restart: unless-stopped
-    ports:
-      - 6501:6501
-    volumes:
-      - ${CONFIG_PATH}/znc/:/config
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
-      TZ: ${TIMEZONE}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.znc.rule=Host(`${ZNC_DOMAIN}`)"
-      - "traefik.http.routers.znc.entrypoints=http"
+       - "com.centurylinklabs.watchtower.enable=true"
   redis:
     image: redis:latest
     container_name: dojoRedis
     restart: always
     volumes:
       - ${DATA_PATH}/redis:/var/lib/redis
-
   whoami:
     image: "containous/whoami"
     container_name: dojoWhoAmI
@@ -86,8 +114,11 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`${WHOAMI_DOMAIN}`)"
       - "traefik.http.routers.whoami.entrypoints=http"
+      - "com.centurylinklabs.watchtower.enable=true"
   samba:
     image: dperson/samba
+    depends_on:
+      - watchtower
     environment:
       TZ: ${TIMEZONE}
     networks:
@@ -106,11 +137,10 @@ services:
     volumes:
       - ${SAMBA_HOST_VOLUME}:/mnt:z
     command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p -w "${SAMBA_WORKGROUP}"'
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
 networks:
   shareNetwork:
-  # Discovery is manually created to avoid forcing any order of docker-compose stack creation (`docker network create discovery`)
-  # allows other compose files to be seen by proxy
-  # Not required if you aren't using multiple docker-compose files...
   discovery:
     external: true
