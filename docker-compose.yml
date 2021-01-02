@@ -3,6 +3,7 @@ version: '3'
 services:
   watchtower:
     image: containrrr/watchtower
+    container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --label-enable --cleanup --interval 300
@@ -15,27 +16,31 @@ services:
       - watchtower
     domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
-    environment:
-      NAMECHEAP_API_USER: ${PIHOLE_IP}
-      NAMECHEAP_API_KEY: ${TIMEZONE}
     ports:
       - 80:80
       - 443:443
       - 8080:8080
-      - 7000:7000
       - 7001:7001
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
     command:
       - "--providers.docker=true"
       - "--providers.docker.network=discovery"
       - "--providers.docker.exposedbydefault=false"
-      - "--api.insecure=true"
       - "--api.dashboard=true"
-      - "--entrypoints.http.address=:80"
-      - "--log.level=ERROR"
-      - "--entryPoints.irc.address=:7001"
+      - "--api.insecure=true"
+      # configure endpoints
+      - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entryPoints.irc.address=:7001"
+      # SSL configuration
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}"
+      - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
+    labels:
+      - "traefik.http.middlewares.api-auth.basicauth.users=${TRAEFIK_USER}"
     networks:
       - default
       - discovery
@@ -57,14 +62,19 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.znc-http.entrypoints=web"
+      - "traefik.http.routers.znc-http.rule=Host(`${ZNC_DOMAIN}`)"
+      - "traefik.http.routers.znc-http.middlewares=znc-https"
+      - "traefik.http.middlewares.znc-https.redirectscheme.scheme=https"
       - "traefik.http.routers.znc.rule=Host(`${ZNC_DOMAIN}`)"
-      - "traefik.http.routers.znc.entryPoints=websecure"
       - "traefik.http.routers.znc.tls=true"
+      - "traefik.http.routers.znc.entryPoints=websecure"
+      - "traefik.http.routers.znc.tls.certresolver=letsencryptresolver"
       - "traefik.http.services.znc.loadbalancer.server.port=6501"
-      - "traefik.tcp.routers.znc.rule=HostSNI(`${ZNC_DOMAIN}`)"
-      - "traefik.tcp.routers.znc.entryPoints=irc"
-      - "traefik.tcp.routers.znc.tls=true"
-      - "traefik.tcp.services.znc.loadbalancer.server.port=6502"
+      - "traefik.tcp.routers.zncirc.rule=HostSNI(`${ZNC_DOMAIN}`)"
+      - "traefik.tcp.routers.zncirc.entryPoints=irc"
+      - "traefik.tcp.routers.zncirc.tls=true"
+      - "traefik.tcp.services.zncirc.loadbalancer.server.port=6502"
       - "traefik.docker.network=discovery"
       - "com.centurylinklabs.watchtower.enable=true"
   pihole:
@@ -97,24 +107,10 @@ services:
     labels:
        - "traefik.enable=true"
        - "traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)"
-       - "traefik.http.routers.pihole.entrypoints=http"
+       - "traefik.http.routers.pihole.entrypoints=web"
        - "traefik.docker.network=discovery"
        - "traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}"
-       - "com.centurylinklabs.watchtower.enable=true"
-  redis:
-    image: redis:latest
-    container_name: dojoRedis
-    restart: always
-    volumes:
-      - ${DATA_PATH}/redis:/var/lib/redis
-  whoami:
-    image: "containous/whoami"
-    container_name: dojoWhoAmI
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`${WHOAMI_DOMAIN}`)"
-      - "traefik.http.routers.whoami.entrypoints=http"
-      - "com.centurylinklabs.watchtower.enable=true"
+       - "com.centurylinklabs.watchtower.enable=false"
   samba:
     image: dperson/samba
     depends_on:
