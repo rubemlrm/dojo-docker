@@ -6,7 +6,7 @@ services:
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --label-enable --cleanup --interval 300
+    command: --label-enable --cleanup --interval 36000
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
   traefik:
@@ -20,7 +20,6 @@ services:
       - 80:80
       - 443:443
       - 8080:8080
-      - 7001:7001
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
@@ -33,14 +32,17 @@ services:
       # configure endpoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--entryPoints.irc.address=:7001"
       # SSL configuration
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.api-auth.basicauth.users=${TRAEFIK_USER}"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_SUBDOMAIN}`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=web"
     networks:
       - default
       - discovery
@@ -49,36 +51,31 @@ services:
       - ${TRAEFIK_DNS2}
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-  znc:
-    image: znc
-    container_name: znc
+  webirc:
+    image: thelounge/thelounge:latest
+    container_name: webirc
     volumes:
-      - ${CONFIG_PATH}/znc:/znc-data
+      - ${CONFIG_PATH}/irc:/var/opt/thelounge 
     networks:
       - discovery
     ports:
-      - 6501:6501
-      - 6502:6502
+      - 113:9001
+      - 9000:9000
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.znc-http.entrypoints=web"
-      - "traefik.http.routers.znc-http.rule=Host(`${ZNC_DOMAIN}`)"
-      - "traefik.http.routers.znc-http.middlewares=znc-https"
-      - "traefik.http.middlewares.znc-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.znc.rule=Host(`${ZNC_DOMAIN}`)"
-      - "traefik.http.routers.znc.tls=true"
-      - "traefik.http.routers.znc.entryPoints=websecure"
-      - "traefik.http.routers.znc.tls.certresolver=letsencryptresolver"
-      - "traefik.http.services.znc.loadbalancer.server.port=6501"
-      - "traefik.tcp.routers.zncirc.rule=HostSNI(`${ZNC_DOMAIN}`)"
-      - "traefik.tcp.routers.zncirc.entryPoints=irc"
-      - "traefik.tcp.routers.zncirc.tls=true"
-      - "traefik.tcp.services.zncirc.loadbalancer.server.port=6502"
+      - "traefik.http.routers.irc-http.entrypoints=web"
+      - "traefik.http.routers.irc-http.rule=Host(`${IRC_DOMAIN}`)"
+      - "traefik.http.routers.irc-http.middlewares=irc-https"
+      - "traefik.http.middlewares.irc-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.irc.entrypoints=websecure"
+      - "traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)"
+      - "traefik.http.routers.irc.tls=true"
+      - "traefik.http.routers.irc.tls.certresolver=letsencryptresolver"
       - "traefik.docker.network=discovery"
       - "com.centurylinklabs.watchtower.enable=true"
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:nightly
     container_name: pihole
     depends_on:
       - watchtower
@@ -93,8 +90,12 @@ services:
       - '0.0.0.0:8053:80/tcp'
       - "0.0.0.0:8054:443/tcp"
     volumes:
-      - ./configs/pihole/etc-pihole/:/etc/pihole/
-      - ./configs/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
+      - ${CONFIG_PATH}/pihole/etc-pihole/:/etc/pihole/
+      - ${CONFIG_PATH}/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
+    dns:
+      - 127.0.0.1
+      - ${PIHOLE_DNS1}
+      - ${PIHOLE_DNS2}
     environment:
       ServerIP: ${PIHOLE_IP}
       TZ: ${TIMEZONE}
@@ -110,7 +111,7 @@ services:
        - "traefik.http.routers.pihole.entrypoints=web"
        - "traefik.docker.network=discovery"
        - "traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}"
-       - "com.centurylinklabs.watchtower.enable=false"
+       - "com.centurylinklabs.watchtower.enable=true"
   samba:
     image: dperson/samba
     depends_on:
@@ -135,7 +136,6 @@ services:
     command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p -w "${SAMBA_WORKGROUP}"'
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-
 networks:
   shareNetwork:
   discovery:
