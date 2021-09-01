@@ -5,16 +5,29 @@ services:
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
-    depends_on:
-      - dockerproxy
-    command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    domainname: watchtower
+    restart: unless-stopped
     networks:
       - traefikNetwork
+    depends_on:
+      - dockerproxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
+    command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
+
   dockerproxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: dockerproxy
+    domainname: dockerproxy
+    restart: unless-stopped
+    networks:
+      - traefikNetwork
+    ports:
+      - 2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONTAINERS=1
       - TASKS=1 # Portaienr
@@ -30,24 +43,24 @@ services:
       - CONTAINERS_UPDATE=1 # WatchTower
       - CONTAINERS_DELETE=1 # WatchTower
       - IMAGES_DELETE=1 # WatchTower
-    image: tecnativa/docker-socket-proxy
-    networks:
-      - traefikNetwork
-    ports:
-      - 2375
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
+
   # Web Reverse Proxy
   traefik:
     image: traefik:v2.4
     container_name: traefik
     domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
-    depends_on:
-      - dockerproxy
+    networks:
+      - traefikNetwork
+      - webircNetwork
+      - adguardNetwork
+      - syncthingNetwork
+      - piholeNetwork
     ports:
       - 80:80
       - 443:443
+    depends_on:
+      - dockerproxy
     volumes:
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
     command:
@@ -64,12 +77,6 @@ services:
       - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
       - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
       - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
-    networks:
-      - traefikNetwork
-      - webircNetwork
-      - adguardNetwork
-      - syncthingNetwork
-      - piholeNetwork
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
@@ -77,10 +84,8 @@ services:
   portainer:
     image: portainer/portainer:latest
     container_name: portainer
+    domainname: portainer
     restart: unless-stopped
-    command: -H tcp://dockerproxy:2375
-    security_opt:
-      - no-new-privileges:true
     networks:
       - traefikNetwork
     volumes:
@@ -95,17 +100,22 @@ services:
       - 'traefik.http.routers.portainer-secure.service=portainer'
       - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
       - 'traefik.docker.network=traefikNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+    command: -H tcp://dockerproxy:2375
+    security_opt:
+      - no-new-privileges:true
   webirc:
     image: thelounge/thelounge:latest
     container_name: webirc
+    domainname: webirc
+    restart: unless-stopped
     networks:
       - webircNetwork
-    volumes:
-      - ${CONFIG_PATH}/irc:/var/opt/thelounge
     ports:
       - 113:9001
       - 9000:9000
-    restart: unless-stopped
+    volumes:
+      - ${CONFIG_PATH}/irc:/var/opt/thelounge
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.irc.entrypoints=websecure'
@@ -117,9 +127,7 @@ services:
   pihole:
     image: pihole/pihole:nightly
     container_name: pihole
-    depends_on:
-      - watchtower
-    domainname: ${TRAEFIK_DOMAIN}
+    domainname: pihole
     restart: unless-stopped
     networks:
       - piholeNetwork
@@ -127,13 +135,11 @@ services:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
+    depends_on:
+      - watchtower
     volumes:
       - ${CONFIG_PATH}/pihole/etc-pihole/:/etc/pihole/
       - ${CONFIG_PATH}/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
-    dns:
-      - 127.0.0.1
-      - ${PIHOLE_DNS1}
-      - ${PIHOLE_DNS2}
     environment:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}
@@ -154,22 +160,27 @@ services:
       - 'traefik.http.middlewares.pihole-basic-auth.basicauth.users=${PIHOLE_SECOND_AUTH}'
       - 'traefik.http.routers.pihole.middlewares=pihole-basic-auth'
       - 'com.centurylinklabs.watchtower.enable=true'
+    dns:
+      - 127.0.0.1
+      - ${PIHOLE_DNS1}
+      - ${PIHOLE_DNS2}
   syncthing:
     image: ghcr.io/linuxserver/syncthing
     container_name: syncthing
+    domainname: syncthing
+    restart: unless-stopped
+    hostname: dojosync
     networks:
       - syncthingNetwork
-    hostname: dojosync
-    environment:
-      - PUID=1000
-      - PGID=1000
-    volumes:
-      - ${CONFIG_PATH}/syncthing:/config
-      - ${SAMBA_HOST_VOLUME}/sync:/data1
     ports:
       - 22000:22000/tcp
       - 22000:22000/udp
-    restart: unless-stopped
+    volumes:
+      - ${CONFIG_PATH}/syncthing:/config
+      - ${SAMBA_HOST_VOLUME}/sync:/data1
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.sync.entrypoints=websecure'
@@ -177,13 +188,13 @@ services:
       - 'traefik.http.routers.sync.tls=true'
       - 'traefik.http.routers.sync.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=syncthingNetwork'
-      - 'com.centurylinklabs.watchtower.enable=true'
       - 'traefik.http.services.sync.loadbalancer.server.port=8384'
+      - 'com.centurylinklabs.watchtower.enable=true'
+
   # network services
   samba:
     image: dperson/samba
-    environment:
-      TZ: ${TIMEZONE}
+    restart: unless-stopped
     networks:
       - shareNetwork
     ports:
@@ -191,24 +202,25 @@ services:
       - '138:138/udp'
       - '139:139/tcp'
       - '445:445/tcp'
-    read_only: true
-    tmpfs:
-      - /tmp
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
     volumes:
-      - ${SAMBA_HOST_VOLUME}:/mnt:z
-    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p -w "${SAMBA_WORKGROUP}"'
+      - ${SAMBA_HOST_VOLUME}/media:/mnt:z
+    environment:
+      - TZ=${TIMEZONE}
+    read_only: true
+    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p'
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
+    tmpfs:
+      - /tmp
+    stdin_open: true
+    tty: true
 networks:
   shareNetwork:
     external: true
   piholeNetwork:
     external: true
+  traefikNetwork:
+    external: true
   webircNetwork:
   adguardNetwork:
   syncthingNetwork:
-  traefikNetwork:
-    external: true
