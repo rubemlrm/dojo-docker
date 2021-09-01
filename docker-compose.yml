@@ -5,14 +5,16 @@ services:
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
-    command: --label-enable --cleanup --interval 36000 -H tcp://socket-proxy:2375
+    depends_on:
+      - dockerproxy
+    command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - traefikNetwork
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
   dockerproxy:
-    depends_on:
-      - watchtower
     environment:
       - CONTAINERS=1
       - TASKS=1 # Portaienr
@@ -39,10 +41,10 @@ services:
   traefik:
     image: traefik:v2.4
     container_name: traefik
-    depends_on:
-      - watchtower
     domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
+    depends_on:
+      - dockerproxy
     ports:
       - 80:80
       - 443:443
@@ -50,10 +52,12 @@ services:
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
     command:
       - '--providers.docker=true'
-      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
       - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
       # configure endpoints
       - '--entrypoints.web.address=:80'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
       - '--entrypoints.websecure.address=:443'
       # SSL configuration
       - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
@@ -65,6 +69,7 @@ services:
       - webircNetwork
       - adguardNetwork
       - syncthingNetwork
+      - piholeNetwork
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
@@ -72,8 +77,8 @@ services:
   portainer:
     image: portainer/portainer:latest
     container_name: portainer
-    command: -H tcp://socket-proxy:2375
     restart: unless-stopped
+    command: -H tcp://dockerproxy:2375
     security_opt:
       - no-new-privileges:true
     networks:
@@ -83,10 +88,6 @@ services:
       - ${CONFIG_PATH}/portainer:/data
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.portainer.entrypoints=web'
-      - 'traefik.http.routers.portainer.rule=Host(`${PORTAINER_DOMAIN}`)'
-      - 'traefik.http.middlewares.portainer-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.portainer.middlewares=portainer-https-redirect'
       - 'traefik.http.routers.portainer-secure.entrypoints=websecure'
       - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
       - 'traefik.http.routers.portainer-secure.tls=true'
@@ -107,46 +108,51 @@ services:
     restart: unless-stopped
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.irc-http.entrypoints=web'
-      - 'traefik.http.routers.irc-http.rule=Host(`${IRC_DOMAIN}`)'
-      - 'traefik.http.routers.irc-http.middlewares=irc-https'
-      - 'traefik.http.middlewares.irc-https.redirectscheme.scheme=https'
       - 'traefik.http.routers.irc.entrypoints=websecure'
       - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
       - 'traefik.http.routers.irc.tls=true'
       - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=webircNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
-  adguard:
-    container_name: adguard
-    domainname: docker
-    hostname: adguard
-    networks:
-      - adguardNetwork
-    image: adguard/adguardhome:latest
-    ports:
-      - '53:53/tcp'
-      - '53:53/udp'
-      - '67:67/udp'
-      - '853:853/tcp'
+  pihole:
+    image: pihole/pihole:nightly
+    container_name: pihole
+    depends_on:
+      - watchtower
+    domainname: ${TRAEFIK_DOMAIN}
     restart: unless-stopped
+    networks:
+      - piholeNetwork
+    ports:
+      - '0.0.0.0:53:53/tcp'
+      - '0.0.0.0:53:53/udp'
+      - '0.0.0.0:67:67/udp'
     volumes:
-      - ${CONFIG_PATH}/adguard/work:/opt/adguardhome/work
-      - ${CONFIG_PATH}/adguard/conf:/opt/adguardhome/conf
-    cap_add:
-      - NET_ADMIN
+      - ${CONFIG_PATH}/pihole/etc-pihole/:/etc/pihole/
+      - ${CONFIG_PATH}/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
+    dns:
+      - 127.0.0.1
+      - ${PIHOLE_DNS1}
+      - ${PIHOLE_DNS2}
+    environment:
+      - ServerIP=${PIHOLE_IP}
+      - TZ=${TIMEZONE}
+      - WEBPASSWORD=${PIHOLE_PASS}
+      - PROXY_LOCATION=pihole
+      - VIRTUAL_HOST=${PIHOLE_DOMAIN}
+      - VIRTUAL_PORT=${PIHOLE_PORT}
+      - DNS1=${PIHOLE_DNS1}
+      - DNS2=${PIHOLE_DNS2}
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.adguard-http.entrypoints=web'
-      - 'traefik.http.routers.adguard-http.rule=Host(`${AD_GUARD_DOMAIN}`)'
-      - 'traefik.http.routers.adguard-http.middlewares=adguard-https'
-      - 'traefik.http.middlewares.adguard-https.redirectscheme.scheme=https'
-      - 'traefik.http.routers.adguard.entrypoints=websecure'
-      - 'traefik.http.routers.adguard.rule=Host(`${AD_GUARD_DOMAIN}`)'
-      - 'traefik.http.routers.adguard.tls=true'
-      - 'traefik.http.routers.adguard.tls.certresolver=letsencryptresolver'
-      - 'traefik.http.services.adguard.loadbalancer.server.port=3000'
-      - 'traefik.docker.network=adguardNetwork'
+      - 'traefik.http.routers.pihole.entrypoints=websecure'
+      - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
+      - 'traefik.http.routers.pihole.tls=true'
+      - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=piholeNetwork'
+      - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
+      - 'traefik.http.middlewares.pihole-basic-auth.basicauth.users=${PIHOLE_SECOND_AUTH}'
+      - 'traefik.http.routers.pihole.middlewares=pihole-basic-auth'
       - 'com.centurylinklabs.watchtower.enable=true'
   syncthing:
     image: ghcr.io/linuxserver/syncthing
@@ -166,10 +172,6 @@ services:
     restart: unless-stopped
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.sync-http.entrypoints=web'
-      - 'traefik.http.routers.sync-http.rule=Host(`${SYNC_DOMAIN}`)'
-      - 'traefik.http.routers.sync-http.middlewares=sync-https'
-      - 'traefik.http.middlewares.sync-https.redirectscheme.scheme=https'
       - 'traefik.http.routers.sync.entrypoints=websecure'
       - 'traefik.http.routers.sync.rule=Host(`${SYNC_DOMAIN}`)'
       - 'traefik.http.routers.sync.tls=true'
@@ -180,8 +182,6 @@ services:
   # network services
   samba:
     image: dperson/samba
-    depends_on:
-      - watchtower
     environment:
       TZ: ${TIMEZONE}
     networks:
@@ -204,6 +204,9 @@ services:
       - 'com.centurylinklabs.watchtower.enable=true'
 networks:
   shareNetwork:
+    external: true
+  piholeNetwork:
+    external: true
   webircNetwork:
   adguardNetwork:
   syncthingNetwork:
