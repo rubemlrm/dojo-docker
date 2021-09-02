@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.2
       - name: Super-Linter
-        uses: github/super-linter:v4
+        uses: docker://ghcr.io/github/super-linter:v4.7.0
         env:
            VALIDATE_ALL_CODEBASE: true
            VALIDATE_ENV: true
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.2
       - name: Super-Linter
-        uses: github/super-linter:v4
+        uses: docker://ghcr.io/github/super-linter:v4.7.0
         env:
            VALIDATE_ALL_CODEBASE: true
            VALIDATE_YAML: true
