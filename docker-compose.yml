@@ -60,7 +60,7 @@ services:
       - 80:80
       - 443:443
     depends_on:
-      - dockerproxy
+      - watchtower
     volumes:
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
     command:
@@ -69,8 +69,6 @@ services:
       - '--providers.docker.endpoint=tcp://dockerproxy:2375'
       # configure endpoints
       - '--entrypoints.web.address=:80'
-      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
-      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
       - '--entrypoints.websecure.address=:443'
       # SSL configuration
       - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
@@ -80,6 +78,14 @@ services:
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
+    labels:
+      # global redirect to https
+      traefik.http.routers.http-catchall.rule: hostregexp(`{host:.+}`)
+      traefik.http.routers.http-catchall.entrypoints: web
+      traefik.http.routers.http-catchall.middlewares: redirect-to-https
+      traefik.http.routers.http-catchall.priority: 1000
+      # middleware redirect
+      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
   # webservices
   portainer:
     image: portainer/portainer:latest
@@ -122,8 +128,81 @@ services:
       - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
       - 'traefik.http.routers.irc.tls=true'
       - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=webircNetwork'
+      - 'traefik.docker.network=traefikNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
+  ncdatabase:
+    image: postgres
+    container_name: ncdatabase
+    networks:
+      - nextcloudNetwork
+    volumes:
+      - ${CONFIG_PATH}/ncdatabase:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=${NEXTCLOUD_DB_USER}
+    restart: unless-stopped
+  nextcloudapp:
+   image: nextcloud
+   restart: always
+   networks:
+     - nextcloudNetwork
+     - traefikNetwork
+   depends_on:
+     - ncdatabase
+   volumes:
+     - ${SAMBA_HOST_VOLUME}/SyncData:/var/www/html/data
+     - ${CONFIG_PATH}/nextcloud:/var/www/html/
+   environment:
+     - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+     - POSTGRES_DB=nextcloud
+     - POSTGRES_USER=${NEXTCLOUD_DB_USER}
+     - POSTGRES_HOST=ncdatabase
+   labels:
+    - 'traefik.enable=true'
+    - 'traefik.docker.network=traefikNetwork'
+    - 'traefik.http.routers.nextcloud.entrypoints=websecure'
+    - 'traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud_redirect'
+    - 'traefik.http.routers.nextcloud.tls.certresolver=letsencryptresolver'
+    - 'traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOST}`)'
+    - 'traefik.http.middlewares.nextcloud.headers.customFrameOptionsValue=ALLOW-FROM https://${NEXTCLOUD_HOST}'
+    - 'traefik.http.middlewares.nextcloud.headers.contentSecurityPolicy=frame-ancestors "self" ${NEXTCLOUD_HOST} *.${NEXTCLOUD_HOST}'
+    - 'traefik.http.middlewares.nextcloud.headers.stsSeconds=155520011'
+    - 'traefik.http.middlewares.nextcloud.headers.stsIncludeSubdomains=true'
+    - 'traefik.http.middlewares.nextcloud.headers.stsPreload=true'
+    - 'traefik.http.middlewares.nextcloud-caldav.replacepathregex.regex=^/.well-known/ca(l|rd)dav'
+    - 'traefik.http.middlewares.nextcloud-caldav.replacepathregex.replacement=/remote.php/dav/'
+    - 'traefik.http.middlewares.nextcloud_redirect.redirectregex.regex=/.well-known/(card|cal)dav'
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: service:vpn
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    depends_on:
+      - vpn
+    volumes:
+      - ${CONFIG_PATH}/qbittorrent:/config
+      - ${SAMBA_HOST_VOLUME}/media:/downloads
+    restart: unless-stopped
+  # network services
+  vpn:
+    image: ghcr.io/bubuntux/nordvpn
+    cap_add:
+      - NET_ADMIN               # Required
+    environment:                # Review https://github.com/bubuntux/nordvpn#environment-variables
+      - USER=${VPN_USER}    # Required
+      - "PASS=${VPN_PASSWORD}"         # Required
+      - CONNECT=${VPN_CONNECT}
+      - TECHNOLOGY=NordLynx
+      - NET_LOCAL=${VPN_LOCAL_NETWORK}
+      - NETWORK=${VPN_LOCAL_NETWORK}
+    ports:
+      - 8080:8080
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
   pihole:
     image: pihole/pihole:nightly
     container_name: pihole
@@ -135,6 +214,7 @@ services:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
+      - '8000:80'
     depends_on:
       - watchtower
     volumes:
@@ -151,47 +231,15 @@ services:
       - DNS2=${PIHOLE_DNS2}
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.pihole.entrypoints=websecure'
+      - 'traefik.http.routers.pihole.entrypoints: web'
+      - 'traefik.http.routers.pihole.priority: 2000'
       - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
-      - 'traefik.http.routers.pihole.tls=true'
-      - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=piholeNetwork'
-      - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
-      - 'traefik.http.middlewares.pihole-basic-auth.basicauth.users=${PIHOLE_SECOND_AUTH}'
-      - 'traefik.http.routers.pihole.middlewares=pihole-basic-auth'
       - 'com.centurylinklabs.watchtower.enable=true'
     dns:
       - 127.0.0.1
       - ${PIHOLE_DNS1}
       - ${PIHOLE_DNS2}
-  syncthing:
-    image: ghcr.io/linuxserver/syncthing
-    container_name: syncthing
-    domainname: syncthing
-    restart: unless-stopped
-    hostname: dojosync
-    networks:
-      - syncthingNetwork
-    ports:
-      - 22000:22000/tcp
-      - 22000:22000/udp
-    volumes:
-      - ${CONFIG_PATH}/syncthing:/config
-      - ${SAMBA_HOST_VOLUME}/sync:/data1
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.sync.entrypoints=websecure'
-      - 'traefik.http.routers.sync.rule=Host(`${SYNC_DOMAIN}`)'
-      - 'traefik.http.routers.sync.tls=true'
-      - 'traefik.http.routers.sync.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=syncthingNetwork'
-      - 'traefik.http.services.sync.loadbalancer.server.port=8384'
-      - 'com.centurylinklabs.watchtower.enable=true'
-
-  # network services
   samba:
     image: dperson/samba
     restart: unless-stopped
@@ -224,3 +272,4 @@ networks:
   webircNetwork:
   adguardNetwork:
   syncthingNetwork:
+  nextcloudNetwork:
