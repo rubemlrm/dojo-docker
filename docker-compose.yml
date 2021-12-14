@@ -1,3 +1,4 @@
+---
 version: '3'
 
 services:
@@ -8,7 +9,7 @@ services:
     domainname: watchtower
     restart: unless-stopped
     networks:
-      - traefikNetwork
+      - proxyNetwork
     depends_on:
       - dockerproxy
     volumes:
@@ -23,69 +24,46 @@ services:
     domainname: dockerproxy
     restart: unless-stopped
     networks:
-      - traefikNetwork
+      - proxyNetwork
     ports:
       - 2375
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONTAINERS=1
-      - TASKS=1 # Portaienr
-      - VOLUMES=1 # Portainer
+      - TASKS=1
+      - VOLUMES=1
       - SERVICES=1
-      - IMAGES=1 # Portainer, Watchtower
-      - INFO=1 # Portainer
-      - NETWORKS=1 # Portainer, Watchtower
-      - POST=1 # Watchtower
-      - DELETE=1 # Watchtower
-      - CONTAINERS_CREATE=1 # WatchTower
-      - CONTAINERS_START=1 # WatchTower
-      - CONTAINERS_UPDATE=1 # WatchTower
-      - CONTAINERS_DELETE=1 # WatchTower
-      - IMAGES_DELETE=1 # WatchTower
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - POST=1
+      - DELETE=1
+      - CONTAINERS_CREATE=1
+      - CONTAINERS_START=1
+      - CONTAINERS_UPDATE=1
+      - CONTAINERS_DELETE=1
+      - IMAGES_DELETE=1
 
   # Web Reverse Proxy
-  traefik:
-    image: traefik:v2.4
-    container_name: traefik
-    domainname: ${TRAEFIK_DOMAIN}
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: npm
     restart: unless-stopped
-    networks:
-      - traefikNetwork
-      - webircNetwork
-      - adguardNetwork
-      - syncthingNetwork
-      - piholeNetwork
     ports:
-      - 80:80
-      - 443:443
-    depends_on:
-      - watchtower
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
     volumes:
-      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
-    command:
-      - '--providers.docker=true'
-      - '--providers.docker.exposedbydefault=false'
-      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
-      # configure endpoints
-      - '--entrypoints.web.address=:80'
-      - '--entrypoints.websecure.address=:443'
-      # SSL configuration
-      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
-      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
-      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
-      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
-    dns:
-      - ${TRAEFIK_DNS1}
-      - ${TRAEFIK_DNS2}
-    labels:
-      # global redirect to https
-      traefik.http.routers.http-catchall.rule: hostregexp(`{host:.+}`)
-      traefik.http.routers.http-catchall.entrypoints: web
-      traefik.http.routers.http-catchall.middlewares: redirect-to-https
-      traefik.http.routers.http-catchall.priority: 1000
-      # middleware redirect
-      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
+      - ${CONFIG_PATH}/nginx-proxy-manager:/data
+      - ${CONFIG_PATH}/letsencrypt:/etc/letsencrypt
+    networks:
+      - proxyNetwork
+      - webircNetwork
+      - piholeNetwork
+      - monitoring
   # webservices
   portainer:
     image: portainer/portainer:latest
@@ -93,19 +71,11 @@ services:
     domainname: portainer
     restart: unless-stopped
     networks:
-      - traefikNetwork
+      - proxyNetwork
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${CONFIG_PATH}/portainer:/data
     labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.portainer-secure.entrypoints=websecure'
-      - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
-      - 'traefik.http.routers.portainer-secure.tls=true'
-      - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
-      - 'traefik.http.routers.portainer-secure.service=portainer'
-      - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
-      - 'traefik.docker.network=traefikNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
     command: -H tcp://dockerproxy:2375
     security_opt:
@@ -123,12 +93,6 @@ services:
     volumes:
       - ${CONFIG_PATH}/irc:/var/opt/thelounge
     labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.irc.entrypoints=websecure'
-      - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
-      - 'traefik.http.routers.irc.tls=true'
-      - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=traefikNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
   ncdatabase:
     image: postgres
@@ -136,7 +100,7 @@ services:
     networks:
       - nextcloudNetwork
     volumes:
-      - ${CONFIG_PATH}/ncdatabase:/var/lib/mysql
+      - ${CONFIG_PATH}/ncdatabase:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
     environment:
       - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
@@ -144,65 +108,58 @@ services:
       - POSTGRES_USER=${NEXTCLOUD_DB_USER}
     restart: unless-stopped
   nextcloudapp:
-   image: nextcloud
-   restart: always
-   networks:
-     - nextcloudNetwork
-     - traefikNetwork
-   depends_on:
-     - ncdatabase
-   volumes:
-     - ${SAMBA_HOST_VOLUME}/SyncData:/var/www/html/data
-     - ${CONFIG_PATH}/nextcloud:/var/www/html/
-   environment:
-     - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-     - POSTGRES_DB=nextcloud
-     - POSTGRES_USER=${NEXTCLOUD_DB_USER}
-     - POSTGRES_HOST=ncdatabase
-   labels:
-    - 'traefik.enable=true'
-    - 'traefik.docker.network=traefikNetwork'
-    - 'traefik.http.routers.nextcloud.entrypoints=websecure'
-    - 'traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud_redirect'
-    - 'traefik.http.routers.nextcloud.tls.certresolver=letsencryptresolver'
-    - 'traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOST}`)'
-    - 'traefik.http.middlewares.nextcloud.headers.customFrameOptionsValue=ALLOW-FROM https://${NEXTCLOUD_HOST}'
-    - 'traefik.http.middlewares.nextcloud.headers.contentSecurityPolicy=frame-ancestors "self" ${NEXTCLOUD_HOST} *.${NEXTCLOUD_HOST}'
-    - 'traefik.http.middlewares.nextcloud.headers.stsSeconds=155520011'
-    - 'traefik.http.middlewares.nextcloud.headers.stsIncludeSubdomains=true'
-    - 'traefik.http.middlewares.nextcloud.headers.stsPreload=true'
-    - 'traefik.http.middlewares.nextcloud-caldav.replacepathregex.regex=^/.well-known/ca(l|rd)dav'
-    - 'traefik.http.middlewares.nextcloud-caldav.replacepathregex.replacement=/remote.php/dav/'
-    - 'traefik.http.middlewares.nextcloud_redirect.redirectregex.regex=/.well-known/(card|cal)dav'
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent
-    container_name: qbittorrent
-    network_mode: service:vpn
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
+    container_name: nextcloud
+    image: nextcloud
+    restart: always
+    networks:
+      - nextcloudNetwork
+      - proxyNetwork
     depends_on:
-      - vpn
+      - ncdatabase
     volumes:
-      - ${CONFIG_PATH}/qbittorrent:/config
-      - ${SAMBA_HOST_VOLUME}/media:/downloads
-    restart: unless-stopped
-  # network services
-  vpn:
-    image: ghcr.io/bubuntux/nordvpn
-    cap_add:
-      - NET_ADMIN               # Required
-    environment:                # Review https://github.com/bubuntux/nordvpn#environment-variables
-      - USER=${VPN_USER}    # Required
-      - "PASS=${VPN_PASSWORD}"         # Required
-      - CONNECT=${VPN_CONNECT}
-      - TECHNOLOGY=NordLynx
-      - NET_LOCAL=${VPN_LOCAL_NETWORK}
-      - NETWORK=${VPN_LOCAL_NETWORK}
+      - ${DATA_PATH}/SyncData:/var/www/html/data
+      - ${CONFIG_PATH}/nextcloudConfig:/var/www/html/config
+    environment:
+      - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=${NEXTCLOUD_DB_USER}
+      - POSTGRES_HOST=ncdatabase
+  torrents:
+    image: crazymax/rtorrent-rutorrent:latest
+    container_name: torrents
+    expose:
+      - "${RT_DHT_PORT}/udp"
+      - "${XMLRPC_PORT}"
+      - "${RUTORRENT_PORT}"
+      - "${WEBDAV_PORT}"
+      - "${RT_INC_PORT}"
+    networks:
+      - proxyNetwork
     ports:
-      - 8080:8080
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
+      - target: ${RT_DHT_PORT}
+        published: ${RT_DHT_PORT}
+        protocol: udp
+      - target: ${RUTORRENT_PORT}
+        published: ${RUTORRENT_PORT}
+        protocol: tcp
+      - target: ${WEBDAV_PORT}
+        published: ${WEBDAV_PORT}
+        protocol: tcp
+      - target: ${RT_INC_PORT}
+        published: ${RT_INC_PORT}
+        protocol: tcp
+    volumes:
+      - ${CONFIG_PATH}/torrents:/data
+      - ${CONFIG_PATH}/torrents/passwd:/passwd
+      - ${SAMBA_HOST_VOLUME}/media:/downloads
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 32000
+        hard: 40000
+    restart: always
+
+  # network services
   pihole:
     image: pihole/pihole:nightly
     container_name: pihole
@@ -214,7 +171,6 @@ services:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
-      - '8000:80'
     depends_on:
       - watchtower
     volumes:
@@ -224,17 +180,10 @@ services:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}
       - WEBPASSWORD=${PIHOLE_PASS}
-      - PROXY_LOCATION=pihole
       - VIRTUAL_HOST=${PIHOLE_DOMAIN}
-      - VIRTUAL_PORT=${PIHOLE_PORT}
       - DNS1=${PIHOLE_DNS1}
       - DNS2=${PIHOLE_DNS2}
     labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.pihole.entrypoints: web'
-      - 'traefik.http.routers.pihole.priority: 2000'
-      - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
-      - 'traefik.docker.network=piholeNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
     dns:
       - 127.0.0.1
@@ -255,21 +204,135 @@ services:
     environment:
       - TZ=${TIMEZONE}
     read_only: true
-    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p'
+    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" \
+              -u "${SAMBA_USER};${SAMBA_PASS}" -p'
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     tmpfs:
       - /tmp
     stdin_open: true
     tty: true
+
+  # monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: monitoring_prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=120d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--query.lookback-delta=90m'
+    expose:
+      - 9090
+    links:
+      - cadvisor:cadvisor
+      - node-exporter:node-exporter
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: monitoring_node_exporter
+    restart: unless-stopped
+    user: "1001"
+    networks:
+      - monitoring
+    expose:
+      - 9100
+
+  pihole-exporter:
+    image: ekofr/pihole-exporter:latest
+    container_name: pihole_exporter
+    restart: unless-stopped
+    networks:
+      - monitoring
+      - piholeNetwork
+    environment:
+      - PIHOLE_HOSTNAME=pihole
+      - PIHOLE_PASSWORD=${PIHOLE_PASS}
+      - PORT=6317
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: monitoring_cadvisor
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - monitoring
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /sys/fs/cgroup/:/sys/fs/cgroup/
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+    expose:
+      - 8080
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoring_grafana
+    restart: unless-stopped
+    user: '104'
+    networks:
+      - monitoring
+    links:
+      - prometheus:prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/:/etc/grafana/provisioning/
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN}
+
+  speedtest:
+    tty: true
+    stdin_open: true
+    expose:
+      - 9798
+    ports:
+      - 9798:9798
+    image: miguelndecarvalho/speedtest-exporter
+    restart: always
+    networks:
+      - monitoring
+
+  ping:
+    tty: true
+    stdin_open: true
+    expose:
+      - 9115
+    ports:
+      - 9115:9115
+    image: prom/blackbox-exporter
+    restart: always
+    volumes:
+      - ./config/blackbox/config:/config
+    command:
+      - '--config.file=/config/blackbox.yml'
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+
 networks:
   shareNetwork:
     external: true
   piholeNetwork:
     external: true
-  traefikNetwork:
+  proxyNetwork:
     external: true
   webircNetwork:
-  adguardNetwork:
-  syncthingNetwork:
   nextcloudNetwork:
+  monitoring:
