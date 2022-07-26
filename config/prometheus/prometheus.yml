@@ -11,7 +11,7 @@ rule_files: []
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: 'docker'
     scrape_interval: 120s
     static_configs:
       - targets:
@@ -30,5 +30,27 @@ scrape_configs:
     static_configs:
       - targets: ['speedtest:9798']
   - job_name: 'pihole'
+    scrape_interval: 10m
+    scrape_timeout: 60s
     static_configs:
       - targets: ['pihole_exporter:9617']
+  - job_name: 'traefik'
+    scrape_interval: 10m
+    scrape_timeout: 20s
+    static_configs:
+      - targets: ['traefik:8082']
+  - job_name: 'blackbox'
+    scrape_interval: 5s
+    metrics_path: /probe
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/*.yml'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [module]
+        target_label: __param_module
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115  # blackbox exporter

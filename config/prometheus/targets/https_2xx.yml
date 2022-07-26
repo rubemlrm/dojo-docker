@@ -1,0 +1,5 @@
+_
+- labels:
+    module: https_2xx
+  targets:
+  - https://rubemlrm.com/
