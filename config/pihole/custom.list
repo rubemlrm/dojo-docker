@@ -1,1 +1,6 @@
 #local network domains
+192.168.2.2 portainer.dojo.lan
+192.168.2.2 irc.dojo.lan
+192.168.2.2 grafana.dojo.lan
+192.168.2.2 pihole-exporter.dojo.lan
+192.168.2.2 prometheus.dojo.lan
