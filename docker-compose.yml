@@ -1,10 +1,15 @@
 ---
 version: '3'
 
-
 volumes:
   prometheus_data: {}
   grafana_data: {}
+  portainer_data: {}
+  matodomodb_data: {}
+  matodomo_data: {}
+  qbittorrent_data: {}
+  pihole_data: {}
+  pihole_dns_data: {}
 
 networks:
   shareNetwork:
@@ -16,7 +21,8 @@ networks:
   webircNetwork:
   monitoring:
     external: true
-
+  site-analytics:
+  oauth-network:
 services:
   # Secure Socket and Auto Update images
   watchtower:
@@ -75,6 +81,7 @@ services:
       - 8080:8080
     volumes:
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
+      - /var/log/traefik:/var/log
     command:
       - '--metrics.prometheus=true'
       - '--entryPoints.metrics.address=:8082'
@@ -86,16 +93,26 @@ services:
       - '--providers.docker.endpoint=tcp://dockerproxy:2375'
       # configure endpoints
       - '--entrypoints.web.address=:80'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.websecure.address=:443'
       # SSL configuration
       - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
       - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
       - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
       - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
+      - '--accesslog=true'
+      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
+      - '--experimental.plugins.fail2ban.version=v0.6.6'
+      - '--accessLog.filePath=/var/log/access.log'
+      - '--accessLog.filters.statusCodes=400-499'
     networks:
       - proxyNetwork
       - webircNetwork
       - piholeNetwork
       - monitoring
+      - site-analytics
+      - oauth-network
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
@@ -109,21 +126,50 @@ services:
       - proxyNetwork
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${CONFIG_PATH}/portainer:/data
+      - portainer_data:/data
     command: -H tcp://dockerproxy:2375
     security_opt:
       - no-new-privileges:true
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.portainer-secure.entrypoints=web'
+      - 'traefik.http.routers.portainer-secure.entrypoints=websecure'
       - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
-      - 'traefik.http.routers.portainer-secure.tls=false'
+      - 'traefik.http.routers.portainer-secure.tls=true'
       - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
       - 'traefik.http.routers.portainer-secure.service=portainer'
       - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
       - 'traefik.docker.network=proxyNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
 
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8080
+    networks:
+      - proxyNetwork
+    volumes:
+      - qbittorrent_data:/config
+      - ${SAMBA_HOST_VOLUME}:/downloads
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.qbittorrent.entrypoints=web'
+      - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENT_DOMAIN}`)'
+      - 'traefik.http.routers.qbittorrent.tls=false'
+      - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.routers.qbittorrent.service=qbittorrent'
+      - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
   webirc:
     image: thelounge/thelounge:latest
     container_name: webirc
@@ -138,12 +184,14 @@ services:
       - ${CONFIG_PATH}/irc:/var/opt/thelounge
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.irc.entrypoints=web'
+      - 'traefik.http.routers.irc.entrypoints=websecure'
       - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
-      - 'traefik.http.routers.irc.tls=false'
+      - 'traefik.http.routers.irc.tls=true'
       - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=webircNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+
   # network services
   pihole:
     image: pihole/pihole:nightly
@@ -160,8 +208,8 @@ services:
       - watchtower
     volumes:
       - ./config/pihole/custom.list:/etc/pihole/custom.list
-      - ${CONFIG_PATH}/pihole/etc-pihole/:/etc/pihole/
-      - ${CONFIG_PATH}/pihole/etc-dnsmasqd/:/etc/dnsmasq.d/
+      - pihole_data:/etc/pihole/
+      - pihole_dns_data:/etc/dnsmasq.d/
     environment:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}
@@ -171,13 +219,14 @@ services:
       - DNS2=${PIHOLE_DNS2}
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.pihole.entrypoints=web'
+      - 'traefik.http.routers.pihole.entrypoints=websecure'
       - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
-      - 'traefik.http.routers.pihole.tls=false'
+      - 'traefik.http.routers.pihole.tls=true'
       - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=piholeNetwork'
       - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
       - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
     dns:
       - 127.0.0.1
       - ${PIHOLE_DNS1}
@@ -193,9 +242,11 @@ services:
       - '139:139/tcp'
       - '445:445/tcp'
     volumes:
-      - ${SAMBA_HOST_VOLUME}/media:/mnt:z
+      - ${SAMBA_HOST_VOLUME}:/mnt:z
     environment:
       - TZ=${TIMEZONE}
+      - USERID=${PUID}
+      - GROUPID=${PGID}
     read_only: true
     command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p'
     labels:
@@ -230,10 +281,14 @@ services:
       - node-exporter:node-exporter
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.prometheus.entrypoints=web'
+      - 'traefik.http.routers.prometheus.entrypoints=websecure'
       - 'traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_DOMAIN}`)'
+      - 'traefik.http.routers.prometheus.tls=true'
+      - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
+      - 'docker-volume-backup.stop-during-backup=true'
+
   grafana:
     image: grafana/grafana:latest
     container_name: monitoring_grafana
@@ -253,14 +308,14 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.grafana.entrypoints=web'
+      - 'traefik.http.routers.grafana.entrypoints=websecure'
       - 'traefik.http.routers.grafana.rule=Host(`${GF_SERVER_DOMAIN}`)'
-      - 'traefik.http.routers.grafana.tls=false'
+      - 'traefik.http.routers.grafana.tls=true'
       - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
       - 'com.centurylinklabs.watchtower.enable=true'
-
+      - 'docker-volume-backup.stop-during-backup=true'
   node-exporter:
     image: prom/node-exporter:latest
     container_name: monitoring_node_exporter
@@ -279,7 +334,6 @@ services:
       - '--path.sysfs=/host/sys'
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-
   pihole-exporter:
     image: ekofr/pihole-exporter:latest
     container_name: pihole_exporter
@@ -291,7 +345,6 @@ services:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
       - PORT=6317
-
   cadvisor:
     image: klo2k/cadvisor:v0.38.8
     container_name: monitoring_cadvisor
@@ -309,7 +362,6 @@ services:
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
     expose:
       - 8080
-
   speedtest:
     tty: true
     stdin_open: true
@@ -321,7 +373,6 @@ services:
     restart: always
     networks:
       - monitoring
-
   ping:
     tty: true
     stdin_open: true
@@ -337,3 +388,104 @@ services:
       - '--config.file=/config/blackbox.yml'
     networks:
       - monitoring
+
+  # site analytics
+  matomodb:
+    image: linuxserver/mariadb
+    restart: always
+    networks:
+      - site-analytics
+    volumes:
+      - matodomodb_data:/var/lib/mysql
+    environment:
+      -  MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_DATABASE=matomo
+      -  MYSQL_USER=matomo
+      -  MATOMO_DATABASE_ADAPTER=mysql
+      -  MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      -  MATOMO_DATABASE_USERNAME=matomo
+      -  MATOMO_DATABASE_PASSWORD=
+      -  MATOMO_DATABASE_DBNAME=matomo
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  matomo:
+    image: matomo
+    restart: always
+    volumes:
+      - matodomo_data:/var/www/html
+    environment:
+      -  MATOMO_DATABASE_HOST=matomodb
+      -  MYSQL_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_DATABASE=matomo
+      -  MYSQL_USER=matomo
+      -  MATOMO_DATABASE_ADAPTER=mysql
+      -  MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      -  MATOMO_DATABASE_USERNAME=matomo
+      -  MATOMO_DATABASE_PASSWORD=
+      -  MATOMO_DATABASE_DBNAME=matomo
+    networks:
+      - site-analytics
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.matomo.entrypoints=websecure'
+      - 'traefik.http.routers.matomo.rule=Host(`${MATOMO_DOMAIN}`)'
+      - 'traefik.http.routers.matomo.tls=true'
+      - 'traefik.http.routers.matomo.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=monitoring'
+      - 'traefik.http.services.matomo.loadbalancer.server.port=80'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+  cms:
+    image: rubemlrm/netlify-cms-auth-provider:82e6447c966219e494233e6702e57749ae0eecd2
+    restart: always
+    volumes:
+      - ./config/netlify-oauth/.env:/.env
+    networks:
+     - oauth-network
+    ports:
+     - 3000:3000
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.cms.entrypoints=websecure'
+      - 'traefik.http.routers.cms.rule=Host(`${CMS_OAUTH_DOMAIN}`)'
+      - 'traefik.http.routers.cms.tls=true'
+      - 'traefik.http.routers.cms.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=oauth-network'
+      - 'traefik.http.services.cms.loadbalancer.server.port=3000'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: fail2ban
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - "./config/fail2ban:/data"
+      - "/var/log:/var/log:ro"
+    environment:
+     - TZ=Europe/Paris
+     - F2B_LOG_TARGET=STDOUT
+     - F2B_LOG_LEVEL=INFO
+     - F2B_DB_PURGE_AGE=1d
+    restart: always
+
+  #backup volumes
+  backup:
+    image: offen/docker-volume-backup:latest
+    restart: always
+    volumes:
+      - prometheus_data:/backup/prometheus:ro
+      - grafana_data:/backup/grafana:ro
+      - portainer_data:/backup/portainer:ro
+      - matodomodb_data:/backup/matomodb:ro
+      - matodomo_data:/backup/matomo:ro
+      - qbittorrent_data:/backup/qbittorrent:ro
+      - pihole_data:/backup/pihole:ro
+      - pihole_dns_data:/backup/pihole_dns:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${SAMBA_HOST_VOLUME}/docker-backups:/archive
