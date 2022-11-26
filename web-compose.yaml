@@ -1,0 +1,168 @@
+---
+version: '3'
+
+volumes:
+  portainer_data: {}
+  matodomodb_data: {}
+  matodomo_data: {}
+
+networks:
+  proxyNetwork:
+    external: true
+services:
+  # Web Reverse Proxy
+  traefik:
+    image: traefik:v2.8
+    container_name: traefik
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
+      - /var/log/traefik:/var/log
+    command:
+      - '--metrics.prometheus=true'
+      - '--entryPoints.metrics.address=:8082'
+      - '--metrics.prometheus.entryPoint=metrics'
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
+      # configure endpoints
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.websecure.address=:443'
+      # SSL configuration
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
+      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
+      - '--accesslog=true'
+      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
+      - '--experimental.plugins.fail2ban.version=v0.6.6'
+      - '--accessLog.filePath=/var/log/access.log'
+      - '--accessLog.filters.statusCodes=400-499'
+    networks:
+      - proxyNetwork
+    dns:
+      - ${TRAEFIK_DNS1}
+      - ${TRAEFIK_DNS2}
+  # webservices
+  portainer:
+    image: portainer/portainer:latest
+    container_name: portainer
+    domainname: portainer
+    restart: unless-stopped
+    networks:
+      - proxyNetwork
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - portainer_data:/data
+    command: -H tcp://dockerproxy:2375
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.portainer-secure.entrypoints=websecure'
+      - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
+      - 'traefik.http.routers.portainer-secure.tls=true'
+      - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.routers.portainer-secure.service=portainer'
+      - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+  webirc:
+    image: thelounge/thelounge:latest
+    container_name: webirc
+    domainname: webirc
+    restart: unless-stopped
+    networks:
+      - proxyNetwork
+    ports:
+      - 113:9001
+      - 9000:9000
+    volumes:
+      - ${CONFIG_PATH}/irc:/var/opt/thelounge
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.irc.entrypoints=websecure'
+      - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
+      - 'traefik.http.routers.irc.tls=true'
+      - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  # site analytics
+  matomodb:
+    image: linuxserver/mariadb
+    restart: always
+    networks:
+      - proxyNetwork
+    volumes:
+      - matodomodb_data:/var/lib/mysql
+    environment:
+      -  MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_DATABASE=matomo
+      -  MYSQL_USER=matomo
+      -  MATOMO_DATABASE_ADAPTER=mysql
+      -  MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      -  MATOMO_DATABASE_USERNAME=matomo
+      -  MATOMO_DATABASE_PASSWORD=
+      -  MATOMO_DATABASE_DBNAME=matomo
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  matomo:
+    image: matomo
+    restart: always
+    volumes:
+      - matodomo_data:/var/www/html
+    environment:
+      -  MATOMO_DATABASE_HOST=matomodb
+      -  MYSQL_PASSWORD=${MATOMODB_PASS}
+      -  MYSQL_DATABASE=matomo
+      -  MYSQL_USER=matomo
+      -  MATOMO_DATABASE_ADAPTER=mysql
+      -  MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      -  MATOMO_DATABASE_USERNAME=matomo
+      -  MATOMO_DATABASE_PASSWORD=
+      -  MATOMO_DATABASE_DBNAME=matomo
+    networks:
+      - proxyNetwork
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.matomo.entrypoints=websecure'
+      - 'traefik.http.routers.matomo.rule=Host(`${MATOMO_DOMAIN}`)'
+      - 'traefik.http.routers.matomo.tls=true'
+      - 'traefik.http.routers.matomo.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.http.services.matomo.loadbalancer.server.port=80'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+  cms:
+    image: rubemlrm/netlify-cms-auth-provider:v1.0.2
+    restart: always
+    volumes:
+      - ./config/netlify-oauth/.env:/.env
+    networks:
+     - proxyNetwork
+    ports:
+     - 3000:3000
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.cms.entrypoints=websecure'
+      - 'traefik.http.routers.cms.rule=Host(`${CMS_OAUTH_DOMAIN}`)'
+      - 'traefik.http.routers.cms.tls=true'
+      - 'traefik.http.routers.cms.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.http.services.cms.loadbalancer.server.port=3000'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
