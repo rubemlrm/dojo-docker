@@ -3,7 +3,7 @@ version: '3'
 
 networks:
   proxyNetwork:
-    external: true
+    name: proxyNetwork
 services:
   # Secure Socket and Auto Update images
   watchtower:
@@ -63,3 +63,45 @@ services:
      - F2B_LOG_LEVEL=INFO
      - F2B_DB_PURGE_AGE=1d
     restart: always
+  # Web Reverse Proxy
+  traefik:
+    image: traefik:v2.8
+    container_name: traefik
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
+      - /var/log/traefik:/var/log
+    command:
+      - '--metrics.prometheus=true'
+      - '--entryPoints.metrics.address=:8082'
+      - '--metrics.prometheus.entryPoint=metrics'
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
+      # configure endpoints
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.websecure.address=:443'
+      # SSL configuration
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
+      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
+      - '--accesslog=true'
+      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
+      - '--experimental.plugins.fail2ban.version=v0.6.6'
+      - '--accessLog.filePath=/var/log/access.log'
+      - '--accessLog.filters.statusCodes=400-499'
+    networks:
+      - proxyNetwork
+    dns:
+      - ${TRAEFIK_DNS1}
+      - ${TRAEFIK_DNS2}

@@ -5,42 +5,67 @@ volumes:
   qbittorrent_data: {}
   pihole_data: {}
   pihole_dns_data: {}
+  jellyfin_data: {}
 
 networks:
-  shareNetwork:
+  monitoring:
     external: true
+  shareNetwork:
   piholeNetwork:
+  proxyNetwork:
     external: true
 services:
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - WEBUI_PORT=8080
+  torrents:
+    image: crazymax/rtorrent-rutorrent:latest
     networks:
       - proxyNetwork
     volumes:
-      - qbittorrent_data:/config
-      - ${SAMBA_HOST_VOLUME}:/downloads
-    ports:
-      - 6881:6881
-      - 6881:6881/udp
-    restart: unless-stopped
+      - "${SAMBA_HOST_VOLUME}:/downloads"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 32000
+        hard: 40000
+    restart: always
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.qbittorrent.entrypoints=web'
-      - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENT_DOMAIN}`)'
-      - 'traefik.http.routers.qbittorrent.tls=false'
-      - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
-      - 'traefik.http.routers.qbittorrent.service=qbittorrent'
-      - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
+      - 'traefik.http.routers.torrents.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.torrents.rule=Host(`${TORRENT_DOMAIN}`)'
+      - 'traefik.http.routers.torrents.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.torrents.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.services.torrents.loadbalancer.server.port=8080'
       - 'traefik.docker.network=proxyNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
-  # network services
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    networks:
+      - proxyNetwork
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_IP} #optional
+    volumes:
+      - jellyfin_data:/config
+      - ${SAMBA_HOST_VOLUME}:/data
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.jellyfin.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_DOMAIN}`)'
+      - 'traefik.http.routers.jellyfin.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.jellyfin.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.services.jellyfin.loadbalancer.server.port=8096'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
   pihole:
     image: pihole/pihole:nightly
     container_name: pihole
@@ -48,12 +73,13 @@ services:
     restart: unless-stopped
     networks:
       - piholeNetwork
+      - proxyNetwork
     ports:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
-    depends_on:
-      - watchtower
+    expose:
+      - 80
     volumes:
       - ./config/pihole/custom.list:/etc/pihole/custom.list
       - pihole_data:/etc/pihole/
@@ -67,11 +93,11 @@ services:
       - DNS2=${PIHOLE_DNS2}
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.pihole.entrypoints=websecure'
+      - 'traefik.http.routers.pihole.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
-      - 'traefik.http.routers.pihole.tls=true'
+      - 'traefik.http.routers.pihole.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=piholeNetwork'
+      - 'traefik.docker.network=proxyNetwork'
       - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
@@ -79,34 +105,8 @@ services:
       - 127.0.0.1
       - ${PIHOLE_DNS1}
       - ${PIHOLE_DNS2}
-  samba:
-    image: dperson/samba
-    restart: unless-stopped
-    networks:
-      - shareNetwork
-    ports:
-      - '137:137/udp'
-      - '138:138/udp'
-      - '139:139/tcp'
-      - '445:445/tcp'
-    volumes:
-      - ${SAMBA_HOST_VOLUME}:/mnt:z
-    environment:
-      - TZ=${TIMEZONE}
-      - USERID=${PUID}
-      - GROUPID=${PGID}
-    read_only: true
-    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p'
-    labels:
-      - 'com.centurylinklabs.watchtower.enable=true'
-    tmpfs:
-      - /tmp
-    stdin_open: true
-    tty: true
-
   pihole-exporter:
     image: ekofr/pihole-exporter:latest
-    container_name: pihole_exporter
     restart: unless-stopped
     networks:
       - monitoring
@@ -114,4 +114,7 @@ services:
     environment:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
-      - PORT=6317
+    expose:
+      - 9617
+    ports:
+      - 9617:9617

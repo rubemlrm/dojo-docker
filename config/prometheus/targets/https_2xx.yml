@@ -3,3 +3,4 @@
     module: https_2xx
   targets:
     - https://rubemlrm.com/
+    - https://matomo.rubemlrm.com/
