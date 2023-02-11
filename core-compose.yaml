@@ -7,8 +7,6 @@ networks:
 volumes:
   dojo_portainer_data:
     external: true
-  dojo_qbittorrent_data:
-    external: true
   dojo_pihole_data:
     external: true
   dojo_pihole_dns_data:
@@ -22,6 +20,8 @@ volumes:
   dojo_prometheus_data:
     external: true
   dojo_grafana_data:
+    external: true
+  dojo_freshrss_data:
     external: true
 services:
   # Secure Socket and Auto Update images
@@ -199,5 +199,6 @@ services:
       - dojo_homeassistant_data:/backup/homeassistant_data
       - dojo_homeassistant_database:/backup/homeassistant_database
       - dojo_influxdb_data:/backup/influxdb_data
+      - dojo_freshrss_data:/backup/dojo_freshrss_data
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DATA_PATH}/docker-backups:/archive

@@ -12,6 +12,8 @@ volumes:
     external: true
   dojo_influxdb_data:
     external: true
+  dojo_freshrss_data:
+    external: true
 
 networks:
   monitoring:
@@ -141,7 +143,7 @@ services:
       - dojo_influxdb_data:/var/lib/influxdb2
     labels:
       - 'docker-volume-backup.stop-during-backup=true'
-  
+
   webirc:
     image: thelounge/thelounge:latest
     container_name: webirc
@@ -163,3 +165,32 @@ services:
       - 'traefik.docker.network=proxyNetwork'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
+
+  freshrss:
+    image: freshrss/freshrss
+    container_name: freshrss
+    domainname: freshrss
+    restart: unless-stopped
+    networks:
+      - proxyNetwork
+    volumes:
+      - dojo_freshrss_data:/var/opt/thelounge
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.freshrss.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.freshrss.rule=Host(`${FRESHRSS_DOMAIN}`)'
+      - 'traefik.http.routers.freshrss.tls==${ENABLE_SSL}'
+      - 'traefik.http.routers.freshrss.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.routers.freshrss.middlewares=freshrssM1,freshrssM2'
+      - 'traefik.http.middlewares.freshrssM1.compress=true'
+      - 'traefik.http.middlewares.freshrssM2.headers.browserXssFilter=true'
+      - 'traefik.http.middlewares.freshrssM2.headers.forceSTSHeader=true'
+      - 'traefik.http.middlewares.freshrssM2.headers.frameDeny=true'
+      - 'traefik.http.middlewares.freshrssM2.headers.referrerPolicy=no-referrer-when-downgrade'
+      - 'traefik.http.middlewares.freshrssM2.headers.stsSeconds=31536000'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+    environment:
+      TZ: Europe/Lisbon
+      CRON_MIN: '3,33'
