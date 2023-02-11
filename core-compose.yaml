@@ -3,6 +3,25 @@ version: '3'
 
 networks:
   proxyNetwork:
+    name: proxyNetwork
+volumes:
+  dojo_portainer_data:
+    external: true
+  dojo_qbittorrent_data:
+    external: true
+  dojo_pihole_data:
+    external: true
+  dojo_pihole_dns_data:
+    external: true
+  dojo_homeassistant_data:
+    external: true
+  dojo_homeassistant_database:
+    external: true
+  dojo_influxdb_data:
+    external: true
+  dojo_prometheus_data:
+    external: true
+  dojo_grafana_data:
     external: true
 services:
   # Secure Socket and Auto Update images
@@ -20,6 +39,19 @@ services:
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
+
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    environment:
+      - TZ=Europe/London
+      - CLI_ARGS= #optional
+    volumes:
+      - ${DATA_PATH}/backups:/backups
+      - /var/lib/docker:/source
+    ports:
+      - 8200:8200
+    restart: unless-stopped
 
   dockerproxy:
     image: tecnativa/docker-socket-proxy
@@ -63,3 +95,109 @@ services:
      - F2B_LOG_LEVEL=INFO
      - F2B_DB_PURGE_AGE=1d
     restart: always
+  # Web Reverse Proxy
+  traefik:
+    image: traefik:v2.8
+    container_name: traefik
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
+      - /var/log/traefik:/var/log
+    command:
+      - '--metrics.prometheus=true'
+      - '--entryPoints.metrics.address=:8082'
+      - '--metrics.prometheus.entryPoint=metrics'
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
+      # configure endpoints
+      - '--entrypoints.web.address=:80'
+      #- '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      #- '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.websecure.address=:443'
+      # SSL configuration
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
+      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
+      - '--accesslog=true'
+      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
+      - '--experimental.plugins.fail2ban.version=v0.6.6'
+      - '--accessLog.filePath=/var/log/access.log'
+      - '--accessLog.filters.statusCodes=400-499'
+    networks:
+      - proxyNetwork
+    dns:
+      - ${TRAEFIK_DNS1}
+      - ${TRAEFIK_DNS2}
+    extra_hosts:
+      - host.docker.internal:172.17.0.1
+  portainer:
+    image: portainer/portainer:latest
+    container_name: portainer
+    domainname: portainer
+    restart: unless-stopped
+    networks:
+      - proxyNetwork
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - dojo_portainer_data:/data
+    command: -H tcp://dockerproxy:2375
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.portainer-secure.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
+      - 'traefik.http.routers.portainer-secure.tls==${ENABLE_SSL}'
+      - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.routers.portainer-secure.service=portainer'
+      - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:2.0.6
+    container_name: duplicati
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - CLI_ARGS= #optional
+    volumes:
+      - ${CONFIG_PATH}/diverti:/config
+      - /home/rubemlrm/Data:/backups
+      - /home/rubemlrm/:/source
+    ports:
+      - 8200:8200
+    networks:
+      - proxyNetwork
+    restart: unless-stopped
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.duplicati.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.duplicati.rule=Host(`${DUPLICATI_DOMAIN}`)'
+      - 'traefik.http.routers.duplicati.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.duplicati.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.services.duplicati.loadbalancer.server.port=8200'
+      - 'traefik.docker.network=proxyNetwork'
+  backup:
+    image: offen/docker-volume-backup:v2
+    restart: always
+    volumes:
+      - dojo_pihole_data:/backup/pihole
+      - dojo_pihole_dns_data:/backup/pihole_dns
+      - dojo_prometheus_data:/backup/dojo_prometheus_data
+      - dojo_grafana_data:/backup/dojo_grafana_data
+      - dojo_homeassistant_data:/backup/homeassistant_data
+      - dojo_homeassistant_database:/backup/homeassistant_database
+      - dojo_influxdb_data:/backup/influxdb_data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_PATH}/docker-backups:/archive

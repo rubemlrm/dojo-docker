@@ -2,12 +2,17 @@
 version: '3'
 
 volumes:
-  prometheus_data: {}
-  grafana_data: {}
+  dojo_prometheus_data:
+    external: true
+  dojo_grafana_data:
+    external: true
 
 networks:
   monitoring:
+    name: monitoring
+  proxyNetwork:
     external: true
+    name: proxyNetwork
 services:
   # monitoring
   prometheus:
@@ -19,7 +24,7 @@ services:
       - proxyNetwork
     volumes:
       - ./config/prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
+      - dojo_prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -35,9 +40,9 @@ services:
       - node-exporter:node-exporter
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.prometheus.entrypoints=websecure'
+      - 'traefik.http.routers.prometheus.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_DOMAIN}`)'
-      - 'traefik.http.routers.prometheus.tls=true'
+      - 'traefik.http.routers.prometheus.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
@@ -54,7 +59,7 @@ services:
     links:
       - prometheus:prometheus
     volumes:
-      - grafana_data:/var/lib/grafana
+      - dojo_grafana_data:/var/lib/grafana
       - ./config/grafana/:/etc/grafana/provisioning/
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
@@ -63,9 +68,9 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.grafana.entrypoints=websecure'
+      - 'traefik.http.routers.grafana.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.grafana.rule=Host(`${GF_SERVER_DOMAIN}`)'
-      - 'traefik.http.routers.grafana.tls=true'
+      - 'traefik.http.routers.grafana.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
@@ -102,7 +107,7 @@ services:
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
       - PORT=6317
   cadvisor:
-    image: klo2k/cadvisor:v0.38.8
+    image: gcr.io/cadvisor/cadvisor
     container_name: monitoring_cadvisor
     restart: unless-stopped
     privileged: true

@@ -4,10 +4,11 @@ modules:
     prober: http
     http:
       preferred_ip_protocol: "ip4"
-  http_post_2xx:
+      no_follow_redirects: false
+  https_2xx:
     prober: http
     http:
-      method: POST
+      method: GET
   tcp_connect:
     prober: tcp
   pop3s_banner:

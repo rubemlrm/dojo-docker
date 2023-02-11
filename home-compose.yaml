@@ -2,45 +2,26 @@
 version: '3'
 
 volumes:
-  qbittorrent_data: {}
-  pihole_data: {}
-  pihole_dns_data: {}
+  dojo_pihole_data:
+    external: true
+  dojo_pihole_dns_data:
+    external: true
+  dojo_homeassistant_data:
+    external: true
+  dojo_homeassistant_database:
+    external: true
+  dojo_influxdb_data:
+    external: true
 
 networks:
-  shareNetwork:
+  monitoring:
     external: true
+  shareNetwork:
   piholeNetwork:
+  homeassistant:
+  proxyNetwork:
     external: true
 services:
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - WEBUI_PORT=8080
-    networks:
-      - proxyNetwork
-    volumes:
-      - qbittorrent_data:/config
-      - ${SAMBA_HOST_VOLUME}:/downloads
-    ports:
-      - 6881:6881
-      - 6881:6881/udp
-    restart: unless-stopped
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.qbittorrent.entrypoints=web'
-      - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENT_DOMAIN}`)'
-      - 'traefik.http.routers.qbittorrent.tls=false'
-      - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
-      - 'traefik.http.routers.qbittorrent.service=qbittorrent'
-      - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
-      - 'traefik.docker.network=proxyNetwork'
-      - 'com.centurylinklabs.watchtower.enable=true'
-      - 'docker-volume-backup.stop-during-backup=true'
-  # network services
   pihole:
     image: pihole/pihole:nightly
     container_name: pihole
@@ -48,16 +29,17 @@ services:
     restart: unless-stopped
     networks:
       - piholeNetwork
+      - proxyNetwork
     ports:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
       - '0.0.0.0:67:67/udp'
-    depends_on:
-      - watchtower
+    expose:
+      - 80
     volumes:
       - ./config/pihole/custom.list:/etc/pihole/custom.list
-      - pihole_data:/etc/pihole/
-      - pihole_dns_data:/etc/dnsmasq.d/
+      - dojo_pihole_data:/etc/pihole/
+      - dojo_pihole_dns_data:/etc/dnsmasq.d/
     environment:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}
@@ -67,11 +49,11 @@ services:
       - DNS2=${PIHOLE_DNS2}
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.pihole.entrypoints=websecure'
+      - 'traefik.http.routers.pihole.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
-      - 'traefik.http.routers.pihole.tls=true'
+      - 'traefik.http.routers.pihole.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=piholeNetwork'
+      - 'traefik.docker.network=proxyNetwork'
       - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
@@ -79,34 +61,8 @@ services:
       - 127.0.0.1
       - ${PIHOLE_DNS1}
       - ${PIHOLE_DNS2}
-  samba:
-    image: dperson/samba
-    restart: unless-stopped
-    networks:
-      - shareNetwork
-    ports:
-      - '137:137/udp'
-      - '138:138/udp'
-      - '139:139/tcp'
-      - '445:445/tcp'
-    volumes:
-      - ${SAMBA_HOST_VOLUME}:/mnt:z
-    environment:
-      - TZ=${TIMEZONE}
-      - USERID=${PUID}
-      - GROUPID=${PGID}
-    read_only: true
-    command: '-s "media;/mnt;yes;no;no;${SAMBA_USER}" -u "${SAMBA_USER};${SAMBA_PASS}" -p'
-    labels:
-      - 'com.centurylinklabs.watchtower.enable=true'
-    tmpfs:
-      - /tmp
-    stdin_open: true
-    tty: true
-
   pihole-exporter:
     image: ekofr/pihole-exporter:latest
-    container_name: pihole_exporter
     restart: unless-stopped
     networks:
       - monitoring
@@ -114,4 +70,96 @@ services:
     environment:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
-      - PORT=6317
+    expose:
+      - 9617
+    ports:
+      - 9617:9617
+
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - ./config/homeassistant/blueprints:/config/blueprints
+      - ./config/homeassistant/automations.yaml:/config/automations.yaml
+      - ./config/homeassistant/configuration.yaml:/config/configuration.yaml
+      - ./config/homeassistant/scenes.yaml:/config/scenes.yaml
+      - ./config/homeassistant/scripts.yaml:/config/scripts.yaml
+      - ./config/homeassistant/secrets.yaml:/config/secrets.yaml
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    depends_on:
+      - postgres
+      - influxdb
+    labels:
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.homeassistant.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.homeassistant.rule=Host(`${HOMEASSISTANT_DOMAIN}`)'
+      - 'traefik.http.routers.homeassistant.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
+
+  postgres:
+    container_name: postgres
+    image: postgres:12.6
+    restart: always
+    network_mode: host
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${HOMEASSISTANT_DB}
+      POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
+      POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
+    volumes:
+      - dojo_homeassistant_database:/var/lib/postgresql/data
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:latest
+    restart: always
+    network_mode: host
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - INFLUXDB_DB=${HOMEASSISTANT_INFLUX_DB}
+      - DOCKER_INFLUXDB_INIT_USERNAME=${HOMEASSISTANT_INFLUX_DB_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${HOMEASSISTANT_INFLUX_DB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+      - DOCKER_INFLUXDB_INIT_ORG=ha-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
+    ports:
+      - 8086:8086
+    volumes:
+      - dojo_influxdb_data:/var/lib/influxdb2
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+  
+  webirc:
+    image: thelounge/thelounge:latest
+    container_name: webirc
+    domainname: webirc
+    restart: unless-stopped
+    networks:
+      - proxyNetwork
+    ports:
+      - 113:9001
+      - 9000:9000
+    volumes:
+      - ${CONFIG_PATH}/irc:/var/opt/thelounge
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.irc.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
+      - 'traefik.http.routers.irc.tls==${ENABLE_SSL}'
+      - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxyNetwork'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'

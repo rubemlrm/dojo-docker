@@ -4,3 +4,8 @@
 192.168.2.2 grafana.dojo.lan
 192.168.2.2 pihole-exporter.dojo.lan
 192.168.2.2 prometheus.dojo.lan
+192.168.2.2 torrents.dojo.lan
+192.168.2.2 jellyfin.dojo.lan
+192.168.2.2 dns.dojo.lan
+192.168.2.2 home.dojo.lan
+192.168.2.2 backup.dojo.lan
