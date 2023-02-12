@@ -14,14 +14,15 @@ volumes:
     external: true
   dojo_freshrss_data:
     external: true
-
-networks:
-  monitoring:
+  dojo_freshrss_database:
     external: true
-  shareNetwork:
-  piholeNetwork:
+networks:
+  monitoring_network:
+    external: true
+  pihole_network:
   homeassistant:
-  proxyNetwork:
+  freshrss:
+  proxy_network:
     external: true
 services:
   pihole:
@@ -30,8 +31,8 @@ services:
     domainname: pihole
     restart: unless-stopped
     networks:
-      - piholeNetwork
-      - proxyNetwork
+      - pihole_network
+      - proxy_network
     ports:
       - '0.0.0.0:53:53/tcp'
       - '0.0.0.0:53:53/udp'
@@ -55,7 +56,7 @@ services:
       - 'traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)'
       - 'traefik.http.routers.pihole.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.pihole.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.pihole.loadbalancer.server.port=${PIHOLE_PORT}'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
@@ -67,8 +68,8 @@ services:
     image: ekofr/pihole-exporter:latest
     restart: unless-stopped
     networks:
-      - monitoring
-      - piholeNetwork
+      - monitoring_network
+      - pihole_network
     environment:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
@@ -78,8 +79,8 @@ services:
       - 9617:9617
 
   homeassistant:
-    container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
+    container_name: homeassistant
     volumes:
       - ./config/homeassistant/blueprints:/config/blueprints
       - ./config/homeassistant/automations.yaml:/config/automations.yaml
@@ -96,8 +97,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     depends_on:
-      - postgres
-      - influxdb
+      - homeassistant_postgres
+      - homeassistant_influxdb
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
@@ -108,49 +109,13 @@ services:
       - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
 
-  postgres:
-    container_name: postgres
-    image: postgres:12.6
-    restart: always
-    network_mode: host
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_DB: ${HOMEASSISTANT_DB}
-      POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
-      POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
-    volumes:
-      - dojo_homeassistant_database:/var/lib/postgresql/data
-    labels:
-      - 'docker-volume-backup.stop-during-backup=true'
-
-  influxdb:
-    container_name: influxdb
-    image: influxdb:latest
-    restart: always
-    network_mode: host
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - INFLUXDB_DB=${HOMEASSISTANT_INFLUX_DB}
-      - DOCKER_INFLUXDB_INIT_USERNAME=${HOMEASSISTANT_INFLUX_DB_USER}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${HOMEASSISTANT_INFLUX_DB_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
-      - DOCKER_INFLUXDB_INIT_ORG=ha-org
-      - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
-    ports:
-      - 8086:8086
-    volumes:
-      - dojo_influxdb_data:/var/lib/influxdb2
-    labels:
-      - 'docker-volume-backup.stop-during-backup=true'
-
   webirc:
     image: thelounge/thelounge:latest
     container_name: webirc
     domainname: webirc
     restart: unless-stopped
     networks:
-      - proxyNetwork
+      - proxy_network
     ports:
       - 113:9001
       - 9000:9000
@@ -162,7 +127,7 @@ services:
       - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
       - 'traefik.http.routers.irc.tls==${ENABLE_SSL}'
       - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
-      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
 
@@ -172,7 +137,8 @@ services:
     domainname: freshrss
     restart: unless-stopped
     networks:
-      - proxyNetwork
+      - proxy_network
+      - freshrss
     volumes:
       - dojo_freshrss_data:/var/opt/thelounge
     labels:
@@ -188,9 +154,25 @@ services:
       - 'traefik.http.middlewares.freshrssM2.headers.frameDeny=true'
       - 'traefik.http.middlewares.freshrssM2.headers.referrerPolicy=no-referrer-when-downgrade'
       - 'traefik.http.middlewares.freshrssM2.headers.stsSeconds=31536000'
-      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
     environment:
       TZ: Europe/Lisbon
       CRON_MIN: '3,33'
+  fressrss_database:
+    image: postgres:14
+    container_name: freshrss-db
+    hostname: freshrss-db
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: 10m
+    networks:
+      - freshrss
+    volumes:
+      - dojo_freshrss_database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${FRESHRSS_DATABASE_DB}
+      POSTGRES_USER: ${FRESHRSS_DATABASE_USER}
+      POSTGRES_PASSWORD: ${FRESHRSS_DATABASE_PASSWORD}

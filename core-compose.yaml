@@ -2,8 +2,8 @@
 version: '3'
 
 networks:
-  proxyNetwork:
-    name: proxyNetwork
+  proxy_network:
+    name: proxy_network
 volumes:
   dojo_portainer_data:
     external: true
@@ -23,6 +23,8 @@ volumes:
     external: true
   dojo_freshrss_data:
     external: true
+  dojo_freshrss_database:
+    external: true
 services:
   # Secure Socket and Auto Update images
   watchtower:
@@ -31,7 +33,7 @@ services:
     domainname: watchtower
     restart: unless-stopped
     networks:
-      - proxyNetwork
+      - proxy_network
     depends_on:
       - dockerproxy
     volumes:
@@ -59,7 +61,7 @@ services:
     domainname: dockerproxy
     restart: unless-stopped
     networks:
-      - proxyNetwork
+      - proxy_network
     ports:
       - 2375
     volumes:
@@ -133,7 +135,7 @@ services:
       - '--accessLog.filePath=/var/log/access.log'
       - '--accessLog.filters.statusCodes=400-499'
     networks:
-      - proxyNetwork
+      - proxy_network
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}
@@ -145,7 +147,7 @@ services:
     domainname: portainer
     restart: unless-stopped
     networks:
-      - proxyNetwork
+      - proxy_network
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - dojo_portainer_data:/data
@@ -160,7 +162,7 @@ services:
       - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
       - 'traefik.http.routers.portainer-secure.service=portainer'
       - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
-      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
   duplicati:
@@ -178,7 +180,7 @@ services:
     ports:
       - 8200:8200
     networks:
-      - proxyNetwork
+      - proxy_network
     restart: unless-stopped
     labels:
       - 'traefik.enable=true'
@@ -187,7 +189,7 @@ services:
       - 'traefik.http.routers.duplicati.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.duplicati.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.duplicati.loadbalancer.server.port=8200'
-      - 'traefik.docker.network=proxyNetwork'
+      - 'traefik.docker.network=proxy_network'
   backup:
     image: offen/docker-volume-backup:v2
     restart: always
@@ -200,5 +202,6 @@ services:
       - dojo_homeassistant_database:/backup/homeassistant_database
       - dojo_influxdb_data:/backup/influxdb_data
       - dojo_freshrss_data:/backup/dojo_freshrss_data
+      - dojo_freshrss_database:/backup/dojo_freshrss_database
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DATA_PATH}/docker-backups:/archive

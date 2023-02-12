@@ -9,3 +9,6 @@ docker volume create dojo_influxdb_data
 docker volume create dojo_prometheus_data
 docker volume create dojo_grafana_data
 docker volume create dojo_freshrss_data
+docker volume create dojo_freshrss_database
+docker network create proxy_network
+docker network create monitoring_network

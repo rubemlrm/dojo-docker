@@ -8,11 +8,11 @@ volumes:
     external: true
 
 networks:
-  monitoring:
-    name: monitoring
-  proxyNetwork:
+  monitoring_network:
+    name: monitoring_network
+  proxy_network:
     external: true
-    name: proxyNetwork
+    name: proxy_network
 services:
   # monitoring
   prometheus:
@@ -20,8 +20,8 @@ services:
     container_name: monitoring_prometheus
     restart: unless-stopped
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
     volumes:
       - ./config/prometheus/:/etc/prometheus/
       - dojo_prometheus_data:/prometheus
@@ -54,8 +54,8 @@ services:
     restart: unless-stopped
     user: '104'
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
     links:
       - prometheus:prometheus
     volumes:
@@ -82,8 +82,8 @@ services:
     restart: unless-stopped
     user: "1001"
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
     expose:
       - 9100
     volumes:
@@ -100,8 +100,8 @@ services:
     container_name: pihole_exporter
     restart: unless-stopped
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
     environment:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
@@ -112,8 +112,8 @@ services:
     restart: unless-stopped
     privileged: true
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -134,8 +134,8 @@ services:
     image: miguelndecarvalho/speedtest-exporter
     restart: always
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
   ping:
     tty: true
     stdin_open: true
@@ -150,5 +150,5 @@ services:
     command:
       - '--config.file=/config/blackbox.yml'
     networks:
-      - monitoring
-      - proxyNetwork
+      - monitoring_network
+      - proxy_network
