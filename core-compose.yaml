@@ -21,10 +21,6 @@ volumes:
     external: true
   dojo_grafana_data:
     external: true
-  dojo_freshrss_data:
-    external: true
-  dojo_freshrss_database:
-    external: true
 services:
   # Secure Socket and Auto Update images
   watchtower:
@@ -165,31 +161,6 @@ services:
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
-  duplicati:
-    image: lscr.io/linuxserver/duplicati:2.0.6
-    container_name: duplicati
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - CLI_ARGS= #optional
-    volumes:
-      - ${CONFIG_PATH}/diverti:/config
-      - /home/rubemlrm/Data:/backups
-      - /home/rubemlrm/:/source
-    ports:
-      - 8200:8200
-    networks:
-      - proxy_network
-    restart: unless-stopped
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.duplicati.entrypoints=${DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.duplicati.rule=Host(`${DUPLICATI_DOMAIN}`)'
-      - 'traefik.http.routers.duplicati.tls=${ENABLE_SSL}'
-      - 'traefik.http.routers.duplicati.tls.certresolver=letsencryptresolver'
-      - 'traefik.http.services.duplicati.loadbalancer.server.port=8200'
-      - 'traefik.docker.network=proxy_network'
   backup:
     image: offen/docker-volume-backup:v2
     restart: always
@@ -201,7 +172,5 @@ services:
       - dojo_homeassistant_data:/backup/homeassistant_data
       - dojo_homeassistant_database:/backup/homeassistant_database
       - dojo_influxdb_data:/backup/influxdb_data
-      - dojo_freshrss_data:/backup/dojo_freshrss_data
-      - dojo_freshrss_database:/backup/dojo_freshrss_database
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DATA_PATH}/docker-backups:/archive
