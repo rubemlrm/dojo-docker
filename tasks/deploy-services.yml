@@ -1,0 +1,114 @@
+---
+# This deploy-services.yml tasks will be replaced with proper GitOps in future
+# https://github.com/veerendra2/raspberrypi-homeserver/issues/54
+
+- name: Create base directory
+  file:
+    path: "{{ docker_stacks_path }}"
+    state: directory
+    owner: "{{ username }}"
+  become: yes
+
+- name: Synchronize services directories
+  synchronize:
+    src: "services/"
+    dest: "{{ docker_stacks_path }}/services"
+    delete: false
+    recursive: true
+    perms: false
+
+- name: Create volumes
+  community.docker.docker_volume:
+    name: "{{ item.name }}"
+  with_items: "{{ docker_volumes }}"
+
+- name: Create networks
+  community.general.docker_network:
+    name: "{{ item.name }}"
+    internal: "{{ item.internal }}"
+    scope: "swarm"
+  with_items: "{{ docker_networks }}"
+
+
+- name: Deploy traefik service stacks
+  docker_stack:
+    state: present
+    name: traefik
+    compose:
+      - "{{ docker_stacks_services_path }}/traefik/docker-stack.yml"
+  environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
+    CONFIG_PATH: "{{ docker_configs.config_path }}"
+    TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
+    TRAEFIK_DOMAIN: "{{ docker_services_secrets.traefik.domain }}"
+    TRAEFIK_DNS1: "{{ docker_services_secrets.traefik.dns_1 }}"
+    TRAEFIK_DNS2: "{{ docker_services_secrets.traefik.dns_2 }}"
+
+- name: Deploy portainer service stacks
+  docker_stack:
+    state: present
+    name: portainer
+    compose:
+      - "{{ docker_stacks_services_path }}/portainer/docker-stack.yml"
+  environment:
+    PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
+    DEFAULT_ENDPOINT: "{{ docker_services_secrets.portainer.default_endpoint }}"
+    ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
+
+- name: Deploy backups service stacks
+  docker_stack:
+    state: present
+    name: backups
+    compose:
+      - "{{ docker_stacks_services_path }}/backups/docker-stack.yml"
+  environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
+
+- name: Deploy pihole service stacks
+  docker_stack:
+    state: present
+    name: pihole
+    compose:
+      - "{{ docker_stacks_services_path }}/pihole/docker-stack.yml"
+  environment:
+    PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
+    TIMEZONE: "{{ docker_configs.timezone }}"
+    PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
+    PIHOLE_DOMAIN: "{{ docker_services_secrets.pihole.pihole_domain }}"
+    PIHOLE_DNS1: "{{ docker_services_secrets.pihole.pihole_dns1 }}"
+    PIHOLE_DNS2: "{{ docker_services_secrets.pihole.pihole_dns2 }}"
+    DEFAULT_ENDPOINT: "{{ docker_services_secrets.pihole.default_endpoint }}"
+    ENABLE_SSL: "{{ docker_services_secrets.pihole.enable_ssl }}"
+
+
+- name: Deploy monitoring service stacks
+  docker_stack:
+    state: present
+    name: monitoring
+    compose:
+      - "{{ docker_stacks_services_path }}/monitoring/docker-stack.yml"
+  environment:
+    PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
+    PROMETHEUS_DOMAIN: "{{ docker_services_secrets.prometheus.domain }}"
+    PROMETHEUS_ENABLE_SSL: "{{ docker_services_secrets.prometheus.enable_ssl }}"
+    GRAFANA_PASSWORD: "{{ docker_services_secrets.grafana.password }}"
+    GRAFANA_DOMAIN: "{{ docker_services_secrets.grafana.domain }}"
+    GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
+    GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
+    PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
+
+
+- name: Deploy media service stacks
+  docker_stack:
+    state: present
+    name: media
+    compose:
+      - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
+  environment:
+    CONFIG_PATH: "{{ docker_configs.config_path }}"
+    TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"
+    TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
+    TORRENTS_DOMAIN: "{{ docker_services_secrets.qbittorrent.domain }}"
+    EMBY_DOMAIN: "{{ docker_services_secrets.qbittorrent.domain }}"
+    EMBY_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
+    EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"

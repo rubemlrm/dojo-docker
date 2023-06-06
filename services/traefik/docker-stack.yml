@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '3.8'
 
 networks:
   proxy_network:
@@ -7,20 +7,6 @@ networks:
     external: true
 volumes:
   dojo_portainer_data:
-    external: true
-  dojo_pihole_data:
-    external: true
-  dojo_pihole_dns_data:
-    external: true
-  dojo_homeassistant_data:
-    external: true
-  dojo_homeassistant_database:
-    external: true
-  dojo_influxdb_data:
-    external: true
-  dojo_prometheus_data:
-    external: true
-  dojo_grafana_data:
     external: true
 services:
   # Secure Socket and Auto Update images
@@ -38,19 +24,6 @@ services:
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
-
-  duplicati:
-    image: lscr.io/linuxserver/duplicati:latest
-    container_name: duplicati
-    environment:
-      - TZ=Europe/London
-      - CLI_ARGS= #optional
-    volumes:
-      - ${DATA_PATH}/backups:/backups
-      - /var/lib/docker:/source
-    ports:
-      - 8200:8200
-    restart: unless-stopped
 
   dockerproxy:
     image: tecnativa/docker-socket-proxy
@@ -86,7 +59,7 @@ services:
       - NET_ADMIN
       - NET_RAW
     volumes:
-      - "./config/fail2ban:/data"
+      - "./fail2ban:/data"
       - "/var/log:/var/log:ro"
     environment:
      - TZ=Europe/Paris
@@ -162,16 +135,3 @@ services:
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
-  backup:
-    image: offen/docker-volume-backup:v2
-    restart: always
-    volumes:
-      - dojo_pihole_data:/backup/pihole
-      - dojo_pihole_dns_data:/backup/pihole_dns
-      - dojo_prometheus_data:/backup/dojo_prometheus_data
-      - dojo_grafana_data:/backup/dojo_grafana_data
-      - dojo_homeassistant_data:/backup/homeassistant_data
-      - dojo_homeassistant_database:/backup/homeassistant_database
-      - dojo_influxdb_data:/backup/influxdb_data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DATA_PATH}/docker-backups:/archive

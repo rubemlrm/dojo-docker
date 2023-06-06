@@ -1,0 +1,38 @@
+docker_services:
+  - backups
+  - media
+  - monitoring
+  - pihole
+  - traefik
+
+docker_networks:
+  - name: monitoring_network
+    internal: false
+  - name: pihole_network
+    internal: true
+  - name: homeassistant
+    internal: true
+  - name: proxy_network
+    internal: false
+
+docker_volumes:
+  - name: dojo_portainer_data
+    internal: false
+  - name: dojo_pihole_data
+    internal: false
+  - name: dojo_pihole_dns_data
+    internal: false
+  - name: dojo_homeassistant_data
+    internal: false
+  - name: dojo_influxdb_data
+    internal: false
+  - name: dojo_prometheus_data
+    internal: false
+  - name: dojo_grafana_data
+    internal: false
+  - name: dojo_pihole_data
+    internal: false
+
+username: rubemlrm
+docker_stacks_path: "/home/rubemlrm/docker/"
+docker_stacks_services_path: "/home/rubemlrm/docker/services"

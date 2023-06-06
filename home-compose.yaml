@@ -95,3 +95,59 @@ services:
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
       - 'docker-volume-backup.stop-during-backup=true'
+
+  emby:
+    image: emby/embyserver
+    container_name: embyserver
+    environment:
+      - UID=1000 # The UID to run emby as (default: 2)
+      - GID=100 # The GID to run emby as (default 2)
+      - GIDLIST=100 # A comma-separated list of additional GIDs to run emby as (default: 2)
+    volumes:
+      - ${CONFIG_PATH}/emby:/config # Configuration directory
+      - /mnt/shared-data:/mnt/share # Media directory
+    ports:
+      - 8096:8096 # HTTP port
+      - 8920:8920 # HTTPS port
+    restart: on-failure
+    networks:
+      - proxy_network
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.emby.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.emby.rule=Host(`${EMBY_DOMAIN}`)'
+      - 'traefik.http.routers.emby.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.emby.loadbalancer.server.port=8096'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    networks:
+      - proxy_network
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+    volumes:
+      - ${CONFIG_PATH}/qbittorrent:/config
+      - /mnt/shared-data:/downloads
+    ports:
+      - 8010:8080
+      - 6881:6881
+      - 6881:6881/udp
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.qbittorrent.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENT_DOMAIN}`)'
+      - 'traefik.http.routers.qbittorrent.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
+      - 'com.centurylinklabs.watchtower.enable=true'
+      - 'docker-volume-backup.stop-during-backup=true'
+    restart: unless-stopped

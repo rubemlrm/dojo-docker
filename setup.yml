@@ -1,0 +1,16 @@
+- name: Homeserver Setup
+  hosts: localhost
+  gather_facts: yes
+  pre_tasks:
+    - name: Load default vars file
+      ansible.builtin.include_vars:
+        dir: "host_vars/"
+        files_matching: all.yml
+    - name: Load default vault file
+      ansible.builtin.include_vars:
+        file: secrets.yaml
+
+  tasks:
+    - name: Deploy services
+      import_tasks: tasks/deploy-services.yml
+      tags: services

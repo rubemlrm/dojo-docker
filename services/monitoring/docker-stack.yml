@@ -10,6 +10,7 @@ volumes:
 networks:
   monitoring_network:
     name: monitoring_network
+    external: true
   proxy_network:
     external: true
     name: proxy_network
@@ -17,13 +18,12 @@ services:
   # monitoring
   prometheus:
     image: prom/prometheus:latest
-    container_name: monitoring_prometheus
     restart: unless-stopped
     networks:
       - monitoring_network
       - proxy_network
     volumes:
-      - ./config/prometheus/:/etc/prometheus/
+      - ./prometheus/:/etc/prometheus/
       - dojo_prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -33,16 +33,14 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--query.lookback-delta=90m'
-    expose:
-      - 9090
     links:
       - cadvisor:cadvisor
       - node-exporter:node-exporter
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.prometheus.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.prometheus.entrypoints=${PROMETHEUS_DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_DOMAIN}`)'
-      - 'traefik.http.routers.prometheus.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.prometheus.tls=${PROMETHEUS_ENABLE_SSL}'
       - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
@@ -50,7 +48,6 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: monitoring_grafana
     restart: unless-stopped
     user: '104'
     networks:
@@ -60,17 +57,17 @@ services:
       - prometheus:prometheus
     volumes:
       - dojo_grafana_data:/var/lib/grafana
-      - ./config/grafana/:/etc/grafana/provisioning/
+      - ./grafana/:/etc/grafana/provisioning/
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN}
+      - GF_SERVER_DOMAIN=${GRAFANA_DOMAIN}
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.grafana.entrypoints=${DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.grafana.rule=Host(`${GF_SERVER_DOMAIN}`)'
-      - 'traefik.http.routers.grafana.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.grafana.entrypoints=${GRAFANA_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.grafana.rule=Host(`${GRAFANA_DOMAIN}`)'
+      - 'traefik.http.routers.grafana.tls=${GRAFANA_ENABLE_SSL}'
       - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=monitoring'
       - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
@@ -78,14 +75,11 @@ services:
       - 'docker-volume-backup.stop-during-backup=true'
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: monitoring_node_exporter
     restart: unless-stopped
     user: "1001"
     networks:
       - monitoring_network
       - proxy_network
-    expose:
-      - 9100
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -97,7 +91,6 @@ services:
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
   pihole-exporter:
     image: ekofr/pihole-exporter:latest
-    container_name: pihole_exporter
     restart: unless-stopped
     networks:
       - monitoring_network
@@ -108,7 +101,6 @@ services:
       - PORT=6317
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
-    container_name: monitoring_cadvisor
     restart: unless-stopped
     privileged: true
     networks:
@@ -122,13 +114,9 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
-    expose:
-      - 8080
   speedtest:
     tty: true
     stdin_open: true
-    expose:
-      - 9798
     ports:
       - 9798:9798
     image: miguelndecarvalho/speedtest-exporter
@@ -139,14 +127,12 @@ services:
   ping:
     tty: true
     stdin_open: true
-    expose:
-      - 9115
     ports:
       - 9115:9115
     image: prom/blackbox-exporter
     restart: always
     volumes:
-      - ./config/blackbox/config:/config
+      - ./blackbox/config:/config
     command:
       - '--config.file=/config/blackbox.yml'
     networks:
