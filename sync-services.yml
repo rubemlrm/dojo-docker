@@ -10,10 +10,5 @@
       ansible.builtin.include_vars:
         file: secrets.yaml
   roles:
-    - dnf
-    - openssh
     - firewall
-    - cli
-    - users
-    - docker
     - docker-stack

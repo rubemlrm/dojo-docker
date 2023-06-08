@@ -1,9 +1,5 @@
-docker_services:
-  - backups
-  - media
-  - monitoring
-  - pihole
-  - traefik
+---
+
 
 docker_networks:
   - name: monitoring_network
@@ -32,7 +28,20 @@ docker_volumes:
     internal: false
   - name: dojo_pihole_data
     internal: false
+  - name: matodomodb_data
+    internal: false
+  - name: matodomo_data
+    internal: false
+  - name: thelounge_data
+    internal: true
 
 username: rubemlrm
+git_email:
+git_name: Rubem Mota
+user_group: rubemlrm
+home_dir: "/home/rubemlrm/"
 docker_stacks_path: "/home/rubemlrm/docker/"
 docker_stacks_services_path: "/home/rubemlrm/docker/services"
+docker_swarm_advertise_addr:
+enable_docker_swarm_mode: true
+ssh_port:

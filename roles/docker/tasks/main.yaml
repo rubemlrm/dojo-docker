@@ -1,0 +1,76 @@
+---
+- name: Fedora - Pre-Setup Docker service
+  when: ansible_facts['distribution'] == "Fedora"
+  become: true
+  block:
+    - name: Fedora - Check if docker repo is enabled
+      ansible.builtin.command: dnf search docker-ce
+      changed_when: false
+      register: docker_repo_exists
+      tags:
+        - skip_ansible_lint
+    - name: Fedora - Add docker repo
+      ansible.builtin.command: dnf config-manager \
+        --add-repo \
+        https://download.docker.com/linux/fedora/docker-ce.repo
+      when: docker_repo_exists.stdout_lines is defined and
+            (docker_repo_exists.stdout_lines | length == 0)
+      tags:
+        - skip_ansible_lint
+    - name: Install containers packages
+      ansible.builtin.package:
+        name: '{{ item }}'
+        state: present
+      with_items:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose
+
+
+- name: Debian Based - Pre-Setup Docker service
+  become: true
+  block:
+    - name: Add Docker GPG key
+      apt_key:
+        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+        state: present
+    - name: Debian - Add docker repo
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} \
+  {{ ansible_distribution_release | lower }} stable"
+        state: present
+        filename: docker.list
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Install docker pages
+  become: true
+  block:
+  - name: Install containers packages
+    ansible.builtin.package:
+      name: '{{ item }}'
+      state: present
+    with_items:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose
+  - name: 'Just force systemd to reread configs'
+    ansible.builtin.systemd:
+      daemon_reload: yes
+  - name: 'Start docker'
+    ansible.builtin.systemd:
+      name: docker
+      state: started
+      enabled: yes
+  - name: 'Add user to docker group'
+    ansible.builtin.user:
+      name: '{{ username }}'
+      groups: docker
+      append: yes
+  - name: Enable docker swarm mode
+    docker_swarm:
+      state: present
+      advertise_addr: "{{ docker_swarm_advertise_addr }}"
+    register: output
+    when: enable_docker_swarm_mode|bool == true

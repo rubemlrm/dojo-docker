@@ -1,0 +1,42 @@
+---
+version: '3'
+
+volumes:
+  thelounge_data:
+    external: true
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network
+
+services:
+  webirc:
+    image: thelounge/thelounge:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.irc.entrypoints=${IRC_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
+        - 'traefik.http.routers.irc.tls==${IRC_ENABLE_SSL}'
+        - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'com.centurylinklabs.watchtower.enable=true'
+        - 'docker-volume-backup.stop-during-backup=true'
+    container_name: webirc
+    domainname: webirc
+    restart: unless-stopped
+    networks:
+      - proxy_network
+    ports:
+      - 113:9001
+      - 9000:9000
+    volumes:
+      - thelounge_data:/var/opt/thelounge

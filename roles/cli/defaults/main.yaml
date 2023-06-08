@@ -1,0 +1,48 @@
+---
+common_cli_base_packages:
+  - "@C Development Tools and Libraries"
+  - acpi
+  - aspell
+  - aspell-pt
+  - automake
+  - cmake
+  - ctags
+  - gcc-c++
+  - gcc
+  - git
+  - python-devel
+  - python3-devel
+  - ruby
+  - tmux
+  - util-linux-user
+  - vim
+  - nano
+  - zsh
+  - numlockx
+  - wget
+  - lm_sensors
+  - screenfetch
+  - python3-devel
+  - python3-pip
+  - libcurl-devel
+  - stow
+  - ripgrep
+  - neovim
+  - neofetch
+  - bat
+  - libselinux-python3
+  - unrar
+  - openssl
+
+common_cli_font_packages:
+  - adobe-source-code-pro-fonts
+  - mozilla-fira-*
+  - fontawesome-fonts
+  - jetbrains-mono-fonts
+
+common_cli_copr_repos: {}
+
+
+common_cli_rpm_repos:
+  - "http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+  - "http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"

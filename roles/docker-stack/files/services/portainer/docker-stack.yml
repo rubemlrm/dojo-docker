@@ -1,0 +1,42 @@
+---
+version: '3.8'
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+volumes:
+  dojo_portainer_data_local:
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.portainer-secure.entrypoints=${DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_DOMAIN}`)'
+        - 'traefik.http.routers.portainer-secure.tls==${ENABLE_SSL}'
+        - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
+        - 'traefik.http.routers.portainer-secure.service=portainer'
+        - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
+        - 'traefik.docker.network=proxy_network'
+        - 'com.centurylinklabs.watchtower.enable=true'
+        - 'docker-volume-backup.stop-during-backup=true'
+    container_name: portainer
+    domainname: portainer
+    restart: unless-stopped
+    networks:
+      - proxy_network
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - dojo_portainer_data_local:/data
+    command: -H tcp://dockerproxy:2375
+    security_opt:
+      - no-new-privileges:true

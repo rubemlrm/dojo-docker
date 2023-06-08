@@ -1,0 +1,94 @@
+---
+version: '3'
+
+volumes:
+  dojo_homeassistant_data:
+    external: true
+  dojo_homeassistant_database:
+    external: true
+  dojo_influxdb_data:
+    external: true
+networks:
+  homeassistant:
+  proxy_network:
+    external: true
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    networks:
+      - proxy_network
+      - homeassistant
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'com.centurylinklabs.watchtower.enable=true'
+        - 'docker-volume-backup.stop-during-backup=true'
+        - 'traefik.enable=true'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.routers.homeassistant.entrypoints=${HOMEASSISTANT_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.homeassistant.rule=Host(`${HOMEASSISTANT_DOMAIN}`)'
+        - 'traefik.http.routers.homeassistant.tls=${HOMEASSISTANT_ENABLE_SSL}'
+        - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
+        - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
+    volumes:
+      - ./config/homeassistant/blueprints:/config/blueprints
+      - ./config/homeassistant/automations.yaml:/config/automations.yaml
+      - ./config/homeassistant/configuration.yaml:/config/configuration.yaml
+      - ./config/homeassistant/scenes.yaml:/config/scenes.yaml
+      - ./config/homeassistant/scripts.yaml:/config/scripts.yaml
+      - ./config/homeassistant/secrets.yaml:/config/secrets.yaml
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    depends_on:
+      - postgres
+      - influxdb
+
+  homeassistant_postgres:
+    container_name: homeassistantPostgres
+    image: postgres:14
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${HOMEASSISTANT_DB}
+      POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
+      POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
+    volumes:
+      - dojo_homeassistant_database:/var/lib/postgresql/data
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+    networks:
+      - homeassistant
+
+  homeassistant_influxdb:
+    container_name: homeassistantInfluxdb
+    image: influxdb:latest
+    restart: always
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - INFLUXDB_DB=${HOMEASSISTANT_INFLUX_DB}
+      - DOCKER_INFLUXDB_INIT_USERNAME=${HOMEASSISTANT_INFLUX_DB_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${HOMEASSISTANT_INFLUX_DB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+      - DOCKER_INFLUXDB_INIT_ORG=ha-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
+    ports:
+      - 8086:8086
+    volumes:
+      - dojo_influxdb_data:/var/lib/influxdb2
+    labels:
+      - 'docker-volume-backup.stop-during-backup=true'
+    networks:
+      - homeassistant

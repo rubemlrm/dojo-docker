@@ -1,0 +1,214 @@
+---
+version: '3'
+
+volumes:
+  dojo_prometheus_data:
+    external: true
+  dojo_grafana_data:
+    external: true
+
+networks:
+  monitoring_network:
+    name: monitoring_network
+    external: true
+  proxy_network:
+    external: true
+    name: proxy_network
+services:
+  # monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.prometheus.entrypoints=${PROMETHEUS_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_DOMAIN}`)'
+        - 'traefik.http.routers.prometheus.tls=${PROMETHEUS_ENABLE_SSL}'
+        - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
+        - 'docker-volume-backup.stop-during-backup=true'
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - dojo_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--query.lookback-delta=90m'
+    links:
+      - cadvisor:cadvisor
+      - node-exporter:node-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.grafana.entrypoints=${GRAFANA_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.grafana.rule=Host(`${GRAFANA_DOMAIN}`)'
+        - 'traefik.http.routers.grafana.tls=${GRAFANA_ENABLE_SSL}'
+        - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
+        - 'com.centurylinklabs.watchtower.enable=true'
+        - 'docker-volume-backup.stop-during-backup=true'
+    restart: unless-stopped
+    user: '104'
+    networks:
+      - monitoring_network
+      - proxy_network
+    links:
+      - prometheus:prometheus
+    volumes:
+      - dojo_grafana_data:/var/lib/grafana
+      - ./grafana/:/etc/grafana/provisioning/
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${GRAFANA_DOMAIN}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    restart: unless-stopped
+    user: "1001"
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+  pihole-exporter:
+    image: ekofr/pihole-exporter:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+      - proxy_network
+    environment:
+      - PIHOLE_HOSTNAME=pihole
+      - PIHOLE_PASSWORD=${PIHOLE_PASS}
+      - PORT=6317
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /sys/fs/cgroup/:/sys/fs/cgroup/
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+  speedtest:
+    tty: true
+    stdin_open: true
+    ports:
+      - 9798:9798
+    image: miguelndecarvalho/speedtest-exporter
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    restart: always
+    networks:
+      - monitoring_network
+      - proxy_network
+  blackbox:
+    tty: true
+    stdin_open: true
+    ports:
+      - 9115:9115
+    image: prom/blackbox-exporter
+    restart: always
+    volumes:
+      - ./blackbox/config:/config
+    command:
+      - '--config.file=/config/blackbox.yml'
+    networks:
+      - monitoring_network
+      - proxy_network
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.jaeger.entrypoints=${JAEGER_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.jaeger.rule=Host(`${JAEGER_DOMAIN}`)'
+        - 'traefik.http.routers.jaeger.tls=${JAEGER_ENABLE_SSL}'
+        - 'traefik.http.routers.jaeger.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.services.jaeger.loadbalancer.server.port=16686'
+        - 'docker-volume-backup.stop-during-backup=true'
+    ports:
+      - '6831:6831'
+      - '16686:16686'
+    networks:
+      - monitoring_network
+      - proxy_network

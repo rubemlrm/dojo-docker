@@ -1,0 +1,59 @@
+---
+- name: Setup Firewall
+  become: true
+  block:
+    - name: Install cli utils
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - firewalld
+        - python-firewall
+    - name: Return service state information as fact data
+      ansible.builtin.service_facts:
+      register: service_facts
+    - name: Start firewall
+      when: service_facts.ansible_facts.services['firewalld.service']['state'] != 'enabled'
+      ansible.builtin.systemd:
+        name: firewalld
+        enabled: yes
+    - name: Set running firewall
+      ansible.builtin.systemd:
+        name: firewalld
+        state: started
+    - name: Setup Ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "8080/tcp"
+
+    - name: permit traffic in default zone for dns service
+      ansible.posix.firewalld:
+        service: dns
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: permit traffic in default zone for https service
+      ansible.posix.firewalld:
+        service: https
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: permit traffic in default zone for http service
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: Setup SSH Ports
+      ansible.posix.firewalld:
+        port: "{{ ssh_port }}/tcp"
+        permanent: true
+        immediate: true
+        state: enabled

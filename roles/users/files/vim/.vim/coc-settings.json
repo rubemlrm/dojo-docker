@@ -1,0 +1,7 @@
+{
+    "diagnostic.displayByAle": true,
+    "coc.preferences.rootPatterns": [
+         ".git",
+         ".vscode"
+    ],
+}
