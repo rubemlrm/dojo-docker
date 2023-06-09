@@ -10,5 +10,4 @@
       ansible.builtin.include_vars:
         file: secrets.yaml
   roles:
-    - firewall
     - docker-stack

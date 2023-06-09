@@ -11,6 +11,7 @@
         file: secrets.yaml
   roles:
     - dnf
+    - resolvconf
     - openssh
     - firewall
     - cli

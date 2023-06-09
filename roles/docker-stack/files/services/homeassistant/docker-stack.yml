@@ -4,9 +4,9 @@ version: '3'
 volumes:
   dojo_homeassistant_data:
     external: true
-  dojo_homeassistant_database:
+  dojo_homeassistant_postgres_database:
     external: true
-  dojo_influxdb_data:
+  dojo_homeassistant_influxdb_data:
     external: true
 networks:
   homeassistant:
@@ -14,7 +14,6 @@ networks:
     external: true
 services:
   homeassistant:
-    container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
     networks:
       - proxy_network
@@ -38,44 +37,47 @@ services:
         - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
         - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
     volumes:
-      - ./config/homeassistant/blueprints:/config/blueprints
-      - ./config/homeassistant/automations.yaml:/config/automations.yaml
-      - ./config/homeassistant/configuration.yaml:/config/configuration.yaml
-      - ./config/homeassistant/scenes.yaml:/config/scenes.yaml
-      - ./config/homeassistant/scripts.yaml:/config/scripts.yaml
-      - ./config/homeassistant/secrets.yaml:/config/secrets.yaml
+      - ./homeassistant/blueprints:/config/blueprints
+      - ./homeassistant/automations.yaml:/config/automations.yaml
+      - ./homeassistant/configuration.yaml:/config/configuration.yaml
+      - ./homeassistant/scenes.yaml:/config/scenes.yaml
+      - ./homeassistant/scripts.yaml:/config/scripts.yaml
+      - ./homeassistant/secrets.yaml:/config/secrets.yaml
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped
-    privileged: true
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
     depends_on:
-      - postgres
-      - influxdb
+      - homeassistant_postgres
+      - homeassistant_influxdb
 
   homeassistant_postgres:
-    container_name: homeassistantPostgres
     image: postgres:14
     restart: always
-    ports:
-      - 5432:5432
     environment:
       POSTGRES_DB: ${HOMEASSISTANT_DB}
       POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
       POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
     volumes:
-      - dojo_homeassistant_database:/var/lib/postgresql/data
+      - dojo_homeassistant_postgres_database:/var/lib/postgresql/data
     labels:
       - 'docker-volume-backup.stop-during-backup=true'
     networks:
       - homeassistant
 
   homeassistant_influxdb:
-    container_name: homeassistantInfluxdb
     image: influxdb:latest
     restart: always
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - INFLUXDB_DB=${HOMEASSISTANT_INFLUX_DB}
@@ -84,10 +86,8 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
       - DOCKER_INFLUXDB_INIT_ORG=ha-org
       - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
-    ports:
-      - 8086:8086
     volumes:
-      - dojo_influxdb_data:/var/lib/influxdb2
+      - dojo_homeassistant_influxdb_data:/var/lib/influxdb2
     labels:
       - 'docker-volume-backup.stop-during-backup=true'
     networks:

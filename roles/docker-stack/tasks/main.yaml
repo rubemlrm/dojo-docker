@@ -147,7 +147,7 @@
 - name: Deploy homeassistant service stacks
   docker_stack:
     state: present
-    name: website
+    name: homeassistant
     compose:
       - "{{ docker_stacks_services_path }}/homeassistant/docker-stack.yml"
   environment:

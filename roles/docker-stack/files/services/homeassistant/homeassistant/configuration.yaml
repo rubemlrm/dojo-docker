@@ -22,17 +22,19 @@ http:
     - 172.18.0.0/24
     - 172.19.0.0/24
     - 127.0.0.1
+    - 10.0.15.21
     - ::1
     - fe80::/64
     - fe00::/64
     - fd00::/64
+    - 10.0.15.0/24
 
 influxdb:
   api_version: 2
   ssl: false
-  host: localhost
+  host: homeassistant_influxdb
   port: 8086
-  database: homeassistant
+  database: home
   organization: ha-org
   bucket: ha-bucket
   token: !secret influxdb_token

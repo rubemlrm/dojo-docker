@@ -33,7 +33,11 @@ docker_volumes:
   - name: matodomo_data
     internal: false
   - name: thelounge_data
-    internal: true
+    internal: false
+  - name: dojo_homeassistant_influxdb_data
+    internal: false
+  - name: dojo_homeassistant_postgres_database
+    internal: false
 
 username: rubemlrm
 git_email:
