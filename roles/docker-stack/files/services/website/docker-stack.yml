@@ -1,12 +1,6 @@
 ---
 version: '3'
 
-volumes:
-  matodomodb_data:
-    external: true
-  matodomo_data:
-    external: true
-
 networks:
   proxy_network:
     external: true
@@ -18,7 +12,7 @@ services:
     networks:
       - proxy_network
     volumes:
-      - matodomodb_data:/var/lib/mysql
+      - ${DATA_PATH}/volumes/matomo/database:/var/lib/mysql
     environment:
       -  MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
       -  MYSQL_PASSWORD=${MATOMODB_PASS}
@@ -47,9 +41,8 @@ services:
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.matomo.loadbalancer.server.port=80'
         - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
     volumes:
-      - matodomo_data:/var/www/html
+      - ${DATA_PATH}/volumes/matomo/website:/var/www/html
     environment:
       -  MATOMO_DATABASE_HOST=matomodb
       -  MATOMO_DATABASE_ADAPTER=mysql
@@ -79,10 +72,9 @@ services:
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.cms.loadbalancer.server.port=3000'
         - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
     restart: always
     volumes:
-      - ./config/netlify-oauth/.env:/.env
+      - ${DATA_PATH}/volumes/website/cms/.env:/.env
     networks:
      - proxy_network
     ports:

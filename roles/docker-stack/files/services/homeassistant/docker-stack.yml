@@ -1,13 +1,6 @@
 ---
 version: '3'
 
-volumes:
-  dojo_homeassistant_data:
-    external: true
-  dojo_homeassistant_postgres_database:
-    external: true
-  dojo_homeassistant_influxdb_data:
-    external: true
 networks:
   homeassistant:
   proxy_network:
@@ -28,7 +21,6 @@ services:
         max_attempts: 3
       labels:
         - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
         - 'traefik.enable=true'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.routers.homeassistant.entrypoints=${HOMEASSISTANT_DEFAULT_ENDPOINT}'
@@ -56,14 +48,20 @@ services:
   homeassistant_postgres:
     image: postgres:14
     restart: always
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
     environment:
       POSTGRES_DB: ${HOMEASSISTANT_DB}
       POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
       POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
     volumes:
-      - dojo_homeassistant_postgres_database:/var/lib/postgresql/data
-    labels:
-      - 'docker-volume-backup.stop-during-backup=true'
+      - ${DATA_PATH}/volumes/homeassistant/postgres:/var/lib/postgresql/data
     networks:
       - homeassistant
 
@@ -87,8 +85,6 @@ services:
       - DOCKER_INFLUXDB_INIT_ORG=ha-org
       - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
     volumes:
-      - dojo_homeassistant_influxdb_data:/var/lib/influxdb2
-    labels:
-      - 'docker-volume-backup.stop-during-backup=true'
+      - ${DATA_PATH}/volumes/homeassistant/influxdb:/var/lib/influxdb2
     networks:
       - homeassistant

@@ -114,24 +114,6 @@ services:
       - '--path.sysfs=/host/sys'
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-  pihole-exporter:
-    image: ekofr/pihole-exporter:latest
-    deploy:
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
-      restart_policy:
-        condition: on-failure
-        delay: 30s
-        max_attempts: 3
-    restart: unless-stopped
-    networks:
-      - monitoring_network
-      - proxy_network
-    environment:
-      - PIHOLE_HOSTNAME=pihole
-      - PIHOLE_PASSWORD=${PIHOLE_PASS}
-      - PORT=6317
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
     deploy:

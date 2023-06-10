@@ -56,8 +56,8 @@ services:
       - 80
     volumes:
       - ./pihole/custom.list:/etc/pihole/custom.list
-      - dojo_pihole_data:/etc/pihole/
-      - dojo_pihole_dns_data:/etc/dnsmasq.d/
+      - ${DATA_PATH}/volumes/pihole/data:/etc/pihole/
+      - ${DATA_PATH}/volumes/pihole/dns:/etc/dnsmasq.d/
     environment:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}

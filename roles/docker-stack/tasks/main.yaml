@@ -51,6 +51,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/portainer/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
     DEFAULT_ENDPOINT: "{{ docker_services_secrets.portainer.default_endpoint }}"
     ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
@@ -62,6 +63,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/irc/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
     IRC_DEFAULT_ENDPOINT: "{{ docker_services_secrets.irc.default_endpoint }}"
     IRC_ENABLE_SSL: "{{ docker_services_secrets.irc.enable_ssl }}"
@@ -82,6 +84,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/pihole/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
     TIMEZONE: "{{ docker_configs.timezone }}"
     PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
@@ -119,6 +122,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     CONFIG_PATH: "{{ docker_configs.config_path }}"
     TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"
     TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
@@ -134,6 +138,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/website/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
     CMS_DEFAULT_ENDPOINT:  "{{ docker_services_secrets.cms.default_endpoint }}"
     CMS_ENABLE_SSL:  "{{ docker_services_secrets.cms.enable_ssl }}"
@@ -151,6 +156,7 @@
     compose:
       - "{{ docker_stacks_services_path }}/homeassistant/docker-stack.yml"
   environment:
+    DATA_PATH: "{{ docker_configs.data_path }}"
     HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"
     HOMEASSISTANT_DB_USER: "{{ docker_services_secrets.homeassistant.db_user }}"
     HOMEASSISTANT_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.db_password }}"

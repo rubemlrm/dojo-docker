@@ -5,27 +5,9 @@ networks:
   proxy_network:
     name: proxy_network
 volumes:
-  dojo_portainer_data:
-    external: true
-  dojo_pihole_data:
-    external: true
-  dojo_pihole_dns_data:
-    external: true
-  dojo_homeassistant_data:
-    external: true
-  dojo_homeassistant_database:
-    external: true
-  dojo_influxdb_data:
-    external: true
   dojo_prometheus_data:
     external: true
   dojo_grafana_data:
-    external: true
-  thelounge_data:
-    external: true
-  dojo_homeassistant_postgres_database:
-    external: true
-  dojo_homeassistant_influxdb_data:
     external: true
 
 services:
@@ -41,13 +23,7 @@ services:
         max_attempts: 3
     restart: always
     volumes:
-      - dojo_pihole_data:/backup/pihole
-      - dojo_pihole_dns_data:/backup/pihole_dns
       - dojo_prometheus_data:/backup/dojo_prometheus_data
       - dojo_grafana_data:/backup/dojo_grafana_data
-      - dojo_homeassistant_data:/backup/homeassistant_data
-      - dojo_homeassistant_postgres_database:/backup/homeassistant_database
-      - dojo_homeassistant_influxdb_data:/backup/dojo_homeassistant_influxdb_data
-      - thelounge_data:/backup/thelounge_data
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DATA_PATH}/docker-backups:/archive

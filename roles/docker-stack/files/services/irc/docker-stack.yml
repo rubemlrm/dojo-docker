@@ -1,10 +1,6 @@
 ---
 version: '3.7'
 
-volumes:
-  thelounge_data2:
-    external: true
-
 networks:
   proxy_network:
     external: true
@@ -36,4 +32,4 @@ services:
     networks:
       - proxy_network
     volumes:
-      - thelounge_data2:/var/opt/thelounge
+      - ${DATA_PATH}/volumes/webirc:/var/opt/thelounge
