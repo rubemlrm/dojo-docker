@@ -8,7 +8,7 @@
         state: present
       with_items:
         - firewalld
-        - python-firewall
+        - python3-firewall
     - name: Return service state information as fact data
       ansible.builtin.service_facts:
       register: service_facts

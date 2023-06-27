@@ -1,0 +1,9 @@
+---
+packages:
+  - apt-transport-https
+  - ca-certificates
+
+deb_repos: {}
+repo_gpgs:
+  - https://download.docker.com/linux/debian/gpg
+  - https://packages.sury.org/php/apt.gpg

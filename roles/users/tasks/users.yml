@@ -14,9 +14,3 @@
         owner: "{{ username }}"
         group: "{{ user_group }}"
       with_items: "{{ users_directories }}"
-    - name: Remove Users
-      ansible.builtin.user:
-        name: "{{ item }}"
-        state: absent
-      with_items: "{{ disable_users }}"
-      when: disable_users is defined and ansible_facts['distribution'] == "Fedora"

@@ -44,3 +44,6 @@ users_directories:
   - ".local/share/fonts"
   - ".ssh"
   - ".config/zsh/plugins"
+  - "docker"
+  - "docker/data"
+  - "docker/configs"

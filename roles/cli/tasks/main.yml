@@ -1,19 +1,14 @@
 ---
-- name: Install Fedora base packages
+- name: Install base packages
   become: true
   block:
-    - name: "Set copr repos"
-      community.general.copr:
-        state: enabled
-        name: "{{ item }}"
-      with_items: "{{ common_cli_copr_repos }}"
     - name: Install cli utils
       ansible.builtin.package:
         name: "{{ item }}"
         state: present
-      with_items: "{{ common_cli_base_packages }}"
+      with_items: "{{ base_packages }}"
     - name: Install fonts
       ansible.builtin.package:
         name: "{{ item }}"
         state: present
-      with_items: "{{ common_cli_font_packages }}"
+      with_items: "{{ font_packages }}"

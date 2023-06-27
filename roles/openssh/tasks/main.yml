@@ -19,15 +19,6 @@
       notify:
         - Enable openssh server
         - Restart openssh server
-    - name: Setup selinux for custom ssh port
-      community.general.seport:
-        ports: '{{ ssh_port }}'
-        proto: 'tcp'
-        setype: 'ssh_port_t'
-        state: 'present'
-      when: ansible_selinux is defined and ansible_selinux is not false and ansible_selinux.status == 'enabled'
-      notify:
-        - Restart openssh server
     - name: Tweak SSH rules on firewall
       when: use_firewall is true
       block:

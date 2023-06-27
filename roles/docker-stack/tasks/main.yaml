@@ -31,139 +31,240 @@
 
 
 - name: Deploy traefik service stacks
-  docker_stack:
-    state: present
-    name: traefik
-    compose:
-      - "{{ docker_stacks_services_path }}/traefik/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    CONFIG_PATH: "{{ docker_configs.config_path }}"
-    TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
-    TRAEFIK_DOMAIN: "{{ docker_services_secrets.traefik.domain }}"
-    TRAEFIK_DNS1: "{{ docker_services_secrets.traefik.dns_1 }}"
-    TRAEFIK_DNS2: "{{ docker_services_secrets.traefik.dns_2 }}"
+  block:
+    - name: Create traefik service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.config_path }}/traefik/certs"
+    - name: Setup traefik service
+      docker_stack:
+        state: present
+        name: traefik
+        compose:
+          - "{{ docker_stacks_services_path }}/traefik/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        CONFIG_PATH: "{{ docker_configs.config_path }}"
+        TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
+        TRAEFIK_DOMAIN: "{{ docker_services_secrets.traefik.domain }}"
+        TRAEFIK_DNS1: "{{ docker_services_secrets.traefik.dns_1 }}"
+        TRAEFIK_DNS2: "{{ docker_services_secrets.traefik.dns_2 }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.traefik.enabled is true
 
 - name: Deploy portainer service stacks
-  docker_stack:
-    state: present
-    name: portainer
-    compose:
-      - "{{ docker_stacks_services_path }}/portainer/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
-    DEFAULT_ENDPOINT: "{{ docker_services_secrets.portainer.default_endpoint }}"
-    ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
+  block:
+    - name: Create portainer service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.data_path }}/traefik/certs"
+    - name: Setup portainer service
+      docker_stack:
+        state: present
+        name: portainer
+        compose:
+          - "{{ docker_stacks_services_path }}/portainer/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
+        DEFAULT_ENDPOINT: "{{ docker_services_secrets.portainer.default_endpoint }}"
+        ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.portainer.enabled is true
 
 - name: Deploy irc service stacks
-  docker_stack:
-    state: present
-    name: irc
-    compose:
-      - "{{ docker_stacks_services_path }}/irc/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
-    IRC_DEFAULT_ENDPOINT: "{{ docker_services_secrets.irc.default_endpoint }}"
-    IRC_ENABLE_SSL: "{{ docker_services_secrets.irc.enable_ssl }}"
+  block:
+    - name: Create irc service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.data_path }}/volumes/webirc"
+    - name: Setup irc service
+      docker_stack:
+        state: present
+        name: irc
+        compose:
+          - "{{ docker_stacks_services_path }}/irc/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
+        IRC_DEFAULT_ENDPOINT: "{{ docker_services_secrets.irc.default_endpoint }}"
+        IRC_ENABLE_SSL: "{{ docker_services_secrets.irc.enable_ssl }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.irc.enabled is true
 
 - name: Deploy backups service stacks
-  docker_stack:
-    state: present
-    name: backups
-    compose:
-      - "{{ docker_stacks_services_path }}/backups/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
+  block:
+    - name: Create backups service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.data_path }}/docker-backups"
+    - name: Setup backups service
+      docker_stack:
+        state: present
+        name: backups
+        compose:
+          - "{{ docker_stacks_services_path }}/backups/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.backups.enabled is true
 
 - name: Deploy pihole service stacks
-  docker_stack:
-    state: present
-    name: pihole
-    compose:
-      - "{{ docker_stacks_services_path }}/pihole/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
-    TIMEZONE: "{{ docker_configs.timezone }}"
-    PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
-    PIHOLE_DOMAIN: "{{ docker_services_secrets.pihole.pihole_domain }}"
-    PIHOLE_DNS1: "{{ docker_services_secrets.pihole.pihole_dns1 }}"
-    PIHOLE_DNS2: "{{ docker_services_secrets.pihole.pihole_dns2 }}"
-    DEFAULT_ENDPOINT: "{{ docker_services_secrets.pihole.default_endpoint }}"
-    ENABLE_SSL: "{{ docker_services_secrets.pihole.enable_ssl }}"
+  block:
+    - name: Setup pihole service
+      docker_stack:
+        state: present
+        name: pihole
+        compose:
+          - "{{ docker_stacks_services_path }}/pihole/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
+        TIMEZONE: "{{ docker_configs.timezone }}"
+        PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
+        PIHOLE_DOMAIN: "{{ docker_services_secrets.pihole.pihole_domain }}"
+        PIHOLE_DNS1: "{{ docker_services_secrets.pihole.pihole_dns1 }}"
+        PIHOLE_DNS2: "{{ docker_services_secrets.pihole.pihole_dns2 }}"
+        DEFAULT_ENDPOINT: "{{ docker_services_secrets.pihole.default_endpoint }}"
+        ENABLE_SSL: "{{ docker_services_secrets.pihole.enable_ssl }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.pihole.enabled is true
 
 
 - name: Deploy monitoring service stacks
-  docker_stack:
-    state: present
-    name: monitoring
-    compose:
-      - "{{ docker_stacks_services_path }}/monitoring/docker-stack.yml"
-  environment:
-    PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
-    PROMETHEUS_DOMAIN: "{{ docker_services_secrets.prometheus.domain }}"
-    PROMETHEUS_ENABLE_SSL: "{{ docker_services_secrets.prometheus.enable_ssl }}"
-    JAEGER_DEFAULT_ENDPOINT: "{{ docker_services_secrets.jaeger.default_endpoint }}"
-    JAEGER_DOMAIN: "{{ docker_services_secrets.jaeger.domain }}"
-    JAEGER_ENABLE_SSL: "{{ docker_services_secrets.jaeger.enable_ssl }}"
-    GRAFANA_PASSWORD: "{{ docker_services_secrets.grafana.password }}"
-    GRAFANA_DOMAIN: "{{ docker_services_secrets.grafana.domain }}"
-    GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
-    GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
-    PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
+  block:
+    - name: Setup monitoring service
+      docker_stack:
+        state: present
+        name: monitoring
+        compose:
+          - "{{ docker_stacks_services_path }}/monitoring/docker-stack.yml"
+      environment:
+        PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
+        PROMETHEUS_DOMAIN: "{{ docker_services_secrets.prometheus.domain }}"
+        PROMETHEUS_ENABLE_SSL: "{{ docker_services_secrets.prometheus.enable_ssl }}"
+        JAEGER_DEFAULT_ENDPOINT: "{{ docker_services_secrets.jaeger.default_endpoint }}"
+        JAEGER_DOMAIN: "{{ docker_services_secrets.jaeger.domain }}"
+        JAEGER_ENABLE_SSL: "{{ docker_services_secrets.jaeger.enable_ssl }}"
+        GRAFANA_PASSWORD: "{{ docker_services_secrets.grafana.password }}"
+        GRAFANA_DOMAIN: "{{ docker_services_secrets.grafana.domain }}"
+        GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
+        GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
+        PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.monitoring.enabled is true
 
 
 - name: Deploy media service stacks
-  docker_stack:
-    state: present
-    name: media
-    compose:
-      - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    CONFIG_PATH: "{{ docker_configs.config_path }}"
-    TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"
-    TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
-    TORRENTS_DOMAIN: "{{ docker_services_secrets.qbittorrent.domain }}"
-    EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
-    EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
-    EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
+  block:
+    - name: Create media service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.data_path }}/volumes/media/emby"
+        -  "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+    - name: Setup service
+      docker_stack:
+        state: present
+        name: media
+        compose:
+          - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        CONFIG_PATH: "{{ docker_configs.config_path }}"
+        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"
+        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
+        TORRENTS_DOMAIN: "{{ docker_services_secrets.qbittorrent.domain }}"
+        EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
+        EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
+        EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.monitoring.enabled is true
 
 - name: Deploy website service stacks
-  docker_stack:
-    state: present
-    name: website
-    compose:
-      - "{{ docker_stacks_services_path }}/website/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
-    CMS_DEFAULT_ENDPOINT:  "{{ docker_services_secrets.cms.default_endpoint }}"
-    CMS_ENABLE_SSL:  "{{ docker_services_secrets.cms.enable_ssl }}"
-    MATOMO_DOMAIN:  "{{ docker_services_secrets.matomo.domain }}"
-    MATOMO_DEFAULT_ENDPOINT: "{{ docker_services_secrets.matomo.default_endpoint }}"
-    MATOMO_ENABLE_SSL: "{{ docker_services_secrets.matomo.enable_ssl }}"
-    MATOMODB_PASS: "{{ docker_services_secrets.matomo.db_password }}"
-    MATOMO_DB:  "{{ docker_services_secrets.matomo.db_database }}"
-    MATOMO_USER:  "{{ docker_services_secrets.matomo.db_user }}"
+  block:
+    - name: Create website service directories
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+      with_items:
+        -  path: "{{ docker_configs.data_path }}/volumes/matomo/database"
+           owner: "{{ username }}"
+        -  path: "{{ docker_configs.data_path }}/volumes/matomo/website"
+           owner: "www-data"
+        -  path: "{{ docker_configs.data_path }}/volumes/website/cms"
+           owner: "{{ username }}"
+    - name: Setup website service
+      docker_stack:
+        state: present
+        name: website
+        compose:
+          - "{{ docker_stacks_services_path }}/website/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
+        CMS_DEFAULT_ENDPOINT:  "{{ docker_services_secrets.cms.default_endpoint }}"
+        CMS_ENABLE_SSL:  "{{ docker_services_secrets.cms.enable_ssl }}"
+        MATOMO_DOMAIN:  "{{ docker_services_secrets.matomo.domain }}"
+        MATOMO_DEFAULT_ENDPOINT: "{{ docker_services_secrets.matomo.default_endpoint }}"
+        MATOMO_ENABLE_SSL: "{{ docker_services_secrets.matomo.enable_ssl }}"
+        MATOMODB_PASS: "{{ docker_services_secrets.matomo.db_password }}"
+        MATOMO_DB:  "{{ docker_services_secrets.matomo.db_database }}"
+        MATOMO_USER:  "{{ docker_services_secrets.matomo.db_user }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.website.enabled is true
 
 - name: Deploy homeassistant service stacks
-  docker_stack:
-    state: present
-    name: homeassistant
-    compose:
-      - "{{ docker_stacks_services_path }}/homeassistant/docker-stack.yml"
-  environment:
-    DATA_PATH: "{{ docker_configs.data_path }}"
-    HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"
-    HOMEASSISTANT_DB_USER: "{{ docker_services_secrets.homeassistant.db_user }}"
-    HOMEASSISTANT_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.db_password }}"
-    HOMEASSISTANT_INFLUX_DB: "{{ docker_services_secrets.homeassistant.influx_db }}"
-    HOMEASSISTANT_INFLUX_DB_USER: "{{ docker_services_secrets.homeassistant.influx_db_user }}"
-    HOMEASSISTANT_INFLUX_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.influx_db_password }}"
-    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ docker_services_secrets.homeassistant.influx_admin_token }}"
-    HOMEASSISTANT_DOMAIN:  "{{ docker_services_secrets.homeassistant.domain }}"
-    HOMEASSISTANT_DEFAULT_ENDPOINT: "{{ docker_services_secrets.homeassistant.default_endpoint }}"
-    HOMEASSISTANT_ENABLE_SSL: "{{ docker_services_secrets.homeassistant.enable_ssl }}"
+  block:
+    - name: Create homeassistant service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.data_path }}/homeassistant/postgres"
+        -  "{{ docker_configs.data_path }}/homeassistant/influxdb"
+    - name: Setup homeassistant service
+      docker_stack:
+        state: present
+        name: homeassistant
+        compose:
+          - "{{ docker_stacks_services_path }}/homeassistant/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"
+        HOMEASSISTANT_DB_USER: "{{ docker_services_secrets.homeassistant.db_user }}"
+        HOMEASSISTANT_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.db_password }}"
+        HOMEASSISTANT_INFLUX_DB: "{{ docker_services_secrets.homeassistant.influx_db }}"
+        HOMEASSISTANT_INFLUX_DB_USER: "{{ docker_services_secrets.homeassistant.influx_db_user }}"
+        HOMEASSISTANT_INFLUX_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.influx_db_password }}"
+        DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ docker_services_secrets.homeassistant.influx_admin_token }}"
+        HOMEASSISTANT_DOMAIN:  "{{ docker_services_secrets.homeassistant.domain }}"
+        HOMEASSISTANT_DEFAULT_ENDPOINT: "{{ docker_services_secrets.homeassistant.default_endpoint }}"
+        HOMEASSISTANT_ENABLE_SSL: "{{ docker_services_secrets.homeassistant.enable_ssl }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.homeassistant.enabled is true

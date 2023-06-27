@@ -17,6 +17,24 @@ docker_volumes:
   - name: dojo_grafana_data
     internal: false
 
+docker_stacks:
+  backups:
+    enabled: false
+  homeassistant:
+    enabled: false
+  irc:
+    enabled: true
+  media:
+    enabled: false
+  pihole:
+    enabled: true
+  portainer:
+    enabled: true
+  traefik:
+    enabled: true
+  website:
+    enabled: true
+
 username: rubemlrm
 git_email:
 git_name: Rubem Mota

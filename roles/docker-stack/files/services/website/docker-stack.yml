@@ -7,7 +7,7 @@ networks:
     name: proxy_network
 services:
   matomodb:
-    image: linuxserver/mariadb
+    image: yobasystems/alpine-mariadb
     restart: always
     networks:
       - proxy_network
