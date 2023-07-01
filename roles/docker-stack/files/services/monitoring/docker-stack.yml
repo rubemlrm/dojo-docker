@@ -18,6 +18,7 @@ services:
   # monitoring
   prometheus:
     image: prom/prometheus:latest
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -56,6 +57,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -92,6 +94,7 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -101,7 +104,6 @@ services:
         delay: 30s
         max_attempts: 3
     restart: unless-stopped
-    user: "1001"
     networks:
       - monitoring_network
       - proxy_network
@@ -116,6 +118,7 @@ services:
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -143,6 +146,7 @@ services:
     ports:
       - 9798:9798
     image: miguelndecarvalho/speedtest-exporter
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -161,6 +165,7 @@ services:
     ports:
       - 9115:9115
     image: prom/blackbox-exporter
+    user: "${UID}:${GID}"
     restart: always
     volumes:
       - ./blackbox/config:/config
@@ -171,6 +176,7 @@ services:
       - proxy_network
   jaeger:
     image: jaegertracing/all-in-one:latest
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:

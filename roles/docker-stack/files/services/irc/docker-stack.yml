@@ -8,6 +8,7 @@ networks:
 services:
   webirc:
     image: thelounge/thelounge:4.4.0
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:

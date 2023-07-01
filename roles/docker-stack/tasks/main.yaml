@@ -64,7 +64,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/traefik/certs"
+        -  "{{ docker_configs.data_path }}/volumes/portainer"
     - name: Setup portainer service
       docker_stack:
         state: present
@@ -127,6 +127,15 @@
 
 - name: Deploy pihole service stacks
   block:
+    - name: Create pihole service directories
+      file:
+        path: "{{ item.path }}"
+        state: directory
+      with_items:
+        -  path: "{{ docker_configs.data_path }}/volumes/pihole/data"
+           owner: "{{ docker_configs.puid }}"
+        -  path: "{{ docker_configs.data_path }}/volumes/pihole/dns"
+           owner: "{{ docker_configs.puid }}"
     - name: Setup pihole service
       docker_stack:
         state: present
@@ -168,8 +177,6 @@
         GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
         GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
         PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.monitoring.enabled is true
 
 
@@ -208,14 +215,10 @@
       file:
         path: "{{ item.path }}"
         state: directory
-        owner: "{{ item.owner }}"
       with_items:
         -  path: "{{ docker_configs.data_path }}/volumes/matomo/database"
-           owner: "{{ username }}"
         -  path: "{{ docker_configs.data_path }}/volumes/matomo/website"
-           owner: "www-data"
         -  path: "{{ docker_configs.data_path }}/volumes/website/cms"
-           owner: "{{ username }}"
     - name: Setup website service
       docker_stack:
         state: present

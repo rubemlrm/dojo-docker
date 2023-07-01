@@ -65,12 +65,15 @@ services:
       - VIRTUAL_HOST=${PIHOLE_DOMAIN}
       - DNS1=${PIHOLE_DNS1}
       - DNS2=${PIHOLE_DNS2}
+      - DNSSEC=true
+      - WEBTHEME=default-dark
     dns:
       - 127.0.0.1
       - ${PIHOLE_DNS1}
       - ${PIHOLE_DNS2}
   pihole-exporter:
     image: ekofr/pihole-exporter:latest
+    user: "${UID}:${GID}"
     restart: unless-stopped
     networks:
       - monitoring_network

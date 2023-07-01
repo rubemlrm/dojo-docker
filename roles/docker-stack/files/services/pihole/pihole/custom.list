@@ -1,15 +1,17 @@
 #local network domains
-192.168.2.4 portainer.dojo.lan
-192.168.2.4 irc.dojo.lan
-192.168.2.4 grafana.dojo.lan
-192.168.2.4 pihole-exporter.dojo.lan
-192.168.2.4 prometheus.dojo.lan
-192.168.2.4 torrents.dojo.lan
-192.168.2.4 dns.dojo.lan
-192.168.2.4 home.dojo.lan
-192.168.2.4 backup.dojo.lan
+192.168.2.4 pi2-portainer.dojo.lan
+192.168.2.4 pi2-cp.dojo.lan
+192.168.2.4 pi2-traefik.dojo.lan
+192.168.2.4 dns1.dojo.lan
 192.168.2.4 rss.dojo.lan
-192.168.2.4 cp.dojo.lan
-192.168.2.4 media.dojo.lan
-192.168.2.4 jaeger.dojo.lan
-192.168.2.4 home.dojo.lan
+
+192.168.2.5 dns2.dojo.lan
+192.168.2.4 irc.dojo.lan
+192.168.2.5 grafana.dojo.lan
+192.168.2.5 pihole-exporter.dojo.lan
+192.168.2.5 prometheus.dojo.lan
+192.168.2.5 torrents.dojo.lan
+192.168.2.5 home.dojo.lan
+192.168.2.5 backup.dojo.lan
+192.168.2.5 media.dojo.lan
+192.168.2.5 jaeger.dojo.lan

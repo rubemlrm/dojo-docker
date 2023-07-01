@@ -48,6 +48,8 @@ services:
       - CONTAINERS_UPDATE=1
       - CONTAINERS_DELETE=1
       - IMAGES_DELETE=1
+      - SWARM=1
+      - NODES=1
   fail2ban:
     image: crazymax/fail2ban:latest
     container_name: fail2ban

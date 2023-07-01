@@ -19,14 +19,6 @@
         dest: "{{ home_dir }}{{ item.dest }}"
         version: "{{ item.version }}"
       with_items: "{{ users_zsh_plugins }}"
-    - name: Link zsh themes
-      ansible.builtin.copy:
-        src: "{{ home_dir }}.config/zsh/themes/spaceship-prompt/spaceship.zsh-theme"
-        dest: "{{ home_dir }}.config/zsh/themes/spaceship.zsh-theme"
-        owner: "{{ username }}"
-        group: "{{ user_group }}"
-        mode: "0644"
-        force: true
     - name: Clone cli utils
       ansible.builtin.git:
         repo: "{{ item.repo }}"
@@ -54,6 +46,8 @@
         group: "{{ user_group }}"
         mode: "0755"
         force: true
+      retries: 5
+      delay: 5
     - name: Restore tmux settings
       ansible.builtin.copy:
         src: "{{ role_path }}/files/tmux/{{ item.name }}"
@@ -67,6 +61,8 @@
           mode: "0644"
         - name: ".tmux"
           mode: "0755"
+      retries: 5
+      delay: 5
     - name: Remove oh my zshrc file
       ansible.builtin.file:
         path: "{{ home_dir }}.zshrc"
@@ -79,12 +75,13 @@
         owner: "{{ username }}"
         group: "{{ user_group }}"
         mode: "{{ item.mode }}"
-        state: link
         force: true
+      retries: 5
+      delay: 5
       with_items:
-        - name: ".config/zsh/alias"
+        - name: ".config/zsh/alias/"
           mode: "0755"
-        - name: ".config/zsh/functions"
+        - name: ".config/zsh/functions/"
           mode: "0755"
         - name: ".config/zsh/alias.zsh"
           mode: "0644"
@@ -113,6 +110,8 @@
           mode: "0755"
         - name: ".vimrc"
           mode: "0644"
+      retries: 5
+      delay: 5
 
     - name: Restore nvim settings
       ansible.builtin.copy:
@@ -122,17 +121,11 @@
         group: "{{ user_group }}"
         mode: "0755"
         force: true
+      retries: 5
+      delay: 5
 
     - name: Check vim plugins directory
       ansible.builtin.stat:
         path: "{{ home_dir }}.vim/plugged"
       register: vim_plugin_stat_result
       changed_when: false
-
-    - name: Install vim plugins
-      ansible.builtin.raw: |
-        pip3 install --user --upgrade pynvim && \
-        vim +'PlugInstall' +qall
-      when: not vim_plugin_stat_result.stat.exists
-      tags:
-        - skip_ansible_lint

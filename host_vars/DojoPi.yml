@@ -1,0 +1,31 @@
+---
+
+docker_networks:
+  - name: pihole_network
+    internal: true
+  - name: proxy_network
+    internal: false
+
+docker_volumes: {}
+
+docker_stacks:
+  backups:
+    enabled: false
+  homeassistant:
+    enabled: false
+  irc:
+    enabled: true
+  media:
+    enabled: false
+  pihole:
+    enabled: true
+  portainer:
+    enabled: true
+  traefik:
+    enabled: true
+  website:
+    enabled: true
+
+docker_swarm_advertise_addr: 192.168.2.4
+enable_docker_swarm_mode: true
+ssh_port: 22

@@ -32,6 +32,8 @@ base_packages:
   - stow
   - ripgrep
   - python3-jsondiff
+  - neovim
+  - fzf
 
 font_packages:
   - fonts-firacode

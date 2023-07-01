@@ -36,5 +36,3 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DATA_PATH}/volumes/portainer:/data
     command: -H tcp://dockerproxy:2375
-    security_opt:
-      - no-new-privileges:true

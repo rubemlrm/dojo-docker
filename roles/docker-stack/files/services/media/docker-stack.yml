@@ -9,6 +9,7 @@ networks:
 services:
   emby:
     image: emby/embyserver
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
@@ -44,6 +45,7 @@ services:
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:

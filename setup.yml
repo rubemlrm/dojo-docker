@@ -1,5 +1,5 @@
 - name: Homeserver Setup
-  hosts: localhost
+  hosts: all
   gather_facts: yes
   pre_tasks:
     - name: Load default vars file
@@ -10,7 +10,7 @@
       ansible.builtin.include_vars:
         file: secrets.yaml
   roles:
-    - dnf
+    - apt
     - resolvconf
     - openssh
     - firewall

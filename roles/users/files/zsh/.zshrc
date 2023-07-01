@@ -39,7 +39,7 @@ HISTSIZE=10000
 SAVEHIST=10000
 ZSH_DISABLE_COMPFIX=true
 # UI settings
-ZSH_THEME="spaceship"
+ZSH_THEME="robbyrussell"
 # Uncomment the following line to enable command auto-correction.
 ENABLE_CORRECTION="true"
 # set options commands

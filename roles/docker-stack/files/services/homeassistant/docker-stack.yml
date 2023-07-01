@@ -8,6 +8,7 @@ networks:
 services:
   homeassistant:
     image: "ghcr.io/home-assistant/home-assistant:stable"
+    user: "${UID}:${GID}"
     networks:
       - proxy_network
       - homeassistant
@@ -47,6 +48,7 @@ services:
 
   homeassistant_postgres:
     image: postgres:14
+    user: "${UID}:${GID}"
     restart: always
     deploy:
       replicas: 1
@@ -67,6 +69,7 @@ services:
 
   homeassistant_influxdb:
     image: influxdb:latest
+    user: "${UID}:${GID}"
     restart: always
     deploy:
       replicas: 1

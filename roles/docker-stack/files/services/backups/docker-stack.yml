@@ -13,6 +13,7 @@ volumes:
 services:
   backup:
     image: offen/docker-volume-backup:v2
+    user: "${UID}:${GID}"
     deploy:
       replicas: 1
       placement:
