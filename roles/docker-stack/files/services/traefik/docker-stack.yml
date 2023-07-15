@@ -25,7 +25,8 @@ services:
       - 443:443
       - 8080:8080
     volumes:
-      - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
+      - ${CONFIG_PATH}/volumes/traefik/certs:/letsencrypt/
+      - ${CONFIG_PATH}/volumes/traefik/logs:/var/log
     command:
       - '--metrics.prometheus=true'
       - '--entryPoints.metrics.address=:8082'

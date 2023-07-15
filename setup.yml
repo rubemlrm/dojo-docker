@@ -13,6 +13,7 @@
     - apt
     - resolvconf
     - openssh
+    - fail2ban
     - firewall
     - cli
     - users
