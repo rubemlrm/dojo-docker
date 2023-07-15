@@ -4,7 +4,7 @@
   block:
     - name: update apt cache
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
     - name: install gpg
       ansible.builtin.package:
         name: gnupg
@@ -21,11 +21,11 @@
         state: present
       with_items: "{{ deb_repos }}"
     - name: Update repos to install ca-certificates and https-transport
-      become: yes
+      become: true
       ansible.builtin.apt:
         name: "*"
-        update_cache: yes
-        force_apt_get: yes
+        update_cache: true
+        force_apt_get: true
     - name: Install ca-certificates and https-transport
       ansible.builtin.package:
         name: "{{ item }}"

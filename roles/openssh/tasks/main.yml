@@ -25,10 +25,10 @@
         - name: Remove old firewall rule
           ansible.posix.firewalld:
             service: ssh
-            permanent: yes
+            permanent: true
             state: disabled
         - name: Enable firewall rule
           ansible.posix.firewalld:
             port: '{{ ssh_port }}/tcp'
-            permanent: yes
+            permanent: true
             state: enabled

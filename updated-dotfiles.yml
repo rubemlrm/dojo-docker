@@ -1,6 +1,7 @@
+---
 - name: Homeserver Setup
   hosts: all
-  gather_facts: yes
+  gather_facts: true
   pre_tasks:
     - name: Load default vars file
       ansible.builtin.include_vars:

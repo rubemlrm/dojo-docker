@@ -7,7 +7,7 @@
     path: "{{ docker_stacks_path }}"
     state: directory
     owner: "{{ username }}"
-  become: yes
+  become: true
 
 - name: Synchronize services directories
   synchronize:
@@ -38,7 +38,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/duckdns"
+        - "{{ docker_configs.data_path }}/duckdns"
     - name: Setup duckdns service
       docker_stack:
         state: present
@@ -50,7 +50,7 @@
         DUCKDNS_DOMAINS: "{{ docker_services_secrets.duckdns.domains }}"
         TOKEN: "{{ docker_services_secrets.duckdns.token }}"
         UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
+        GID: "{{ docker_configs.pgid }}"
   when: docker_stacks.duckdns.enabled is true
 
 
@@ -62,8 +62,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/volumes/traefik/certs"
-        -  "{{ docker_configs.data_path }}/volumes/traefik/logs"
+        - "{{ docker_configs.data_path }}/volumes/traefik/certs"
+        - "{{ docker_configs.data_path }}/volumes/traefik/logs"
     - name: Setup traefik service
       docker_stack:
         state: present
@@ -88,7 +88,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/volumes/portainer"
+        - "{{ docker_configs.data_path }}/volumes/portainer"
     - name: Setup portainer service
       docker_stack:
         state: present
@@ -112,7 +112,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/volumes/webirc"
+        - "{{ docker_configs.data_path }}/volumes/webirc"
     - name: Setup irc service
       docker_stack:
         state: present
@@ -136,7 +136,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/docker-backups"
+        - "{{ docker_configs.data_path }}/docker-backups"
     - name: Setup backups service
       docker_stack:
         state: present
@@ -156,10 +156,10 @@
         path: "{{ item.path }}"
         state: directory
       with_items:
-        -  path: "{{ docker_configs.data_path }}/volumes/pihole/data"
-           owner: "{{ docker_configs.puid }}"
-        -  path: "{{ docker_configs.data_path }}/volumes/pihole/dns"
-           owner: "{{ docker_configs.puid }}"
+        - path: "{{ docker_configs.data_path }}/volumes/pihole/data"
+          owner: "{{ docker_configs.puid }}"
+        - path: "{{ docker_configs.data_path }}/volumes/pihole/dns"
+          owner: "{{ docker_configs.puid }}"
     - name: Setup pihole service
       docker_stack:
         state: present
@@ -212,8 +212,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/volumes/media/emby"
-        -  "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+        - "{{ docker_configs.data_path }}/volumes/media/emby"
+        - "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
     - name: Setup media service
       docker_stack:
         state: present
@@ -231,7 +231,7 @@
         EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  #when: docker_stacks.homemedia.enabled is true
+  when: docker_stacks.homemedia.enabled is true
 
 - name: Deploy website service stacks
   block:
@@ -240,9 +240,9 @@
         path: "{{ item.path }}"
         state: directory
       with_items:
-        -  path: "{{ docker_configs.data_path }}/volumes/matomo/database"
-        -  path: "{{ docker_configs.data_path }}/volumes/matomo/website"
-        -  path: "{{ docker_configs.data_path }}/volumes/website/cms"
+        - path: "{{ docker_configs.data_path }}/volumes/matomo/database"
+        - path: "{{ docker_configs.data_path }}/volumes/matomo/website"
+        - path: "{{ docker_configs.data_path }}/volumes/website/cms"
     - name: Setup website service
       docker_stack:
         state: present
@@ -272,8 +272,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.data_path }}/homeassistant/postgres"
-        -  "{{ docker_configs.data_path }}/homeassistant/influxdb"
+        - "{{ docker_configs.data_path }}/homeassistant/postgres"
+        - "{{ docker_configs.data_path }}/homeassistant/influxdb"
     - name: Setup homeassistant service
       docker_stack:
         state: present

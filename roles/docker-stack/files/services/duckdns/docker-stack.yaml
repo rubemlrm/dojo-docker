@@ -5,12 +5,12 @@ services:
     image: lscr.io/linuxserver/duckdns:latest
     container_name: duckdns
     environment:
-      - PUID=${UID} #optional
-      - PGID=${GID} #optional
-      - TZ=Etc/UTC #optional
+      - PUID=${UID}
+      - PGID=${GID}
+      - TZ=Etc/UTC
       - SUBDOMAINS=${DUCKDNS_DOMAINS}
       - TOKEN=${DUCKDNS_TOKEN}
-      - LOG_FILE=false #optional
+      - LOG_FILE=false
     volumes:
       - ${DATA_PATH}/volumes/duckdns:/config
     restart: unless-stopped

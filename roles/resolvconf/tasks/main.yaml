@@ -22,4 +22,4 @@
         mode: 0644
       notify:
         - Restart Resolved server
-  become: yes
+  become: true

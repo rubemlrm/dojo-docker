@@ -14,10 +14,10 @@ services:
     volumes:
       - ${DATA_PATH}/volumes/matomo/database:/var/lib/mysql
     environment:
-      -  MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
-      -  MYSQL_PASSWORD=${MATOMODB_PASS}
-      -  MYSQL_DATABASE=${MATOMO_DB}
-      -  MYSQL_USER=${MATOMO_USER}
+      - MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
+      - MYSQL_PASSWORD=${MATOMODB_PASS}
+      - MYSQL_DATABASE=${MATOMO_DB}
+      - MYSQL_USER=${MATOMO_USER}
 
   matomo:
     image: matomo
@@ -41,12 +41,12 @@ services:
     volumes:
       - ${DATA_PATH}/volumes/matomo/website:/var/www/html
     environment:
-      -  MATOMO_DATABASE_HOST=matomodb
-      -  MATOMO_DATABASE_ADAPTER=mysql
-      -  MATOMO_DATABASE_TABLES_PREFIX=matomo_
-      -  MATOMO_DATABASE_USERNAME=${MATOMO_USER}
-      -  MATOMO_DATABASE_PASSWORD=${MATOMODB_PASS}
-      -  MATOMO_DATABASE_DBNAME=${MATOMO_DB}
+      - MATOMO_DATABASE_HOST=matomodb
+      - MATOMO_DATABASE_ADAPTER=mysql
+      - MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      - MATOMO_DATABASE_USERNAME=${MATOMO_USER}
+      - MATOMO_DATABASE_PASSWORD=${MATOMODB_PASS}
+      - MATOMO_DATABASE_DBNAME=${MATOMO_DB}
     networks:
       - proxy_network
 
@@ -72,6 +72,6 @@ services:
     volumes:
       - ${DATA_PATH}/volumes/website/cms/.env:/.env
     networks:
-     - proxy_network
+      - proxy_network
     ports:
-     - 3000:3000
+      - 3000:3000

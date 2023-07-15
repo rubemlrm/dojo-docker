@@ -23,22 +23,22 @@
     ansible.builtin.package:
       name: '{{ item }}'
       state: present
-      update_cache: yes
+      update_cache: true
     with_items:
       - docker-compose
   - name: 'Just force systemd to reread configs'
     ansible.builtin.systemd:
-      daemon_reload: yes
+      daemon_reload: true
   - name: 'Start docker'
     ansible.builtin.systemd:
       name: docker
       state: started
-      enabled: yes
+      enabled: true
   - name: 'Add user to docker group'
     ansible.builtin.user:
       name: '{{ username }}'
       groups: docker
-      append: yes
+      append: true
   - name: Enable docker swarm mode
     docker_swarm:
       state: present
