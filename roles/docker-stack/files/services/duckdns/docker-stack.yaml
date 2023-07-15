@@ -1,0 +1,16 @@
+---
+version: '3.7'
+services:
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - PUID=${UID} #optional
+      - PGID=${GID} #optional
+      - TZ=Etc/UTC #optional
+      - SUBDOMAINS=${DUCKDNS_DOMAINS}
+      - TOKEN=${DUCKDNS_TOKEN}
+      - LOG_FILE=false #optional
+    volumes:
+      - ${DATA_PATH}/volumes/duckdns:/config
+    restart: unless-stopped

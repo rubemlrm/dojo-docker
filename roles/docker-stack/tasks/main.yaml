@@ -30,6 +30,30 @@
   with_items: "{{ docker_networks }}"
 
 
+- name: Deploy duckdns service stacks
+  block:
+    - name: Create duckdns service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        -  "{{ docker_configs.config_path }}/duckdns"
+    - name: Setup duckdns service
+      docker_stack:
+        state: present
+        name: traefik
+        compose:
+          - "{{ docker_stacks_services_path }}/duckdns/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        DUCKDNS_DOMAINS: "{{ docker_services_secrets.duckdns.domains }}"
+        TOKEN: "{{ docker_services_secrets.duckdns.token }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.duckdns.enabled is true
+
+
 - name: Deploy traefik service stacks
   block:
     - name: Create traefik service directories

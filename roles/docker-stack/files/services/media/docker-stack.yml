@@ -26,8 +26,6 @@ services:
         - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.emby.loadbalancer.server.port=8096'
-        - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
     container_name: embyserver
     environment:
       - UID=1000 # The UID to run emby as (default: 2)
@@ -62,8 +60,6 @@ services:
         - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
-        - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
     container_name: qbittorrent
     networks:
       - proxy_network

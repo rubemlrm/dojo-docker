@@ -25,6 +25,8 @@ docker_stacks:
     enabled: true
   website:
     enabled: true
+  duckdns:
+    enabled: false
 
 docker_swarm_advertise_addr: 192.168.2.4
 enable_docker_swarm_mode: true

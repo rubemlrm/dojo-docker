@@ -26,7 +26,6 @@ services:
         - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
         - 'traefik.docker.network=proxy_network'
         - 'com.centurylinklabs.watchtower.enable=true'
-        - 'docker-volume-backup.stop-during-backup=true'
     container_name: portainer
     domainname: portainer
     restart: unless-stopped

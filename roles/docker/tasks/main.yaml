@@ -12,7 +12,6 @@
   {{ ansible_distribution_release | lower }} stable"
         state: present
         filename: docker.list
-  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: Install docker pages
   become: true
@@ -21,6 +20,7 @@
     ansible.builtin.package:
       name: '{{ item }}'
       state: present
+      update_cache: yes
     with_items:
       - docker-ce
       - docker-ce-cli

@@ -6,66 +6,6 @@ networks:
     name: proxy_network
     external: true
 services:
-  # Secure Socket and Auto Update images
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    domainname: watchtower
-    restart: unless-stopped
-    networks:
-      - proxy_network
-    depends_on:
-      - dockerproxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - 'com.centurylinklabs.watchtower.enable=true'
-    command: --label-enable --cleanup --interval 36000 -H tcp://dockerproxy:2375
-
-  dockerproxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: dockerproxy
-    domainname: dockerproxy
-    restart: unless-stopped
-    networks:
-      - proxy_network
-    ports:
-      - 2375
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - CONTAINERS=1
-      - TASKS=1
-      - VOLUMES=1
-      - SERVICES=1
-      - IMAGES=1
-      - INFO=1
-      - NETWORKS=1
-      - POST=1
-      - DELETE=1
-      - CONTAINERS_CREATE=1
-      - CONTAINERS_START=1
-      - CONTAINERS_UPDATE=1
-      - CONTAINERS_DELETE=1
-      - IMAGES_DELETE=1
-      - SWARM=1
-      - NODES=1
-  fail2ban:
-    image: crazymax/fail2ban:latest
-    container_name: fail2ban
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    volumes:
-      - "./fail2ban:/data"
-      - "/var/log:/var/log:ro"
-    environment:
-     - TZ=Europe/Paris
-     - F2B_LOG_TARGET=STDOUT
-     - F2B_LOG_LEVEL=INFO
-     - F2B_DB_PURGE_AGE=1d
-    restart: always
   # Web Reverse Proxy
   traefik:
     image: traefik:v2.8
@@ -86,7 +26,6 @@ services:
       - 8080:8080
     volumes:
       - ${CONFIG_PATH}/traefik/certs:/letsencrypt/
-      - /var/log/traefik:/var/log
     command:
       - '--metrics.prometheus=true'
       - '--entryPoints.metrics.address=:8082'

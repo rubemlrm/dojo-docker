@@ -21,7 +21,6 @@ services:
         delay: 30s
         max_attempts: 3
       labels:
-        - 'com.centurylinklabs.watchtower.enable=true'
         - 'traefik.enable=true'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.routers.homeassistant.entrypoints=${HOMEASSISTANT_DEFAULT_ENDPOINT}'
