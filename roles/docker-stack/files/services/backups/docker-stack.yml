@@ -1,0 +1,30 @@
+---
+version: '3.8'
+
+networks:
+  proxy_network:
+    name: proxy_network
+volumes:
+  dojo_prometheus_data:
+    external: true
+  dojo_grafana_data:
+    external: true
+
+services:
+  backup:
+    image: offen/docker-volume-backup:v2
+    user: "${UID}:${GID}"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    restart: always
+    volumes:
+      - dojo_prometheus_data:/backup/dojo_prometheus_data
+      - dojo_grafana_data:/backup/dojo_grafana_data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_PATH}/docker-backups:/archive

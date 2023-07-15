@@ -1,0 +1,41 @@
+---
+base_packages:
+  - aspell
+  - aspell-pt
+  - automake
+  - cmake
+  - exuberant-ctags
+  - gcc
+  - git
+  - htop
+  - ruby
+  - tmux
+  - vim
+  - nano
+  - zsh
+  - numlockx
+  - wget
+  - exfat-utils
+  - screenfetch
+  - python3-pip
+  - python3-oauth2client
+  - curl
+  - wget
+  - vim
+  - screenfetch
+  - powerline
+  - fonts-powerline
+  - build-essential
+  - libssl-dev
+  - libreadline-dev
+  - zlib1g-dev
+  - stow
+  - ripgrep
+  - python3-jsondiff
+  - neovim
+  - fzf
+
+font_packages:
+  - fonts-firacode
+  - fonts-font-awesome
+  - fonts-hack-ttf

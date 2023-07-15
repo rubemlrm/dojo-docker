@@ -1,0 +1,78 @@
+---
+version: '3'
+
+networks:
+  monitoring_network:
+    external: true
+  proxy_network:
+    external: true
+services:
+  emby:
+    image: emby/embyserver
+    user: "${UID}:${GID}"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.emby.entrypoints=${EMBY_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.emby.rule=Host(`${EMBY_DOMAIN}`)'
+        - 'traefik.http.routers.emby.tls=${EMBY_ENABLE_SSL}'
+        - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.services.emby.loadbalancer.server.port=8096'
+    container_name: embyserver
+    environment:
+      - UID=1000
+      - GID=100
+      - GIDLIST=100
+    volumes:
+      - ${DATA_PATH}/volumes/media/emby:/config
+      - ${MEDIA_PATH}:/mnt/share
+    ports:
+      - 8096:8096
+      - 8920:8920
+    restart: on-failure
+    networks:
+      - proxy_network
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    user: "${UID}:${GID}"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.qbittorrent.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENTS_DOMAIN}`)'
+        - 'traefik.http.routers.qbittorrent.tls=${TORRENTS_ENABLE_SSL}'
+        - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
+    container_name: qbittorrent
+    networks:
+      - proxy_network
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+    volumes:
+      - ${DATA_PATH}/volumes/media/qbittorrent:/config
+      - ${MEDIA_PATH}:/downloads
+    ports:
+      - 8010:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+---
+all:
+  hosts:
+    DojoPi:
+      ansible_connection: ssh
+      ansible_host: 192.168.2.4

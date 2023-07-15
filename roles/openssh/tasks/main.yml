@@ -1,0 +1,34 @@
+---
+- name: Setup openssh
+  become: true
+  block:
+    - name: Install openssh
+      ansible.builtin.package:
+        name: 'openssh-server'
+        state: present
+    - name: Copy ssh custom configs
+      ansible.builtin.template:
+        src: '{{ item.origin_name }}'
+        dest: /etc/ssh/{{ item.file_name }}
+        mode: 0644
+      with_items:
+        - origin_name: ssh_config.j2
+          file_name: ssh_config
+        - origin_name: sshd_config.j2
+          file_name: sshd_config
+      notify:
+        - Enable openssh server
+        - Restart openssh server
+    - name: Tweak SSH rules on firewall
+      when: use_firewall is true
+      block:
+        - name: Remove old firewall rule
+          ansible.posix.firewalld:
+            service: ssh
+            permanent: true
+            state: disabled
+        - name: Enable firewall rule
+          ansible.posix.firewalld:
+            port: '{{ ssh_port }}/tcp'
+            permanent: true
+            state: enabled

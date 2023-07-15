@@ -1,0 +1,14 @@
+---
+- name: Install base packages
+  become: true
+  block:
+    - name: Install cli utils
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ base_packages }}"
+    - name: Install fonts
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ font_packages }}"

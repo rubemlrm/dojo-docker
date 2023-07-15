@@ -1,0 +1,65 @@
+---
+version: '3.8'
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+services:
+  # Web Reverse Proxy
+  traefik:
+    image: traefik:v2.8
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    container_name: traefik
+    domainname: ${TRAEFIK_DOMAIN}
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ${DATA_PATH}/volumes/traefik/certs:/letsencrypt/
+      - ${DATA_PATH}/volumes/traefik/logs:/var/log
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    command:
+      - '--metrics.prometheus=true'
+      - '--entryPoints.metrics.address=:8082'
+      - '--metrics.prometheus.entryPoint=metrics'
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.network=proxy_network'
+      - '--providers.docker.swarmMode=true'
+      - '--providers.docker.exposedbydefault=false'
+      # configure endpoints
+      - '--entrypoints.web.address=:80'
+      # '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      # '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.websecure.address=:443'
+      # SSL configuration
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
+      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
+      - '--accesslog=true'
+      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
+      - '--experimental.plugins.fail2ban.version=v0.6.6'
+      - '--accessLog.filePath=/var/log/access.log'
+      - '--accessLog.filters.statusCodes=400-499'
+      - '--tracing.jaeger=true'
+      - '--tracing.jaeger.samplingServerURL=http://jaeger:5778/sampling'
+      - '--tracing.jaeger.localAgentHostPort=jaeger:6831'
+    networks:
+      - proxy_network
+    dns:
+      - ${TRAEFIK_DNS1}
+      - ${TRAEFIK_DNS2}
+    extra_hosts:
+      - host.docker.internal:172.17.0.1

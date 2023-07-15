@@ -1,0 +1,12 @@
+#local network domains
+192.168.2.4 dns.dojo.lan
+192.168.2.4 irc.dojo.lan
+192.168.2.4 grafana.dojo.lan
+192.168.2.4 pihole-exporter.dojo.lan
+192.168.2.4 prometheus.dojo.lan
+192.168.2.4 torrents.dojo.lan
+192.168.2.4 home.dojo.lan
+192.168.2.4 backup.dojo.lan
+192.168.2.4 media.dojo.lan
+192.168.2.4 jaeger.dojo.lan
+192.168.2.4 portainer.dojo.lan

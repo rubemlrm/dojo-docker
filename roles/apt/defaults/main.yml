@@ -1,0 +1,7 @@
+---
+packages:
+  - apt-transport-https
+  - ca-certificates
+
+deb_repos: {}
+repo_gpgs: {}

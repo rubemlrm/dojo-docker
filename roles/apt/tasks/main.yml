@@ -1,0 +1,33 @@
+---
+- name: Add Custom repos for Debian Based
+  become: true
+  block:
+    - name: update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+    - name: install gpg
+      ansible.builtin.package:
+        name: gnupg
+        state: present
+    - name: Add gpg keys
+      ansible.builtin.apt_key:
+        url: "{{ item }}"
+        state: "present"
+      with_items: "{{ repo_gpgs }}"
+    - name: Add deb repos
+      ansible.builtin.apt_repository:
+        repo: "{{ item.url }}"
+        filename: "{{ item.filename }}"
+        state: present
+      with_items: "{{ deb_repos }}"
+    - name: Update repos to install ca-certificates and https-transport
+      become: true
+      ansible.builtin.apt:
+        name: "*"
+        update_cache: true
+        force_apt_get: true
+    - name: Install ca-certificates and https-transport
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ packages }}"

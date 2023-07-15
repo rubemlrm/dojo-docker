@@ -1,0 +1,16 @@
+---
+- name: Setup User
+  block:
+    - name: change user shell to zsh
+      become: yes
+      ansible.builtin.user:
+        name: "{{ username }}"
+        shell: /bin/zsh
+    - name: Created base folders for configs
+      ansible.builtin.file:
+        path: "{{ home_dir }}/{{ item }}"
+        state: directory
+        mode: 0755
+        owner: "{{ username }}"
+        group: "{{ user_group }}"
+      with_items: "{{ users_directories }}"

@@ -1,0 +1,92 @@
+---
+version: '3'
+
+networks:
+  homeassistant:
+  proxy_network:
+    external: true
+services:
+  homeassistant:
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    user: "${UID}:${GID}"
+    networks:
+      - proxy_network
+      - homeassistant
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.docker.network=proxy_network'
+        - 'traefik.http.routers.homeassistant.entrypoints=${HOMEASSISTANT_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.homeassistant.rule=Host(`${HOMEASSISTANT_DOMAIN}`)'
+        - 'traefik.http.routers.homeassistant.tls=${HOMEASSISTANT_ENABLE_SSL}'
+        - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
+        - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
+    volumes:
+      - ./homeassistant/blueprints:/config/blueprints
+      - ./homeassistant/automations.yaml:/config/automations.yaml
+      - ./homeassistant/configuration.yaml:/config/configuration.yaml
+      - ./homeassistant/scenes.yaml:/config/scenes.yaml
+      - ./homeassistant/scripts.yaml:/config/scripts.yaml
+      - ./homeassistant/secrets.yaml:/config/secrets.yaml
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    depends_on:
+      - homeassistant_postgres
+      - homeassistant_influxdb
+
+  homeassistant_postgres:
+    image: postgres:14
+    user: "${UID}:${GID}"
+    restart: always
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    environment:
+      POSTGRES_DB: ${HOMEASSISTANT_DB}
+      POSTGRES_USER: ${HOMEASSISTANT_DB_USER}
+      POSTGRES_PASSWORD: ${HOMEASSISTANT_DB_PASSWORD}
+    volumes:
+      - ${DATA_PATH}/volumes/homeassistant/postgres:/var/lib/postgresql/data
+    networks:
+      - homeassistant
+
+  homeassistant_influxdb:
+    image: influxdb:latest
+    user: "${UID}:${GID}"
+    restart: always
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - INFLUXDB_DB=${HOMEASSISTANT_INFLUX_DB}
+      - DOCKER_INFLUXDB_INIT_USERNAME=${HOMEASSISTANT_INFLUX_DB_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${HOMEASSISTANT_INFLUX_DB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+      - DOCKER_INFLUXDB_INIT_ORG=ha-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
+    volumes:
+      - ${DATA_PATH}/volumes/homeassistant/influxdb:/var/lib/influxdb2
+    networks:
+      - homeassistant

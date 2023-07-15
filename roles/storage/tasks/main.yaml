@@ -1,0 +1,20 @@
+---
+- name: Setup Storage
+  become: true
+  block:
+    - name: Configure disk mounts in /etc/fstab
+      mount:
+        path: "{{ item.dest }}"
+        src: "{{ item.src }}"
+        fstype: ext4
+        opts: rw,async
+        state: mounted
+      with_items: "{{ storage_configs }}"
+
+    - name: Change mount directories ownership
+      file:
+        path: "{{ item.dest }}"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: "0744"
+      loop: "{{ storage_configs }}"
