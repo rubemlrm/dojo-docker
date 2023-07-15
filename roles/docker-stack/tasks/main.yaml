@@ -38,7 +38,7 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.config_path }}/duckdns"
+        -  "{{ docker_configs.data_path }}/duckdns"
     - name: Setup duckdns service
       docker_stack:
         state: present
@@ -62,7 +62,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        -  "{{ docker_configs.config_path }}/traefik/certs"
+        -  "{{ docker_configs.data_path }}/volumes/traefik/certs"
+        -  "{{ docker_configs.data_path }}/volumes/traefik/logs"
     - name: Setup traefik service
       docker_stack:
         state: present
@@ -71,7 +72,6 @@
           - "{{ docker_stacks_services_path }}/traefik/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
-        CONFIG_PATH: "{{ docker_configs.config_path }}"
         TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
         TRAEFIK_DOMAIN: "{{ docker_services_secrets.traefik.domain }}"
         TRAEFIK_DNS1: "{{ docker_services_secrets.traefik.dns_1 }}"
@@ -214,7 +214,7 @@
       with_items:
         -  "{{ docker_configs.data_path }}/volumes/media/emby"
         -  "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
-    - name: Setup service
+    - name: Setup media service
       docker_stack:
         state: present
         name: media
@@ -222,16 +222,16 @@
           - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
-        CONFIG_PATH: "{{ docker_configs.config_path }}"
-        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.qbittorrent.default_endpoint }}"
-        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.qbittorrent.enable_ssl }}"
-        TORRENTS_DOMAIN: "{{ docker_services_secrets.qbittorrent.domain }}"
+        MEDIA_PATH: "{{ docker_configs.media_path }}"
+        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.default_endpoint }}"
+        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.torrent.enable_ssl }}"
+        TORRENTS_DOMAIN: "{{ docker_services_secrets.torrent.domain }}"
         EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
         EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
         EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.monitoring.enabled is true
+  #when: docker_stacks.homemedia.enabled is true
 
 - name: Deploy website service stacks
   block:

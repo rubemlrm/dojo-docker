@@ -15,8 +15,8 @@ docker_stacks:
     enabled: false
   irc:
     enabled: true
-  media:
-    enabled: false
+  homemedia:
+    enabled: true
   pihole:
     enabled: true
   portainer:

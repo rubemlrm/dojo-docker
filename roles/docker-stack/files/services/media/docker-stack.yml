@@ -33,7 +33,7 @@ services:
       - GIDLIST=100 # A comma-separated list of additional GIDs to run emby as (default: 2)
     volumes:
       - ${DATA_PATH}/volumes/media/emby:/config # Configuration directory
-      - /home/rubemlrm/Media:/mnt/share # Media directory
+      - ${MEDIA_PATH}:/mnt/share # Media directory
     ports:
       - 8096:8096 # HTTP port
       - 8920:8920 # HTTPS port
@@ -70,7 +70,7 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - ${DATA_PATH}/volumes/media/qbittorrent:/config
-      - /home/rubemlrm/Media:/downloads
+      - ${MEDIA_PATH}:/downloads
     ports:
       - 8010:8080
       - 6881:6881

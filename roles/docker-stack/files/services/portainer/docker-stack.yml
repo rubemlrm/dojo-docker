@@ -33,5 +33,5 @@ services:
       - proxy_network
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - ${DATA_PATH}/volumes/portainer:/data
-    command: -H tcp://dockerproxy:2375

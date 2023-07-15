@@ -1,30 +1,30 @@
 ---
-- name: Debian Based - Pre-Setup Docker service
-  become: true
-  block:
-    - name: Add Docker GPG key
-      apt_key:
-        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
-        state: present
-    - name: Debian - Add docker repo
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} \
-  {{ ansible_distribution_release | lower }} stable"
-        state: present
-        filename: docker.list
+- name: "Common cli test - check package status"
+  ansible.builtin.package:
+    name: "docker"
+    state: "present"
+  check_mode: yes
+  register: pkg_status
 
 - name: Install docker pages
   become: true
   block:
+  - name: Download scripts
+    get_url:
+      url: "https://get.docker.com/"
+      dest: "/tmp/get-docker.sh"
+      mode: "0776"
+  - name: Install docker
+    command: "/tmp/get-docker.sh"
+    environment:
+      CHANNEL: stable
+
   - name: Install containers packages
     ansible.builtin.package:
       name: '{{ item }}'
       state: present
       update_cache: yes
     with_items:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
       - docker-compose
   - name: 'Just force systemd to reread configs'
     ansible.builtin.systemd:
@@ -45,3 +45,4 @@
       advertise_addr: "{{ docker_swarm_advertise_addr }}"
     register: output
     when: enable_docker_swarm_mode|bool == true
+  when: not pkg_status.changed

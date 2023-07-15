@@ -11,6 +11,7 @@
         file: secrets.yaml
   roles:
     - apt
+    - storage
     - resolvconf
     - openssh
     - fail2ban

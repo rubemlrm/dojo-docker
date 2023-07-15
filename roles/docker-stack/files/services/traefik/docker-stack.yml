@@ -25,8 +25,9 @@ services:
       - 443:443
       - 8080:8080
     volumes:
-      - ${CONFIG_PATH}/volumes/traefik/certs:/letsencrypt/
-      - ${CONFIG_PATH}/volumes/traefik/logs:/var/log
+      - ${DATA_PATH}/volumes/traefik/certs:/letsencrypt/
+      - ${DATA_PATH}/volumes/traefik/logs:/var/log
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
     command:
       - '--metrics.prometheus=true'
       - '--entryPoints.metrics.address=:8082'
@@ -37,7 +38,6 @@ services:
       - '--providers.docker.network=proxy_network'
       - '--providers.docker.swarmMode=true'
       - '--providers.docker.exposedbydefault=false'
-      - '--providers.docker.endpoint=tcp://dockerproxy:2375'
       # configure endpoints
       - '--entrypoints.web.address=:80'
       #- '--entrypoints.web.http.redirections.entrypoint.to=websecure'
