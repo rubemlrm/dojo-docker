@@ -17,15 +17,16 @@ docker_volumes:
   - name: dojo_grafana_data
     internal: false
 
+
 docker_stacks:
   backups:
     enabled: false
   homeassistant:
-    enabled: false
+    enabled: true
   irc:
     enabled: true
-  media:
-    enabled: false
+  homemedia:
+    enabled: true
   pihole:
     enabled: true
   portainer:
@@ -34,6 +35,15 @@ docker_stacks:
     enabled: true
   website:
     enabled: true
+  duckdns:
+    enabled: true
+  monitoring:
+    enabled: true
+
+docker_swarm_advertise_addr: 192.168.2.4
+enable_docker_swarm_mode: true
+ssh_port: 22
+
 
 username: rubemlrm
 git_email:
@@ -42,6 +52,3 @@ user_group: rubemlrm
 home_dir: "/home/rubemlrm/"
 docker_stacks_path: "/home/rubemlrm/docker/"
 docker_stacks_services_path: "/home/rubemlrm/docker/services"
-docker_swarm_advertise_addr:
-enable_docker_swarm_mode: true
-ssh_port:

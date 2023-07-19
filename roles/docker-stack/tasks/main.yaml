@@ -38,11 +38,11 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        - "{{ docker_configs.data_path }}/duckdns"
+        - "{{ docker_configs.data_path }}/volumes/duckdns"
     - name: Setup duckdns service
       docker_stack:
         state: present
-        name: traefik
+        name: duckdns
         compose:
           - "{{ docker_stacks_services_path }}/duckdns/docker-stack.yml"
       environment:
@@ -56,6 +56,32 @@
 
 - name: Deploy traefik service stacks
   block:
+    - name: Setup Ports
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "8080/tcp"
+
+    - name: permit traffic in default zone for https service
+      become: true
+      ansible.posix.firewalld:
+        service: https
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: permit traffic in default zone for http service
+      become: true
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        immediate: true
+        state: enabled
+
     - name: Create traefik service directories
       file:
         path: "{{ item }}"
@@ -160,6 +186,15 @@
           owner: "{{ docker_configs.puid }}"
         - path: "{{ docker_configs.data_path }}/volumes/pihole/dns"
           owner: "{{ docker_configs.puid }}"
+
+    - name: permit traffic in default zone for dns service
+      become: true
+      ansible.posix.firewalld:
+        service: dns
+        permanent: true
+        immediate: true
+        state: enabled
+
     - name: Setup pihole service
       docker_stack:
         state: present
@@ -206,6 +241,16 @@
 
 - name: Deploy media service stacks
   block:
+    - name: Setup Ports
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "8096/tcp"
+        - "8920/tcp"
     - name: Create media service directories
       file:
         path: "{{ item }}"
@@ -229,8 +274,6 @@
         EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
         EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
         EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.homemedia.enabled is true
 
 - name: Deploy website service stacks

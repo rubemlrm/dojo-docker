@@ -2,3 +2,4 @@
 .env
 data
 secrets.yaml
+get-docker.sh

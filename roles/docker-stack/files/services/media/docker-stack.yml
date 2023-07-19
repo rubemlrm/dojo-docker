@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '3.7'
 
 networks:
   monitoring_network:
@@ -8,7 +8,7 @@ networks:
     external: true
 services:
   emby:
-    image: emby/embyserver
+    image: emby/embyserver_arm64v8
     user: "${UID}:${GID}"
     deploy:
       replicas: 1

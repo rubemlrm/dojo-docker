@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '3.7'
 
 volumes:
   dojo_prometheus_data:
@@ -15,7 +15,6 @@ networks:
     external: true
     name: proxy_network
 services:
-  # monitoring
   prometheus:
     image: prom/prometheus:latest
     user: "${UID}:${GID}"
@@ -111,7 +110,7 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+      - "^/(sys|proc|dev|host|etc|rootfs${DATA_PATH}/data/system/containers|rootfs${DATA_PATH}/data/system/overlay2|rootfs${DATA_PATH}/data/system/netns|rootfs${DATA_PATH}/data/system/aufs)($$|/)"
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
     user: "${UID}:${GID}"
@@ -130,10 +129,10 @@ services:
       - proxy_network
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:rw
+      - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - /sys/fs/cgroup/:/sys/fs/cgroup/
-      - /var/lib/docker/:/var/lib/docker:ro
+      - ${DATA_PATH}/data/system/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
   speedtest:

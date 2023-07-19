@@ -1,7 +1,7 @@
 ---
 - name: "Common cli test - check package status"
   ansible.builtin.package:
-    name: "docker"
+    name: "docker-ce"
     state: "present"
   check_mode: yes
   register: pkg_status
@@ -29,6 +29,16 @@
   - name: 'Just force systemd to reread configs'
     ansible.builtin.systemd:
       daemon_reload: true
+
+  - name: Copy docker custom configs
+    ansible.builtin.template:
+      src: '{{ item.origin_name }}'
+      dest: '{{ item.dest }}'
+      mode: 0644
+    with_items:
+      - origin_name: daemon.json.j2
+        dest: /etc/docker/daemon.json
+
   - name: 'Start docker'
     ansible.builtin.systemd:
       name: docker
@@ -39,10 +49,21 @@
       name: '{{ username }}'
       groups: docker
       append: true
+
+  - name: Setup Ports
+    ansible.posix.firewalld:
+      port: "{{ item }}"
+      permanent: true
+      immediate: true
+      state: enabled
+    with_items:
+      - "2376/tcp"
+      - "7946/tcp"
+      - "7946/udp"
+      - "4789/udp"
   - name: Enable docker swarm mode
     docker_swarm:
       state: present
       advertise_addr: "{{ docker_swarm_advertise_addr }}"
     register: output
-    when: enable_docker_swarm_mode|bool == true
-  when: not pkg_status.changed
+  when: pkg_status is not succeeded

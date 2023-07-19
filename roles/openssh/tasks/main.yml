@@ -20,7 +20,6 @@
         - Enable openssh server
         - Restart openssh server
     - name: Tweak SSH rules on firewall
-      when: use_firewall is true
       block:
         - name: Remove old firewall rule
           ansible.posix.firewalld:
