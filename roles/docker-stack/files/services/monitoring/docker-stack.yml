@@ -112,7 +112,7 @@ services:
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs${DATA_PATH}/data/system/containers|rootfs${DATA_PATH}/data/system/overlay2|rootfs${DATA_PATH}/data/system/netns|rootfs${DATA_PATH}/data/system/aufs)($$|/)"
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     user: "${UID}:${GID}"
     deploy:
       replicas: 1
@@ -131,7 +131,7 @@ services:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - ${DATA_PATH}/data/system/:/var/lib/docker:ro
+      - ${DATA_PATH}/system/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro

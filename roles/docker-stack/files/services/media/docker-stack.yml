@@ -8,7 +8,7 @@ networks:
     external: true
 services:
   emby:
-    image: emby/embyserver_arm64v8
+    image: jellyfin/jellyfin
     user: "${UID}:${GID}"
     deploy:
       replicas: 1
@@ -31,12 +31,21 @@ services:
       - UID=1000
       - GID=100
       - GIDLIST=100
+      - JELLYFIN_PublishedServerUrl=http://${EMBY_DOMAIN}
     volumes:
-      - ${DATA_PATH}/volumes/media/emby:/config
-      - ${MEDIA_PATH}:/mnt/share
+      - ${DATA_PATH}/volumes/media/config:/config
+      - ${DATA_PATH}/volumes/media/cache:/cache
+      - ${MEDIA_PATH}:/media
+      - /etc/localtime:/etc/localtime:ro
     ports:
-      - 8096:8096
-      - 8920:8920
+      - target: 7359
+        published: 7359
+        protocol: udp
+        mode: host
+      - target: 1900
+        published: 1900
+        protocol: udp
+        mode: host
     restart: on-failure
     networks:
       - proxy_network

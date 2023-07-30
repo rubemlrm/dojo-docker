@@ -1,28 +1,18 @@
 ---
 
-
 docker_networks:
-  - name: monitoring_network
-    internal: false
   - name: pihole_network
-    internal: true
-  - name: homeassistant
     internal: true
   - name: proxy_network
     internal: false
 
-docker_volumes:
-  - name: dojo_prometheus_data
-    internal: false
-  - name: dojo_grafana_data
-    internal: false
-
+docker_volumes: {}
 
 docker_stacks:
   backups:
     enabled: true
   homeassistant:
-    enabled: true
+    enabled: false
   irc:
     enabled: true
   homemedia:
@@ -37,20 +27,9 @@ docker_stacks:
     enabled: true
   duckdns:
     enabled: true
-  monitoring:
-    enabled: true
   grocery:
     enabled: true
 
 docker_swarm_advertise_addr: 192.168.2.4
 enable_docker_swarm_mode: true
-host_management: true
-host_worker: false
 ssh_port: 22
-
-
-username: rubemlrm
-user_group: rubemlrm
-home_dir: "/home/rubemlrm/"
-docker_stacks_path: "/home/rubemlrm/docker/"
-docker_stacks_services_path: "/home/rubemlrm/docker/services"

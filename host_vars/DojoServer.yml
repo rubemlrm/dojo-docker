@@ -10,9 +10,9 @@ docker_volumes: {}
 
 docker_stacks:
   backups:
-    enabled: false
-  homeassistant:
     enabled: true
+  homeassistant:
+    enabled: false
   irc:
     enabled: true
   homemedia:
@@ -26,6 +26,8 @@ docker_stacks:
   website:
     enabled: true
   duckdns:
+    enabled: true
+  grocery:
     enabled: true
 
 docker_swarm_advertise_addr: 192.168.2.4

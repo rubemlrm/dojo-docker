@@ -66,4 +66,5 @@
       state: present
       advertise_addr: "{{ docker_swarm_advertise_addr }}"
     register: output
+    when: host_management is true
   when: pkg_status is not succeeded

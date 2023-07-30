@@ -4,16 +4,11 @@ version: '3.8'
 networks:
   proxy_network:
     name: proxy_network
-volumes:
-  dojo_prometheus_data:
-    external: true
-  dojo_grafana_data:
     external: true
 
 services:
   backup:
-    image: offen/docker-volume-backup:v2
-    user: "${UID}:${GID}"
+    image: lscr.io/linuxserver/duplicati:latest
     deploy:
       replicas: 1
       placement:
@@ -22,9 +17,18 @@ services:
         condition: on-failure
         delay: 30s
         max_attempts: 3
-    restart: always
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.backup.entrypoints=${DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.backup.rule=Host(`${BACKUP_DOMAIN}`)'
+        - 'traefik.http.routers.backup.tls=${ENABLE_SSL}'
+        - 'traefik.http.routers.backup.tls.certresolver=letsencryptresolver'
+        - 'traefik.http.routers.backup.service=backup'
+        - 'traefik.http.services.backup.loadbalancer.server.port=8200'
+        - 'traefik.docker.network=proxy_network'
+    networks:
+      - proxy_network
     volumes:
-      - dojo_prometheus_data:/backup/dojo_prometheus_data
-      - dojo_grafana_data:/backup/dojo_grafana_data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DATA_PATH}/docker-backups:/archive
+      - ${DATA_PATH}/volumes/backups/:/config
+      - ${DATA_PATH}/:/source
+      - ${MEDIA_PATH}/docker-backups:/backups

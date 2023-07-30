@@ -130,6 +130,30 @@
         GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.portainer.enabled is true
 
+- name: Deploy grocery service stacks
+  block:
+    - name: Create grocery service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/grocery"
+    - name: Setup grocery service
+      docker_stack:
+        state: present
+        name: grocery
+        compose:
+          - "{{ docker_stacks_services_path }}/grocery/docker-stack.yml"
+      environment:
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        GROCERY_DOMAIN: "{{ docker_services_secrets.grocery.domain }}"
+        DEFAULT_ENDPOINT: "{{ docker_services_secrets.grocery.default_endpoint }}"
+        ENABLE_SSL: "{{ docker_services_secrets.grocery.enable_ssl }}"
+  when: docker_stacks.grocery.enabled is true
+
 - name: Deploy irc service stacks
   block:
     - name: Create irc service directories
@@ -162,7 +186,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        - "{{ docker_configs.data_path }}/docker-backups"
+        - "{{ docker_configs.data_path }}/volumes/backups"
+        - "{{ docker_configs.media_path }}/docker-backups"
     - name: Setup backups service
       docker_stack:
         state: present
@@ -171,8 +196,12 @@
           - "{{ docker_stacks_services_path }}/backups/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
+        MEDIA_PATH: "{{ docker_configs.media_path }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
+        BACKUP_DOMAIN: "{{ docker_services_secrets.backup.domain }}"
+        DEFAULT_ENDPOINT: "{{ docker_services_secrets.backup.default_endpoint }}"
+        ENABLE_SSL: "{{ docker_services_secrets.backup.enable_ssl }}"
   when: docker_stacks.backups.enabled is true
 
 - name: Deploy pihole service stacks
@@ -225,6 +254,7 @@
         compose:
           - "{{ docker_stacks_services_path }}/monitoring/docker-stack.yml"
       environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
         PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
         PROMETHEUS_DOMAIN: "{{ docker_services_secrets.prometheus.domain }}"
         PROMETHEUS_ENABLE_SSL: "{{ docker_services_secrets.prometheus.enable_ssl }}"
@@ -251,6 +281,8 @@
       with_items:
         - "8096/tcp"
         - "8920/tcp"
+        - "7539/udp"
+        - "1900/udp"
     - name: Create media service directories
       file:
         path: "{{ item }}"

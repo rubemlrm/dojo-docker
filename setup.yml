@@ -12,12 +12,11 @@
         file: secrets.yaml
   roles:
     - apt
-    - storage
+    #- storage
     - resolvconf
     - openssh
     - fail2ban
     - firewall
     - cli
-    - users
     - docker
     - docker-stack
