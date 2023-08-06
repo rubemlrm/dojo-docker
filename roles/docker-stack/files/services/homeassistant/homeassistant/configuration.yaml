@@ -41,6 +41,8 @@ influxdb:
 
 recorder:
   db_url: !secret postgres_url
+  auto_purge: false
+
 
 automation: !include automations.yaml
 script: !include scripts.yaml
