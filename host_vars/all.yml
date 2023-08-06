@@ -39,7 +39,7 @@ docker_stacks:
     enabled: true
   monitoring:
     enabled: true
-  grocery:
+  torrents:
     enabled: true
 
 docker_swarm_advertise_addr: 192.168.2.4

@@ -130,30 +130,6 @@
         GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.portainer.enabled is true
 
-- name: Deploy grocery service stacks
-  block:
-    - name: Create grocery service directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        owner: "{{ username }}"
-      with_items:
-        - "{{ docker_configs.data_path }}/volumes/grocery"
-    - name: Setup grocery service
-      docker_stack:
-        state: present
-        name: grocery
-        compose:
-          - "{{ docker_stacks_services_path }}/grocery/docker-stack.yml"
-      environment:
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        GROCERY_DOMAIN: "{{ docker_services_secrets.grocery.domain }}"
-        DEFAULT_ENDPOINT: "{{ docker_services_secrets.grocery.default_endpoint }}"
-        ENABLE_SSL: "{{ docker_services_secrets.grocery.enable_ssl }}"
-  when: docker_stacks.grocery.enabled is true
-
 - name: Deploy irc service stacks
   block:
     - name: Create irc service directories
@@ -182,12 +158,24 @@
   block:
     - name: Create backups service directories
       file:
-        path: "{{ item }}"
+        path: "{{ item.path }}"
         state: directory
-        owner: "{{ username }}"
+        owner: "{{ item.owner }}"
       with_items:
-        - "{{ docker_configs.data_path }}/volumes/backups"
-        - "{{ docker_configs.media_path }}/docker-backups"
+        - path: "{{ docker_configs.data_path }}/volumes/backups"
+          owner: "{{ username }}"
+        - path: "{{ docker_configs.data_path }}/docker-backups"
+          owner: "{{ username }}"
+        - path: "{{ docker_configs.data_path }}/docker-backups/databases"
+          owner: "999"
+        - path: "{{ docker_configs.data_path }}/docker-backups/volumes"
+          owner: "{{ username }}"
+        - path: "{{ docker_configs.media_path }}/docker-backups"
+          owner: "{{ username }}"
+        - path: "{{ docker_configs.media_path }}/docker-backups/databases"
+          owner: "{{ username }}"
+        - path: "{{ docker_configs.media_path }}/docker-backups/volumes"
+          owner: "{{ username }}"
     - name: Setup backups service
       docker_stack:
         state: present
@@ -300,13 +288,46 @@
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
-        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.default_endpoint }}"
-        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.torrent.enable_ssl }}"
-        TORRENTS_DOMAIN: "{{ docker_services_secrets.torrent.domain }}"
         EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
         EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
         EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
   when: docker_stacks.homemedia.enabled is true
+
+
+- name: Deploy torrents service stacks
+  block:
+    - name: Setup Ports
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "8096/tcp"
+        - "8920/tcp"
+        - "7539/udp"
+        - "1900/udp"
+    - name: Create torrents service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+    - name: Setup torrents service
+      docker_stack:
+        state: present
+        name: torrents
+        compose:
+          - "{{ docker_stacks_services_path }}/torrents/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        MEDIA_PATH: "{{ docker_configs.media_path }}"
+        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.default_endpoint }}"
+        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.torrent.enable_ssl }}"
+        TORRENTS_DOMAIN: "{{ docker_services_secrets.torrent.domain }}"
+  when: docker_stacks.torrents.enabled is true
 
 - name: Deploy website service stacks
   block:
@@ -347,8 +368,9 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        - "{{ docker_configs.data_path }}/homeassistant/postgres"
-        - "{{ docker_configs.data_path }}/homeassistant/influxdb"
+        - "{{ docker_configs.data_path }}/volumes/homeassistant/homeassistant"
+        - "{{ docker_configs.data_path }}/volumes/homeassistant/postgres"
+        - "{{ docker_configs.data_path }}/volumes/homeassistant/influxdb"
     - name: Setup homeassistant service
       docker_stack:
         state: present

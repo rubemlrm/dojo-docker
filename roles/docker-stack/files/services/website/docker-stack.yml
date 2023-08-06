@@ -8,7 +8,14 @@ networks:
 services:
   matomodb:
     image: yobasystems/alpine-mariadb
-    restart: always
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 3
     networks:
       - proxy_network
     volumes:
@@ -21,13 +28,12 @@ services:
 
   matomo:
     image: matomo
-    restart: always
     deploy:
       replicas: 1
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
@@ -57,7 +63,7 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
@@ -68,7 +74,6 @@ services:
         - 'traefik.http.routers.cms.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.cms.loadbalancer.server.port=3000'
-    restart: always
     volumes:
       - ${DATA_PATH}/volumes/website/cms/.env:/.env
     networks:

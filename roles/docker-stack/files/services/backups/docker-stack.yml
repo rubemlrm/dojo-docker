@@ -14,7 +14,7 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
@@ -30,5 +30,8 @@ services:
       - proxy_network
     volumes:
       - ${DATA_PATH}/volumes/backups/:/config
-      - ${DATA_PATH}/:/source
+      - ${DATA_PATH}/docker-backups/:/source
       - ${MEDIA_PATH}/docker-backups:/backups
+    environment:
+      - PUID=${UID}
+      - PGID=${GID}

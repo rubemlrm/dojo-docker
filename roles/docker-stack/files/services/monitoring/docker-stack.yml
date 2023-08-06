@@ -23,7 +23,7 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
@@ -61,7 +61,7 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
@@ -72,7 +72,6 @@ services:
         - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
-    restart: unless-stopped
     networks:
       - monitoring_network
       - proxy_network
@@ -95,10 +94,9 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
-    restart: unless-stopped
     networks:
       - monitoring_network
       - proxy_network
@@ -119,10 +117,9 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
-    restart: unless-stopped
     privileged: true
     networks:
       - monitoring_network
@@ -147,21 +144,27 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
-    restart: always
     networks:
       - monitoring_network
       - proxy_network
   blackbox:
     tty: true
     stdin_open: true
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 3
     ports:
       - 9115:9115
     image: prom/blackbox-exporter
     user: "${UID}:${GID}"
-    restart: always
     volumes:
       - ./blackbox/config:/config
     command:
@@ -177,7 +180,7 @@ services:
       placement:
         constraints: [node.role == manager]
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 30s
         max_attempts: 3
       labels:
