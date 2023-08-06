@@ -26,6 +26,13 @@ services:
         condition: any
         delay: 30s
         max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
       labels:
         - 'traefik.enable=true'
         - 'traefik.http.routers.prometheus.entrypoints=${PROMETHEUS_DEFAULT_ENDPOINT}'
@@ -34,6 +41,7 @@ services:
         - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
+
     restart: unless-stopped
     networks:
       - monitoring_network
@@ -64,6 +72,13 @@ services:
         condition: any
         delay: 30s
         max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
       labels:
         - 'traefik.enable=true'
         - 'traefik.http.routers.grafana.entrypoints=${GRAFANA_DEFAULT_ENDPOINT}'
@@ -120,6 +135,13 @@ services:
         condition: any
         delay: 30s
         max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     privileged: true
     networks:
       - monitoring_network

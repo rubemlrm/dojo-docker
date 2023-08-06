@@ -25,6 +25,13 @@ services:
         - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     container_name: qbittorrent
     networks:
       - proxy_network
