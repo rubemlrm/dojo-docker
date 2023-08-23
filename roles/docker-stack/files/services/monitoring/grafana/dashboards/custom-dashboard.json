@@ -1,0 +1,1477 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 8,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 12,
+            "panels": [],
+            "title": "Server Usage",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Busy state of all CPU cores together",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 85
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 95
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 0,
+                "y": 1
+            },
+            "id": 14,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "(((count(count(node_cpu_seconds_total{job=\"$job\",instance=\"$node\"}) by (cpu))) - avg(sum by (mode)(rate(node_cpu_seconds_total{mode='idle',job=\"$job\",instance=\"$node\"}[$__rate_interval])))) * 100) / count(count(node_cpu_seconds_total{job=\"$job\",instance=\"$node\"}) by (cpu))",
+                    "hide": false,
+                    "intervalFactor": 1,
+                    "legendFormat": "",
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "CPU Busy",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Used Swap",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 10
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 25
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 3,
+                "y": 1
+            },
+            "id": 28,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "((node_memory_SwapTotal_bytes{job=\"$job\",instance=\"$node\"} - node_memory_SwapFree_bytes{job=\"$job\",instance=\"$node\"}) / (node_memory_SwapTotal_bytes{job=\"$job\",instance=\"$node\"} )) * 100",
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "SWAP Used",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Used Docker FS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 80
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 1
+            },
+            "id": 22,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "100 - ((node_filesystem_avail_bytes{job=\"$job\",instance=\"$node\",mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{job=\"$job\",instance=\"$node\",mountpoint=\"/\",fstype!=\"rootfs\"})",
+                    "format": "time_series",
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "Docker FS Used",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Used Data FS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 80
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 9,
+                "y": 1
+            },
+            "id": 29,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "100 - ((container_fs_usage_bytes{job=\"docker\",device=\"/dev/sda1\"} * 100) / container_fs_limit_bytes{job=\"docker\",device=\"/dev/sda1\"})",
+                    "format": "time_series",
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "Data FS Used",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Used Docker FS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 80
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 12,
+                "y": 1
+            },
+            "id": 30,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "10000 - ((node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"})",
+                    "format": "time_series",
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "Docker FS Used",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "id": "prometheus",
+                "name": "Prometheus",
+                "type": "datasource",
+                "version": "1.0.0"
+            },
+            "description": "Non available RAM memory",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 80
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 15,
+                "y": 1
+            },
+            "hideTimeOverride": false,
+            "id": 20,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "expr": "((node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"} - node_memory_MemFree_bytes{instance=\"$node\",job=\"$job\"}) / (node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"} )) * 100",
+                    "format": "time_series",
+                    "hide": true,
+                    "intervalFactor": 1,
+                    "refId": "A",
+                    "step": 240
+                },
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "expr": "100 - ((node_memory_MemAvailable_bytes{instance=\"$node\",job=\"$job\"} * 100) / node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"})",
+                    "format": "time_series",
+                    "hide": false,
+                    "intervalFactor": 1,
+                    "refId": "B",
+                    "step": 240
+                }
+            ],
+            "title": "RAM Used",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Total number of CPU cores",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 0,
+                "y": 6
+            },
+            "id": 16,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "count(count(node_cpu_seconds_total{job=\"docker\"}) by (cpu))",
+                    "interval": "",
+                    "intervalFactor": 1,
+                    "legendFormat": "",
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "CPU Cores",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Total SWAP",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 3,
+                "y": 6
+            },
+            "id": 26,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "node_memory_SwapTotal_bytes{job=\"$job\",instance=\"$node\"}",
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "SWAP Total",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Total DockerFS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 70
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 6
+            },
+            "id": 24,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "node_filesystem_size_bytes{job=\"$job\",instance=\"$node\",mountpoint=\"/\",fstype!=\"rootfs\"}",
+                    "format": "time_series",
+                    "hide": false,
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "DockerFSTotal",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "Total DataFS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 70
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 9,
+                "y": 6
+            },
+            "id": 32,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "editorMode": "code",
+                    "expr": "container_fs_limit_bytes{job=\"docker\",device=\"/dev/sda1\"}",
+                    "format": "time_series",
+                    "hide": false,
+                    "intervalFactor": 1,
+                    "range": true,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "DataFS Total",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "id": "prometheus",
+                "name": "Prometheus",
+                "type": "datasource",
+                "version": "1.0.0"
+            },
+            "description": "Total DockerFS",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "rgba(50, 172, 45, 0.97)",
+                                "value": null
+                            },
+                            {
+                                "color": "rgba(237, 129, 40, 0.89)",
+                                "value": 70
+                            },
+                            {
+                                "color": "rgba(245, 54, 54, 0.9)",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 12,
+                "y": 6
+            },
+            "id": 31,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"}",
+                    "format": "time_series",
+                    "hide": false,
+                    "intervalFactor": 1,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "DockerFSTotal",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "id": "prometheus",
+                "name": "Prometheus",
+                "type": "datasource",
+                "version": "1.0.0"
+            },
+            "description": "Total RAM",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "N/A"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 15,
+                "y": 6
+            },
+            "id": 18,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "id": "prometheus",
+                        "name": "Prometheus",
+                        "type": "datasource",
+                        "version": "1.0.0"
+                    },
+                    "expr": "node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"}",
+                    "intervalFactor": 1,
+                    "refId": "A",
+                    "step": 240
+                }
+            ],
+            "title": "RAM Total",
+            "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 11
+            },
+            "id": 1,
+            "panels": [],
+            "title": "Network",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "Mbits"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 12
+            },
+            "id": 11,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "P1809F7CD0C75ACF3"
+                    },
+                    "editorMode": "code",
+                    "expr": "speedtest_upload_bits_per_second{instance=\"$net_instance\", job=\"$net_job\"}*10^-6",
+                    "instant": false,
+                    "legendFormat": "__auto",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Upload Speed",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "Mbits"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 12
+            },
+            "id": 5,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "P1809F7CD0C75ACF3"
+                    },
+                    "editorMode": "code",
+                    "expr": "speedtest_download_bits_per_second{instance=\"$net_instance\", job=\"$net_job\"}*10^-6",
+                    "instant": false,
+                    "legendFormat": "__auto",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Download Speed",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 12
+            },
+            "id": 9,
+            "maxDataPoints": 466,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "P1809F7CD0C75ACF3"
+                    },
+                    "editorMode": "code",
+                    "expr": "speedtest_ping_latency_milliseconds{instance=\"$net_instance\", job=\"$net_job\"}",
+                    "instant": false,
+                    "legendFormat": "__auto",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Ping",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "P1809F7CD0C75ACF3"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 2,
+                    "mappings": [],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "index": 0,
+                                "value": null
+                            },
+                            {
+                                "color": "#EAB839",
+                                "index": 1,
+                                "value": 40
+                            },
+                            {
+                                "color": "red",
+                                "index": 2,
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 12
+            },
+            "id": 3,
+            "links": [],
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "mean"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "10.1.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "P1809F7CD0C75ACF3"
+                    },
+                    "editorMode": "code",
+                    "expr": "pihole_ads_percentage_today{hostname=~'pihole'}",
+                    "instant": false,
+                    "legendFormat": "__auto",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "% ads blocked",
+            "type": "gauge"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "docker",
+                    "value": "docker"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "P1809F7CD0C75ACF3"
+                },
+                "definition": "label_values(node_uname_info,job)",
+                "hide": 0,
+                "includeAll": false,
+                "label": "job",
+                "multi": false,
+                "name": "job",
+                "options": [],
+                "query": {
+                    "query": "label_values(node_uname_info,job)",
+                    "refId": "PrometheusVariableQueryEditor-VariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "node-exporter:9100",
+                    "value": "node-exporter:9100"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "P1809F7CD0C75ACF3"
+                },
+                "definition": "label_values(node_uname_info{job=\"$job\"},instance)",
+                "hide": 0,
+                "includeAll": false,
+                "label": "node",
+                "multi": false,
+                "name": "node",
+                "options": [],
+                "query": {
+                    "query": "label_values(node_uname_info{job=\"$job\"},instance)",
+                    "refId": "PrometheusVariableQueryEditor-VariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "speedtest:9798",
+                    "value": "speedtest:9798"
+                },
+                "definition": "label_values(speedtest_up,instance)",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "net_instance",
+                "options": [],
+                "query": {
+                    "query": "label_values(speedtest_up,instance)",
+                    "refId": "PrometheusVariableQueryEditor-VariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "speedtest",
+                    "value": "speedtest"
+                },
+                "definition": "label_values(speedtest_up,job)",
+                "hide": 0,
+                "includeAll": false,
+                "label": "net_job",
+                "multi": false,
+                "name": "net_job",
+                "options": [],
+                "query": {
+                    "query": "label_values(speedtest_up,job)",
+                    "refId": "PrometheusVariableQueryEditor-VariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "New dashboard",
+    "uid": "a0c16225-1836-4e7b-92f9-61b980f62999",
+    "version": 23,
+    "weekStart": ""
+}
