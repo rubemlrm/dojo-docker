@@ -9,14 +9,6 @@
     owner: "{{ username }}"
   become: true
 
-- name: Synchronize services directories
-  synchronize:
-    src: "{{ role_path }}/files/services/"
-    dest: "{{ docker_stacks_path }}/services"
-    delete: false
-    recursive: true
-    perms: false
-
 - name: Create volumes
   community.docker.docker_volume:
     name: "{{ item.name }}"
@@ -44,7 +36,7 @@
         state: present
         name: duckdns
         compose:
-          - "{{ docker_stacks_services_path }}/duckdns/docker-stack.yml"
+          - "{{ role_path }}/files/services/duckdns/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         DUCKDNS_DOMAINS: "{{ docker_services_secrets.duckdns.domains }}"
@@ -95,7 +87,7 @@
         state: present
         name: traefik
         compose:
-          - "{{ docker_stacks_services_path }}/traefik/docker-stack.yml"
+          - "{{ role_path }}/files/services/traefik/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
@@ -120,7 +112,7 @@
         state: present
         name: portainer
         compose:
-          - "{{ docker_stacks_services_path }}/portainer/docker-stack.yml"
+          - "{{ role_path }}/files/services/portainer/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
@@ -144,7 +136,7 @@
         state: present
         name: irc
         compose:
-          - "{{ docker_stacks_services_path }}/irc/docker-stack.yml"
+          - "{{ role_path }}/files/services/irc/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
@@ -181,7 +173,7 @@
         state: present
         name: backups
         compose:
-          - "{{ docker_stacks_services_path }}/backups/docker-stack.yml"
+          - "{{ role_path }}/files/services/backups/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -217,7 +209,7 @@
         state: present
         name: pihole
         compose:
-          - "{{ docker_stacks_services_path }}/pihole/docker-stack.yml"
+          - "{{ role_path }}/files/services/pihole/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
@@ -240,7 +232,7 @@
         state: present
         name: monitoring
         compose:
-          - "{{ docker_stacks_services_path }}/monitoring/docker-stack.yml"
+          - "{{ role_path }}/files/services/monitoring/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
@@ -284,7 +276,7 @@
         state: present
         name: media
         compose:
-          - "{{ docker_stacks_services_path }}/media/docker-stack.yml"
+          - "{{ role_path }}/files/services/media/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -320,7 +312,7 @@
         state: present
         name: torrents
         compose:
-          - "{{ docker_stacks_services_path }}/torrents/docker-stack.yml"
+          - "{{ role_path }}/files/services/torrents/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -344,7 +336,7 @@
         state: present
         name: website
         compose:
-          - "{{ docker_stacks_services_path }}/website/docker-stack.yml"
+          - "{{ role_path }}/files/services/website/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
@@ -376,7 +368,7 @@
         state: present
         name: homeassistant
         compose:
-          - "{{ docker_stacks_services_path }}/homeassistant/docker-stack.yml"
+          - "{{ role_path }}/files/services/homeassistant/docker-stack.yml"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"

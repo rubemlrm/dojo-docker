@@ -119,11 +119,12 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
+      - /home/rubemlrm/external-data:/external-data:ro
     command:
       - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs${DATA_PATH}/data/system/containers|rootfs${DATA_PATH}/data/system/overlay2|rootfs${DATA_PATH}/data/system/netns|rootfs${DATA_PATH}/data/system/aufs)($$|/)"
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|host|etc)($$|/)'
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
     user: "${UID}:${GID}"
