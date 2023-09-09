@@ -307,6 +307,9 @@
         owner: "{{ username }}"
       with_items:
         - "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+        - "{{ docker_configs.data_path }}/volumes/torrents/sonarr"
+        - "{{ docker_configs.data_path }}/volumes/torrents/radarr"
+        - "{{ docker_configs.data_path }}/volumes/torrents/jacket"
     - name: Setup torrents service
       docker_stack:
         state: present
@@ -319,6 +322,19 @@
         TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.default_endpoint }}"
         TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.torrent.enable_ssl }}"
         TORRENTS_DOMAIN: "{{ docker_services_secrets.torrent.domain }}"
+        SONARR_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.sonarr_default_endpoint }}"
+        SONARR_ENABLE_SSL: "{{ docker_services_secrets.torrent.sonarr_enable_ssl }}"
+        SONARR_DOMAIN: "{{ docker_services_secrets.torrent.sonarr_domain }}"
+        RADARR_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.radarr_default_endpoint }}"
+        RADARR_ENABLE_SSL: "{{ docker_services_secrets.torrent.radarr_enable_ssl }}"
+        RADARR_DOMAIN: "{{ docker_services_secrets.torrent.radarr_domain }}"
+        JACKET_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.jacket_default_endpoint }}"
+        JACKET_ENABLE_SSL: "{{ docker_services_secrets.torrent.jacket_enable_ssl }}"
+        JACKET_DOMAIN: "{{ docker_services_secrets.torrent.jacket_domain }}"
+        VPN_USER: "{{ docker_services_secrets.torrent.vpn_user }}"
+        VPN_PASSWORD: "{{ docker_services_secrets.torrent.vpn_password }}"
+        VPN_PROVIDER: "{{ docker_services_secrets.torrent.vpn_provider }}"
+        VPN_SERVER_COUNTRIES:  "{{ docker_services_secrets.torrent.vpn_server_countries }}"
   when: docker_stacks.torrents.enabled is true
 
 - name: Deploy website service stacks
