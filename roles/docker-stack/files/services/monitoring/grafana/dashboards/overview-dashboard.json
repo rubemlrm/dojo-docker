@@ -99,7 +99,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -107,7 +107,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "(((count(count(node_cpu_seconds_total{job=\"docker\",instance=\"node-exporter:9100\"}) by (cpu))) - avg(sum by (mode)(rate(node_cpu_seconds_total{mode='idle',job=\"docker\",instance=\"node-exporter:9100\"}[2m15s])))) * 100) / count(count(node_cpu_seconds_total{job=\"docker\",instance=\"node-exporter:9100\"}) by (cpu))",
+          "expr": "(((count(count(node_cpu_seconds_total{job=\"docker\",instance=\"node-exporter:9100\"}) by (cpu))) - avg(sum by (mode)(rate(node_cpu_seconds_total{mode='idle',job=\"docker\",instance=\"node-exporter:9100\"}[$interval])))) * 100) / count(count(node_cpu_seconds_total{job=\"docker\",instance=\"node-exporter:9100\"}) by (cpu))",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -183,7 +183,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -207,7 +207,7 @@
         "type": "prometheus",
         "uid": "P1809F7CD0C75ACF3"
       },
-      "description": "Used Docker FS",
+      "description": "Used System FS",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -253,7 +253,7 @@
         "x": 6,
         "y": 1
       },
-      "id": 22,
+      "id": 30,
       "links": [],
       "options": {
         "orientation": "horizontal",
@@ -267,7 +267,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -275,15 +275,15 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "100 - ((node_filesystem_free_bytes{job=\"docker\",device=\"/dev/sdb1\"} * 100) / node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sdb1\"})",
+          "expr": "100 - ((node_filesystem_free_bytes{job=\"docker\",device=\"/dev/root\"} * 100) / node_filesystem_size_bytes{job=\"docker\",device=\"/dev/root\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
-          "refId": "A"
+          "refId": "B"
         }
       ],
-      "title": "Docker FS Used",
+      "title": "System FS Used",
       "type": "gauge"
     },
     {
@@ -351,7 +351,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -359,7 +359,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "100 - ((node_filesystem_free_bytes{job=\"docker\",device=\"/dev/sda1\"} * 100) / node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sda1\"})",
+          "expr": "100 - ((node_filesystem_free_bytes{job=\"docker\",device=\"/dev/sdb1\"} * 100) / node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sdb1\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -368,90 +368,6 @@
         }
       ],
       "title": "Data FS Used",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
-      },
-      "description": "Used System FS",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 80
-              },
-              {
-                "color": "rgba(245, 54, 54, 0.9)",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 12,
-        "y": 1
-      },
-      "id": 30,
-      "links": [],
-      "options": {
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "10.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
-          },
-          "editorMode": "code",
-          "expr": "100 - ((node_filesystem_free_bytes{job=\"docker\",device=\"/dev/root\"} * 100) / node_filesystem_size_bytes{job=\"docker\",device=\"/dev/root\"})",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "System FS Used",
       "type": "gauge"
     },
     {
@@ -493,7 +409,7 @@
       "gridPos": {
         "h": 6,
         "w": 3,
-        "x": 15,
+        "x": 12,
         "y": 1
       },
       "hideTimeOverride": false,
@@ -511,7 +427,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -571,7 +487,7 @@
       "gridPos": {
         "h": 2,
         "w": 3,
-        "x": 18,
+        "x": 15,
         "y": 1
       },
       "id": 16,
@@ -591,7 +507,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -611,6 +527,168 @@
         }
       ],
       "title": "CPU Cores",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P1809F7CD0C75ACF3"
+      },
+      "description": "Total RAM",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 18,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P1809F7CD0C75ACF3"
+          },
+          "editorMode": "code",
+          "expr": "node_memory_MemTotal_bytes{job=\"docker\" }",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "RAM Total",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P1809F7CD0C75ACF3"
+      },
+      "description": "Total Containers running",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 45,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P1809F7CD0C75ACF3"
+          },
+          "editorMode": "code",
+          "expr": "count(rate(container_last_seen{name=~\".+\"}[$interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Running Containers",
       "type": "stat"
     },
     {
@@ -660,8 +738,8 @@
       "gridPos": {
         "h": 2,
         "w": 3,
-        "x": 21,
-        "y": 1
+        "x": 15,
+        "y": 3
       },
       "id": 31,
       "links": [],
@@ -680,7 +758,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -696,173 +774,6 @@
         }
       ],
       "title": "System FS Total",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
-      },
-      "description": "Total RAM",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 18,
-        "y": 3
-      },
-      "id": 18,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
-          },
-          "editorMode": "code",
-          "expr": "node_memory_MemTotal_bytes{job=\"docker\" }",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "RAM Total",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
-      },
-      "description": "Total DockerFS",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 70
-              },
-              {
-                "color": "rgba(245, 54, 54, 0.9)",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 21,
-        "y": 3
-      },
-      "id": 24,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
-          },
-          "editorMode": "code",
-          "expr": "node_filesystem_size_bytes{device=\"/dev/sdb1\"}",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "DockerFSTotal",
       "type": "stat"
     },
     {
@@ -909,7 +820,7 @@
         "h": 2,
         "w": 3,
         "x": 18,
-        "y": 5
+        "y": 3
       },
       "id": 26,
       "links": [],
@@ -928,21 +839,20 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
-            "id": "prometheus",
-            "name": "Prometheus",
-            "type": "datasource",
-            "version": "1.0.0"
+            "type": "prometheus",
+            "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "node_memory_SwapTotal_bytes{job=\"$job\",instance=\"$node\"}",
-          "intervalFactor": 1,
+          "expr": "node_memory_SwapTotal_bytes{}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
           "range": true,
-          "refId": "A",
-          "step": 240
+          "refId": "A"
         }
       ],
       "title": "SWAP Total",
@@ -996,7 +906,7 @@
         "h": 2,
         "w": 3,
         "x": 21,
-        "y": 5
+        "y": 3
       },
       "id": 32,
       "links": [],
@@ -1015,7 +925,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1023,7 +933,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sda1\", fstype=\"ext4\"}",
+          "expr": "node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sdb1\", fstype=\"ext4\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -1092,7 +1002,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1156,7 +1066,7 @@
         "showThresholdMarkers": true,
         "text": {}
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1220,7 +1130,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1297,7 +1207,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1376,7 +1286,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1455,7 +1365,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1688,7 +1598,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
+            "align": "left",
             "cellOptions": {
               "type": "auto"
             },
@@ -1729,9 +1639,15 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Total Requests"
+          }
+        ]
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1808,7 +1724,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
+            "align": "left",
             "cellOptions": {
               "type": "auto"
             },
@@ -1842,6 +1758,7 @@
         "cellHeight": "sm",
         "footer": {
           "countRows": false,
+          "enablePagination": true,
           "fields": "",
           "reducer": [
             "sum"
@@ -1850,7 +1767,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.0",
+      "pluginVersion": "10.1.1",
       "targets": [
         {
           "datasource": {
@@ -1880,8 +1797,10 @@
                 "operation": "groupby"
               },
               "Value": {
-                "aggregations": [],
-                "operation": "groupby"
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
               }
             }
           }
@@ -1893,7 +1812,7 @@
             "sort": [
               {
                 "desc": true,
-                "field": "Value"
+                "field": "Value (sum)"
               }
             ]
           }
@@ -1904,8 +1823,9 @@
             "excludeByName": {},
             "indexByName": {},
             "renameByName": {
-              "Metric": "Device",
-              "Value": "Total Blocked Requests"
+              "Metric": "Source",
+              "Value": "Total Blocked Requests",
+              "Value (sum)": "Total"
             }
           }
         }
@@ -2299,7 +2219,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "sum(rate(traefik_service_requests_total[60m])) by (service)",
+          "expr": "sum(traefik_service_requests_total) by (service)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -2372,7 +2292,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "sum(rate(traefik_entrypoint_requests_total[60m])) by (entrypoint) ",
+          "expr": "sum(rate(traefik_entrypoint_requests_total[$interval])) by (entrypoint) ",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -2388,16 +2308,117 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "auto": true,
+        "auto_count": 50,
+        "auto_min": "50s",
+        "current": {
+          "selected": true,
+          "text": "5m",
+          "value": "5m"
+        },
+        "hide": 0,
+        "label": "Interval",
+        "name": "interval",
+        "options": [
+          {
+            "selected": false,
+            "text": "auto",
+            "value": "$__auto_interval_interval"
+          },
+          {
+            "selected": false,
+            "text": "30s",
+            "value": "30s"
+          },
+          {
+            "selected": false,
+            "text": "1m",
+            "value": "1m"
+          },
+          {
+            "selected": false,
+            "text": "2m",
+            "value": "2m"
+          },
+          {
+            "selected": false,
+            "text": "3m",
+            "value": "3m"
+          },
+          {
+            "selected": true,
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "selected": false,
+            "text": "7m",
+            "value": "7m"
+          },
+          {
+            "selected": false,
+            "text": "10m",
+            "value": "10m"
+          },
+          {
+            "selected": false,
+            "text": "30m",
+            "value": "30m"
+          },
+          {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "6h",
+            "value": "6h"
+          },
+          {
+            "selected": false,
+            "text": "12h",
+            "value": "12h"
+          },
+          {
+            "selected": false,
+            "text": "1d",
+            "value": "1d"
+          },
+          {
+            "selected": false,
+            "text": "7d",
+            "value": "7d"
+          },
+          {
+            "selected": false,
+            "text": "14d",
+            "value": "14d"
+          },
+          {
+            "selected": false,
+            "text": "30d",
+            "value": "30d"
+          }
+        ],
+        "query": "30s,1m,2m,3m,5m,7m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
+        "queryValue": "",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "type": "interval"
+      }
+    ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "overview-dashboard",
   "uid": "a0c16225-1836-4e7b-92f9-61b980f62999",
-  "version": 10,
+  "version": 12,
   "weekStart": ""
 }

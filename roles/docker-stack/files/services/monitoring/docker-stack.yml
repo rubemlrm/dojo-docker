@@ -15,6 +15,24 @@ networks:
     external: true
     name: proxy_network
 services:
+  alertmanager:
+    image: prom/alertmanager
+    ports:
+      - 9093:9093
+    volumes:
+      - "./alertmanager/:/etc/alertmanager/"
+    networks:
+      - monitoring_network
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    deploy:
+      placement:
+        constraints:
+           - node.role==manager
+      restart_policy:
+        condition: on-failure
+
   prometheus:
     image: prom/prometheus:latest
     user: "${UID}:${GID}"

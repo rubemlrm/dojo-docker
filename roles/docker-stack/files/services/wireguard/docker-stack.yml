@@ -1,0 +1,68 @@
+---
+version: '3.7'
+
+networks:
+  proxy_network:
+    external: true
+  wireguard:
+
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 3
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 51820:51820/udp
+    volumes:
+      - ${DATA_PATH}/volumes/wireguard:/config
+      - /lib/modules:/lib/modules
+    environment:
+      - PUID=${UID}
+      - PGID=${GID}
+      - TZ=Europe/London
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
+  wireguard-ui:
+    image: ngoduykhanh/wireguard-ui:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.wireguard.entrypoints=${WIREGUARD_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.wireguard.rule=Host(`${WIREGUARD_DOMAIN}`)'
+        - 'traefik.http.routers.wireguard.tls=${WIREGUARD_ENABLE_SSL}'
+        - 'traefik.http.routers.wireguard.tls.certresolver=letsencryptresolver'
+        - 'traefik.http.services.wireguard.loadbalancer.server.port=5000'
+        - 'traefik.docker.network=proxy_network'
+    depends_on:
+      - wireguard
+    volumes:
+      - ${DATA_PATH}/volumes/wireguard:/etc/wireguard
+      - ${DATA_PATH}/volumes/wireguard-ui/:/app/db
+    environment:
+      - PUID=${UID}
+      - PGID=${GID}
+      - WG_UI_USERNAME=${WIREGUARD_PASSWORD}
+      - WG_UI_PASSWORD=${WIREGUARD_USERNAME}
+      - WGUI_MANAGE_START=true
+      - WGUI_MANAGE_RESTART=true
+    networks:
+      - proxy_network
+      - wireguard

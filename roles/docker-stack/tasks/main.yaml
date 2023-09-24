@@ -146,6 +146,94 @@
         GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.irc.enabled is true
 
+- name: Deploy calibre service stacks
+  block:
+    - name: Create calibre service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/calibre"
+        - "{{ docker_configs.data_path }}/volumes/calibre-web"
+    - name: Setup irc service
+      docker_stack:
+        state: present
+        name: calibre
+        compose:
+          - "{{ role_path }}/files/services/calibre/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        MEDIA_PATH: "{{ docker_configs.media_path }}"
+        CALIBRE_DOMAIN: "{{ docker_services_secrets.calibre.domain }}"
+        CALIBRE_DEFAULT_ENDPOINT: "{{ docker_services_secrets.calibre.default_endpoint }}"
+        CALIBRE_ENABLE_SSL: "{{ docker_services_secrets.calibre.enable_ssl }}"
+        CALIBRE_PASSWORD: "{{ docker_services_secrets.calibre.password }}"
+        CALIBRE_USERNAME:  "{{ docker_services_secrets.calibre.username }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+  when: docker_stacks.irc.enabled is true
+
+- name: Deploy wireguard service stacks
+  block:
+    - name: Create wireguard service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/wireguard"
+        - "{{ docker_configs.data_path }}/volumes/wireguard-ui"
+    - name: Setup Ports
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "51820/tcp"
+        - "51820/udp"
+    - name: Setup wireguard service
+      docker_stack:
+        state: present
+        name: wireguard
+        compose:
+          - "{{ role_path }}/files/services/wireguard/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        WIREGUARD_DOMAIN: "{{ docker_services_secrets.wireguard.domain }}"
+        WIREGUARD_DEFAULT_ENDPOINT: "{{ docker_services_secrets.wireguard.default_endpoint }}"
+        WIREGUARD_ENABLE_SSL: "{{ docker_services_secrets.wireguard.enable_ssl }}"
+        WIREGUARD_PASSWORD: "{{ docker_services_secrets.wireguard.password }}"
+        WIREGUARD_USERNAME:  "{{ docker_services_secrets.wireguard.username }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+
+- name: Deploy filebrowser service stacks
+  block:
+    - name: Create filebrowser service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/filebrowser"
+    - name: Setup filebrowser service
+      docker_stack:
+        state: present
+        name: filebrowser
+        compose:
+          - "{{ role_path }}/files/services/filebrowser/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        MEDIA_PATH: "{{ docker_configs.media_path }}"
+        FILEBROWSER_DOMAIN: "{{ docker_services_secrets.filebrowser.domain }}"
+        FILEBROWSER_DEFAULT_ENDPOINT: "{{ docker_services_secrets.filebrowser.default_endpoint }}"
+        FILEBROWSER_ENABLE_SSL: "{{ docker_services_secrets.filebrowser.enable_ssl }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+
 - name: Deploy backups service stacks
   block:
     - name: Create backups service directories
