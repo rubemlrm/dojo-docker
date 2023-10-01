@@ -146,6 +146,32 @@
         GID:  "{{ docker_configs.pgid }}"
   when: docker_stacks.irc.enabled is true
 
+
+- name: Deploy obsidian service stacks
+  block:
+    - name: Create obsidian service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/obsidian-sync"
+    - name: Setup obsidian-sync service
+      docker_stack:
+        state: present
+        name: obsidian-sync
+        compose:
+          - "{{ role_path }}/files/services/obsidian-sync/docker-stack.yml"
+      environment:
+        DATA_PATH: "{{ docker_configs.data_path }}"
+        OBSIDIAN_DOMAIN: "{{ docker_services_secrets.obsidian_sync.domain }}"
+        OBSIDIAN_DEFAULT_ENDPOINT: "{{ docker_services_secrets.obsidian_sync.default_endpoint }}"
+        OBSIDIAN_ENABLE_SSL: "{{ docker_services_secrets.obsidian_sync.enable_ssl }}"
+        OBSIDIAN_USER: "{{ docker_services_secrets.obsidian_sync.user }}"
+        OBSIDIAN_PASSWORD: "{{ docker_services_secrets.obsidian_sync.password }}"
+        UID: "{{ docker_configs.puid }}"
+        GID:  "{{ docker_configs.pgid }}"
+
 - name: Deploy calibre service stacks
   block:
     - name: Create calibre service directories

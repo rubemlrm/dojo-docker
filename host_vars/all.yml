@@ -10,6 +10,8 @@ docker_networks:
     internal: true
   - name: proxy_network
     internal: false
+  - name: torrents_network
+    internal: true
 
 docker_volumes:
   - name: dojo_prometheus_data
