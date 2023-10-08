@@ -43,7 +43,6 @@
         TOKEN: "{{ docker_services_secrets.duckdns.token }}"
         UID: "{{ docker_configs.puid }}"
         GID: "{{ docker_configs.pgid }}"
-  when: docker_stacks.duckdns.enabled is true
 
 
 - name: Deploy traefik service stacks
@@ -96,7 +95,6 @@
         TRAEFIK_DNS2: "{{ docker_services_secrets.traefik.dns_2 }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.traefik.enabled is true
 
 - name: Deploy portainer service stacks
   block:
@@ -120,7 +118,6 @@
         ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.portainer.enabled is true
 
 - name: Deploy irc service stacks
   block:
@@ -144,7 +141,6 @@
         IRC_ENABLE_SSL: "{{ docker_services_secrets.irc.enable_ssl }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.irc.enabled is true
 
 
 - name: Deploy obsidian service stacks
@@ -182,6 +178,7 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/freshrss/data"
         - "{{ docker_configs.data_path }}/volumes/freshrss/extensions"
+        - "{{ docker_configs.data_path }}/volumes/freshrss/postgres"
     - name: Setup freshrss service
       docker_stack:
         state: present
@@ -195,6 +192,10 @@
         FRESHRSS_ENABLE_SSL: "{{ docker_services_secrets.freshrss.enable_ssl }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
+        FRESHRSS_DB: "{{ docker_services_secrets.freshrss.db_database }}"
+        FRESHRSS_DB_USER: "{{ docker_services_secrets.freshrss.db_user }}"
+        FRESHRSS_DB_PASSWORD: "{{ docker_services_secrets.freshrss.db_password }}"
+
 
 - name: Deploy calibre service stacks
   block:
@@ -222,7 +223,6 @@
         CALIBRE_USERNAME:  "{{ docker_services_secrets.calibre.username }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.irc.enabled is true
 
 
 - name: Deploy kavita service stacks
@@ -309,7 +309,6 @@
         BACKUP_DOMAIN: "{{ docker_services_secrets.backup.domain }}"
         DEFAULT_ENDPOINT: "{{ docker_services_secrets.backup.default_endpoint }}"
         ENABLE_SSL: "{{ docker_services_secrets.backup.enable_ssl }}"
-  when: docker_stacks.backups.enabled is true
 
 - name: Deploy pihole service stacks
   block:
@@ -349,7 +348,6 @@
         ENABLE_SSL: "{{ docker_services_secrets.pihole.enable_ssl }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.pihole.enabled is true
 
 
 - name: Deploy monitoring service stacks
@@ -373,7 +371,6 @@
         GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
         GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
         PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
-  when: docker_stacks.monitoring.enabled is true
 
 
 - name: Deploy media service stacks
@@ -397,7 +394,7 @@
         owner: "{{ username }}"
       with_items:
         - "{{ docker_configs.data_path }}/volumes/media/emby"
-        - "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+        - "{{ docker_configs.data_path }}/volumes/media/rutorrent"
     - name: Setup media service
       docker_stack:
         state: present
@@ -410,7 +407,6 @@
         EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
         EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
         EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
-  when: docker_stacks.homemedia.enabled is true
 
 
 - name: Deploy torrents service stacks
@@ -433,7 +429,8 @@
         state: directory
         owner: "{{ username }}"
       with_items:
-        - "{{ docker_configs.data_path }}/volumes/media/qbittorrent"
+        - "{{ docker_configs.data_path }}/volumes/torrents/rtorrent"
+        - "{{ docker_configs.data_path }}/volumes/torrents/deluge"
         - "{{ docker_configs.data_path }}/volumes/torrents/sonarr"
         - "{{ docker_configs.data_path }}/volumes/torrents/radarr"
         - "{{ docker_configs.data_path }}/volumes/torrents/jacket"
@@ -462,7 +459,6 @@
         VPN_PASSWORD: "{{ docker_services_secrets.torrent.vpn_password }}"
         VPN_PROVIDER: "{{ docker_services_secrets.torrent.vpn_provider }}"
         VPN_SERVER_COUNTRIES:  "{{ docker_services_secrets.torrent.vpn_server_countries }}"
-  when: docker_stacks.torrents.enabled is true
 
 - name: Deploy website service stacks
   block:
@@ -493,7 +489,6 @@
         MATOMO_USER:  "{{ docker_services_secrets.matomo.db_user }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.website.enabled is true
 
 - name: Deploy homeassistant service stacks
   block:
@@ -526,4 +521,3 @@
         HOMEASSISTANT_ENABLE_SSL: "{{ docker_services_secrets.homeassistant.enable_ssl }}"
         UID: "{{ docker_configs.puid }}"
         GID:  "{{ docker_configs.pgid }}"
-  when: docker_stacks.homeassistant.enabled is true

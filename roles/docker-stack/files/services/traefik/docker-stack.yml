@@ -5,6 +5,8 @@ networks:
   proxy_network:
     name: proxy_network
     external: true
+  torrents_network:
+    external:  true
 services:
   # Web Reverse Proxy
   traefik:
@@ -57,6 +59,7 @@ services:
       - '--tracing.jaeger.localAgentHostPort=jaeger:6831'
     networks:
       - proxy_network
+      - torrents_network
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}

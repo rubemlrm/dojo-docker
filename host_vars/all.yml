@@ -20,30 +20,6 @@ docker_volumes:
     internal: false
 
 
-docker_stacks:
-  backups:
-    enabled: true
-  homeassistant:
-    enabled: true
-  irc:
-    enabled: true
-  homemedia:
-    enabled: true
-  pihole:
-    enabled: true
-  portainer:
-    enabled: true
-  traefik:
-    enabled: true
-  website:
-    enabled: true
-  duckdns:
-    enabled: true
-  monitoring:
-    enabled: true
-  torrents:
-    enabled: true
-
 docker_swarm_advertise_addr: 192.168.2.4
 enable_docker_swarm_mode: true
 host_management: true

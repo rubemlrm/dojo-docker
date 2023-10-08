@@ -9,26 +9,41 @@ networks:
     external:  true
 
 services:
-  vpn_service:
-    image: registry.gitlab.com/ix.ai/swarm-launcher
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock:rw'
-    networks:
-      - torrents_network
-    environment:
-      LAUNCH_IMAGE: qmcgaw/gluetun
-      LAUNCH_PULL: 'true'
-      LAUNCH_EXT_NETWORKS: 'torrents_network'
-      LAUNCH_PROJECT_NAME: 'vpn'
-      LAUNCH_SERVICE_NAME: 'vpn-gluetun'
-      LAUNCH_CAP_ADD: 'NET_ADMIN'
-      LAUNCH_ENVIRONMENTS: 'VPN_SERVICE_PROVIDER=${VPN_PROVIDER} OPENVPN_USER=${VPN_USER} OPENVPN_PASSWORD=${VPN_PASSWORD} SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES} HTTPPROXY=on HTTPPROXY_LOG=on'
-      LAUNCH_PORTS: '8888:8888/tcp'
+  wireguard:
+    image: linuxserver/wireguard:latest
     deploy:
+      replicas: 1
       placement:
-        constraints: [ node.role == manager ]
+        constraints: [node.role == manager]
       restart_policy:
         condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      labels:
+        - traefik.enable=false
+    hostname: wireguard
+    networks:
+      - torrents_network
+      - proxy_network
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ=Etc/UTC
+      - SERVERPORT=51820
+      - INTERNAL_SUBNET=172.16.204.0/24
+      - ALLOWEDIPS=0.0.0.0/0
+      - LOG_CONFS=true
+      - PUID=${UID}
+      - PGID=${GID}
+    volumes:
+      - /lib/modules:/lib/modules
+      - ${DATA_PATH}/volumes/torrents/wireguard/wg0.conf:/config/wg0.conf
+      - ./dante-server/danted.conf:/etc/danted.conf
+      - ./dante-server/install.sh:/custom-cont-init.d/install.sh:ro
+      - ./dante-server/run.sh:/custom-services.d/run.sh:ro
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
   sonarr:
     image: linuxserver/sonarr:arm64v8-3.0.10
     user: "${UID}:${GID}"
@@ -126,7 +141,7 @@ services:
       - gluetun
       - jacket
 
-  qbittorrent:
+  torrentclient:
     image: lscr.io/linuxserver/qbittorrent:latest
     user: "${UID}:${GID}"
     deploy:
@@ -139,30 +154,21 @@ services:
         max_attempts: 3
       labels:
         - 'traefik.enable=true'
-        - 'traefik.http.routers.qbittorrent.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}'
-        - 'traefik.http.routers.qbittorrent.rule=Host(`${TORRENTS_DOMAIN}`)'
-        - 'traefik.http.routers.qbittorrent.tls=${TORRENTS_ENABLE_SSL}'
-        - 'traefik.http.routers.qbittorrent.tls.certresolver=letsencryptresolver'
-        - 'traefik.docker.network=proxy_network'
-        - 'traefik.http.services.qbittorrent.loadbalancer.server.port=8080'
-      resources:
-        limits:
-          cpus: "0.75"
-          memory: 512M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
-    container_name: qbittorrent
+        - 'traefik.http.routers.torrentclient.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}'
+        - 'traefik.http.routers.torrentclient.rule=Host(`${TORRENTS_DOMAIN}`)'
+        - 'traefik.http.routers.torrentclient.tls=${TORRENTS_ENABLE_SSL}'
+        - 'traefik.http.routers.torrentclient.tls.certresolver=letsencryptresolver'
+        - 'traefik.docker.network=torrents_network'
+        - 'traefik.http.services.torrentclient.loadbalancer.server.port=8080'
+    container_name: torrentclient
     networks:
-      - proxy_network
       - torrents_network
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      - WEBUI_PORT=8080
     volumes:
-      - ${DATA_PATH}/volumes/media/qbittorrent:/config
+      - ${DATA_PATH}/volumes/torrents/qbittorrent:/config/qBittorrent
       - ${MEDIA_PATH}:/downloads
     depends_on:
-      - gluetun
+      - wireguard
