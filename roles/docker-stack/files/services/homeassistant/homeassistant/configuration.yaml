@@ -28,6 +28,7 @@ http:
     - fd00::/64
     - 10.0.15.0/24
     - 10.0.4.0/24
+    - 10.11.0.0/24
 
 influxdb:
   api_version: 2
@@ -37,6 +38,7 @@ influxdb:
   database: home
   organization: ha-org
   bucket: ha-bucket
+  max_retries: 3
   token: !secret influxdb_token
 
 recorder:

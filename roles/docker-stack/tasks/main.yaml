@@ -19,6 +19,8 @@
     name: "{{ item.name }}"
     driver: overlay
     attachable: true
+    ipam_config:
+      - subnet: "{{ item.subnet }}"
   with_items: "{{ docker_networks }}"
 
 

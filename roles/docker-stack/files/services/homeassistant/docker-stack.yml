@@ -29,18 +29,11 @@ services:
         - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
     volumes:
       - ${DATA_PATH}/volumes/homeassistant/homeassistant:/config
-      - ./homeassistant/blueprints:/config/blueprints
-      - ./homeassistant/automations.yaml:/config/automations.yaml
       - ./homeassistant/configuration.yaml:/config/configuration.yaml
-      - ./homeassistant/scenes.yaml:/config/scenes.yaml
-      - ./homeassistant/scripts.yaml:/config/scripts.yaml
       - ./homeassistant/secrets.yaml:/config/secrets.yaml
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
     dns:
       - 192.168.2.4
       - 192.168.2.1

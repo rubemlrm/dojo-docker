@@ -9,41 +9,7 @@ networks:
     external:  true
 
 services:
-  wireguard:
-    image: linuxserver/wireguard:latest
-    deploy:
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
-      restart_policy:
-        condition: on-failure
-        delay: 30s
-        max_attempts: 3
-      labels:
-        - traefik.enable=false
-    hostname: wireguard
-    networks:
-      - torrents_network
-      - proxy_network
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - TZ=Etc/UTC
-      - SERVERPORT=51820
-      - INTERNAL_SUBNET=172.16.204.0/24
-      - ALLOWEDIPS=0.0.0.0/0
-      - LOG_CONFS=true
-      - PUID=${UID}
-      - PGID=${GID}
-    volumes:
-      - /lib/modules:/lib/modules
-      - ${DATA_PATH}/volumes/torrents/wireguard/wg0.conf:/config/wg0.conf
-      - ./dante-server/danted.conf:/etc/danted.conf
-      - ./dante-server/install.sh:/custom-cont-init.d/install.sh:ro
-      - ./dante-server/run.sh:/custom-services.d/run.sh:ro
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=0
+
   sonarr:
     image: linuxserver/sonarr:arm64v8-3.0.10
     user: "${UID}:${GID}"
@@ -65,8 +31,8 @@ services:
         - 'traefik.http.services.sonarr.loadbalancer.server.port=8989'
     hostname: sonarr
     networks:
-      - proxy_network
       - torrents_network
+      - proxy_network
     environment:
       - PUID=1000
       - PGID=1000
@@ -74,7 +40,6 @@ services:
       - ${DATA_PATH}/volumes/torrents/sonarr:/config
       - ${MEDIA_PATH}:/downloads
     depends_on:
-      - gluetun
       - jacket
 
   jacket:
@@ -98,16 +63,14 @@ services:
         - 'traefik.http.services.jacket.loadbalancer.server.port=9117'
     hostname: jacket
     networks:
-      - proxy_network
       - torrents_network
+      - proxy_network
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
       - ${DATA_PATH}/volumes/torrents/jacket:/config
       - ${MEDIA_PATH}:/downloads
-    depends_on:
-      - gluetun
 
   radarr:
     image: linuxserver/radarr:arm64v8-4.6.4
@@ -129,8 +92,8 @@ services:
         - 'traefik.docker.network=proxy_network'
         - 'traefik.http.services.radarr.loadbalancer.server.port=7878'
     networks:
-      - proxy_network
       - torrents_network
+      - proxy_network
     environment:
       - PUID=1000
       - PGID=1000
@@ -138,7 +101,6 @@ services:
       - ${DATA_PATH}/volumes/torrents/radarr:/config
       - ${MEDIA_PATH}:/downloads
     depends_on:
-      - gluetun
       - jacket
 
   torrentclient:
@@ -163,6 +125,7 @@ services:
     container_name: torrentclient
     networks:
       - torrents_network
+      - proxy_network
     environment:
       - PUID=1000
       - PGID=1000
@@ -170,5 +133,3 @@ services:
     volumes:
       - ${DATA_PATH}/volumes/torrents/qbittorrent:/config/qBittorrent
       - ${MEDIA_PATH}:/downloads
-    depends_on:
-      - wireguard
