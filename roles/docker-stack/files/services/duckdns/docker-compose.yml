@@ -13,4 +13,4 @@ services:
       - LOG_FILE=false
     volumes:
       - ${DATA_PATH}/volumes/duckdns:/config
-    restart: unless-stopped
+    restart: always

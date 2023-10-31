@@ -17,7 +17,6 @@
 - name: Create networks
   community.general.docker_network:
     name: "{{ item.name }}"
-    driver: overlay
     attachable: true
     ipam_config:
       - subnet: "{{ item.subnet }}"
@@ -34,11 +33,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/duckdns"
     - name: Setup duckdns service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: duckdns
-        compose:
-          - "{{ role_path }}/files/services/duckdns/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/duckdns/"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         DUCKDNS_DOMAINS: "{{ docker_services_secrets.duckdns.domains }}"
@@ -84,11 +81,9 @@
         - "{{ docker_configs.data_path }}/volumes/traefik/certs"
         - "{{ docker_configs.data_path }}/volumes/traefik/logs"
     - name: Setup traefik service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: traefik
-        compose:
-          - "{{ role_path }}/files/services/traefik/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/traefik/"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
@@ -108,11 +103,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/portainer"
     - name: Setup portainer service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: portainer
-        compose:
-          - "{{ role_path }}/files/services/portainer/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/portainer"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
@@ -131,11 +124,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/webirc"
     - name: Setup irc service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: irc
-        compose:
-          - "{{ role_path }}/files/services/irc/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/irc"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
@@ -155,11 +146,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/obsidian-sync"
     - name: Setup obsidian-sync service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: obsidian-sync
-        compose:
-          - "{{ role_path }}/files/services/obsidian-sync/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/obsidian-sync"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         OBSIDIAN_DOMAIN: "{{ docker_services_secrets.obsidian_sync.domain }}"
@@ -182,11 +171,9 @@
         - "{{ docker_configs.data_path }}/volumes/freshrss/extensions"
         - "{{ docker_configs.data_path }}/volumes/freshrss/postgres"
     - name: Setup freshrss service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: freshrss
-        compose:
-          - "{{ role_path }}/files/services/freshrss/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/freshrss"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         FRESHRSS_DOMAIN: "{{ docker_services_secrets.freshrss.domain }}"
@@ -198,35 +185,6 @@
         FRESHRSS_DB_USER: "{{ docker_services_secrets.freshrss.db_user }}"
         FRESHRSS_DB_PASSWORD: "{{ docker_services_secrets.freshrss.db_password }}"
 
-
-- name: Deploy calibre service stacks
-  block:
-    - name: Create calibre service directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        owner: "{{ username }}"
-      with_items:
-        - "{{ docker_configs.data_path }}/volumes/calibre"
-        - "{{ docker_configs.data_path }}/volumes/calibre-web"
-    - name: Setup irc service
-      docker_stack:
-        state: present
-        name: calibre
-        compose:
-          - "{{ role_path }}/files/services/calibre/docker-stack.yml"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        CALIBRE_DOMAIN: "{{ docker_services_secrets.calibre.domain }}"
-        CALIBRE_DEFAULT_ENDPOINT: "{{ docker_services_secrets.calibre.default_endpoint }}"
-        CALIBRE_ENABLE_SSL: "{{ docker_services_secrets.calibre.enable_ssl }}"
-        CALIBRE_PASSWORD: "{{ docker_services_secrets.calibre.password }}"
-        CALIBRE_USERNAME:  "{{ docker_services_secrets.calibre.username }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
-
-
 - name: Deploy kavita service stacks
   block:
     - name: Create kavita service directories
@@ -237,11 +195,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/kavita"
     - name: Setup kavita service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: kavita
-        compose:
-          - "{{ role_path }}/files/services/kavita/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/kavita"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -261,11 +217,9 @@
       with_items:
         - "{{ docker_configs.data_path }}/volumes/filebrowser"
     - name: Setup filebrowser service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: filebrowser
-        compose:
-          - "{{ role_path }}/files/services/filebrowser/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/filebrowser"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -298,11 +252,9 @@
         - path: "{{ docker_configs.media_path }}/docker-backups/volumes"
           owner: "{{ username }}"
     - name: Setup backups service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: backups
-        compose:
-          - "{{ role_path }}/files/services/backups/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/backups"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -333,11 +285,9 @@
         state: enabled
 
     - name: Setup pihole service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: pihole
-        compose:
-          - "{{ role_path }}/files/services/pihole/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/pihole"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
@@ -355,11 +305,9 @@
 - name: Deploy monitoring service stacks
   block:
     - name: Setup monitoring service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: monitoring
-        compose:
-          - "{{ role_path }}/files/services/monitoring/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/monitoring"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
@@ -398,11 +346,9 @@
         - "{{ docker_configs.data_path }}/volumes/media/emby"
         - "{{ docker_configs.data_path }}/volumes/media/rutorrent"
     - name: Setup media service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: media
-        compose:
-          - "{{ role_path }}/files/services/media/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/media"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -425,6 +371,8 @@
         - "8920/tcp"
         - "7539/udp"
         - "1900/udp"
+        - "8282/tcp"
+        - "8001/tcp"
     - name: Create torrents service directories
       file:
         path: "{{ item }}"
@@ -437,11 +385,9 @@
         - "{{ docker_configs.data_path }}/volumes/torrents/radarr"
         - "{{ docker_configs.data_path }}/volumes/torrents/jacket"
     - name: Setup torrents service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: torrents
-        compose:
-          - "{{ role_path }}/files/services/torrents/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/torrents"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         MEDIA_PATH: "{{ docker_configs.media_path }}"
@@ -461,6 +407,7 @@
         VPN_PASSWORD: "{{ docker_services_secrets.torrent.vpn_password }}"
         VPN_PROVIDER: "{{ docker_services_secrets.torrent.vpn_provider }}"
         VPN_SERVER_COUNTRIES:  "{{ docker_services_secrets.torrent.vpn_server_countries }}"
+        CUSTOM_COMMAND:  "{{ docker_services_secrets.torrent.custom_command }}"
 
 - name: Deploy website service stacks
   block:
@@ -473,11 +420,9 @@
         - path: "{{ docker_configs.data_path }}/volumes/matomo/website"
         - path: "{{ docker_configs.data_path }}/volumes/website/cms"
     - name: Setup website service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: website
-        compose:
-          - "{{ role_path }}/files/services/website/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/website"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
@@ -504,11 +449,9 @@
         - "{{ docker_configs.data_path }}/volumes/homeassistant/postgres"
         - "{{ docker_configs.data_path }}/volumes/homeassistant/influxdb"
     - name: Setup homeassistant service
-      docker_stack:
+      community.docker.docker_compose:
         state: present
-        name: homeassistant
-        compose:
-          - "{{ role_path }}/files/services/homeassistant/docker-stack.yml"
+        project_src: "{{ role_path }}/files/services/homeassistant"
       environment:
         DATA_PATH: "{{ docker_configs.data_path }}"
         HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"

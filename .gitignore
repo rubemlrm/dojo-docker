@@ -1,5 +1,9 @@
 ### dotenv ###
 .env
+.env_*
+!.env_*.example
 data
 secrets.yaml
 get-docker.sh
+cronjobs/
+!cronjobs/.gitkeep

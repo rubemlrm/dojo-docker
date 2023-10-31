@@ -46,6 +46,12 @@ recorder:
   auto_purge: false
 
 
+device_tracker:
+  - platform: luci
+    host: 192.168.2.1
+    username: !secret router_user
+    password: !secret router_password
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml

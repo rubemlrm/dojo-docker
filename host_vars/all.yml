@@ -8,7 +8,7 @@ docker_networks:
   - name: pihole_network
     internal: true
     subnet: 10.14.0.0/24
-  - name: homeassistant
+  - name: homeassistant_network
     internal: true
     subnet: 10.15.0.0/24
   - name: proxy_network
@@ -22,6 +22,10 @@ docker_volumes:
   - name: dojo_prometheus_data
     internal: false
   - name: dojo_grafana_data
+    internal: false
+  - name: dojo_pihole_data
+    internal: false
+  - name: dojo_pihole_dns_data
     internal: false
 
 

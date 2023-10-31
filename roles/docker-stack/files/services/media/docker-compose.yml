@@ -5,27 +5,21 @@ networks:
   monitoring_network:
     external: true
   proxy_network:
+    name: proxy_network
     external: true
 services:
   emby:
     image: jellyfin/jellyfin
     user: "${UID}:${GID}"
-    deploy:
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
-      restart_policy:
-        condition: any
-        delay: 30s
-        max_attempts: 3
-      labels:
-        - 'traefik.enable=true'
-        - 'traefik.http.routers.emby.entrypoints=${EMBY_DEFAULT_ENDPOINT}'
-        - 'traefik.http.routers.emby.rule=Host(`${EMBY_DOMAIN}`)'
-        - 'traefik.http.routers.emby.tls=${EMBY_ENABLE_SSL}'
-        - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
-        - 'traefik.docker.network=proxy_network'
-        - 'traefik.http.services.emby.loadbalancer.server.port=8096'
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.emby.entrypoints=${EMBY_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.emby.rule=Host(`${EMBY_DOMAIN}`)'
+      - 'traefik.http.routers.emby.tls=${EMBY_ENABLE_SSL}'
+      - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.emby.loadbalancer.server.port=8096'
     container_name: embyserver
     environment:
       - UID=1000

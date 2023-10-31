@@ -1,0 +1,142 @@
+
+---
+version: '3.7'
+
+networks:
+  proxy_network:
+    external: true
+  torrents_network:
+    external:  true
+
+services:
+
+  sonarr:
+    image: linuxserver/sonarr:arm64v8-3.0.10
+    user: "${UID}:${GID}"
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.sonarr.entrypoints=${SONARR_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.sonarr.rule=Host(`${SONARR_DOMAIN}`)'
+      - 'traefik.http.routers.sonarr.tls=${SONARR_ENABLE_SSL}'
+      - 'traefik.http.routers.sonarr.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.sonarr.loadbalancer.server.port=8989'
+    hostname: sonarr
+    networks:
+      - torrents_network
+      - proxy_network
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/sonarr:/config
+      - ${MEDIA_PATH}:/downloads
+    depends_on:
+      - jacket
+
+  jacket:
+    image: linuxserver/jackett:arm64v8-0.21.568
+    user: "${UID}:${GID}"
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.jacket.entrypoints=${JACKET_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.jacket.rule=Host(`${JACKET_DOMAIN}`)'
+      - 'traefik.http.routers.jacket.tls=${JACKET_ENABLE_SSL}'
+      - 'traefik.http.routers.jacket.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.jacket.loadbalancer.server.port=9117'
+    hostname: jacket
+    networks:
+      - torrents_network
+      - proxy_network
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/jacket:/config
+      - ${MEDIA_PATH}:/downloads
+
+  radarr:
+    image: linuxserver/radarr:arm64v8-4.6.4
+    user: "${UID}:${GID}"
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.radarr.entrypoints=${RADARR_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.radarr.rule=Host(`${RADARR_DOMAIN}`)'
+      - 'traefik.http.routers.radarr.tls=${RADARR_ENABLE_SSL}'
+      - 'traefik.http.routers.radarr.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.radarr.loadbalancer.server.port=7878'
+    networks:
+      - torrents_network
+      - proxy_network
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/radarr:/config
+      - ${MEDIA_PATH}:/downloads
+    depends_on:
+      - jacket
+
+  torrentclient:
+    image: ghcr.io/crazy-max/rtorrent-rutorrent
+    user: "${UID}:${GID}"
+    restart: always
+    container_name: torrentclient
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - XMLRPC_PORT=8010
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/rtorrent:/data
+      - ${MEDIA_PATH}:/downloads
+
+  torrentcronjob:
+    build:
+      context: .
+      dockerfile: ./cronjob.Dockerfile
+    restart: always
+    network_mode: "service:gluetun"
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8282:8080/tcp
+      - 8001:8000/tcp
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/vpn:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
+      - VPN_TYPE=openvpn
+      # OpenVPN:
+      - OPENVPN_USER=${VPN_USER}
+      - OPENVPN_PASSWORD=${VPN_PASSWORD}
+      - SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES}
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.torrentclient.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.torrentclient.rule=Host(`${TORRENTS_DOMAIN}`)'
+      - 'traefik.http.routers.torrentclient.tls=${TORRENTS_ENABLE_SSL}'
+      - 'traefik.http.routers.torrentclient.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.torrentclient.loadbalancer.server.port=8080'
+      - 'traefik.http.routers.torrentclient.service=torrentclient'
+    networks:
+      - proxy_network
+    dns:
+      - 192.168.2.6
+      - 192.168.2.7

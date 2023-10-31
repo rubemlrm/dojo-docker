@@ -1,0 +1,28 @@
+---
+version: '3.7'
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+
+services:
+  kavita:
+    image: kizaing/kavita:latest
+    user: "${UID}:${GID}"
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.kavita.entrypoints=${KAVITA_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.kavita.rule=Host(`${KAVITA_DOMAIN}`)'
+      - 'traefik.http.routers.kavita.tls=${KAVITA_ENABLE_SSL}'
+      - 'traefik.http.routers.kavita.tls.certresolver=letsencryptresolver'
+      - 'traefik.http.services.kavita.loadbalancer.server.port=5000'
+      - 'traefik.docker.network=proxy_network'
+    container_name: kavita
+    domainname: kavita
+    networks:
+      - proxy_network
+    volumes:
+      - ${DATA_PATH}/volumes/kavita:/kavita/config
+      - ${MEDIA_PATH}/ebooks/:/books

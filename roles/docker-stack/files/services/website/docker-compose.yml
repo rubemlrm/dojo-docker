@@ -1,0 +1,61 @@
+---
+version: '3.7'
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network
+services:
+  matomodb:
+    image: yobasystems/alpine-mariadb
+    restart: always
+    networks:
+      - proxy_network
+    volumes:
+      - ${DATA_PATH}/volumes/matomo/database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MATOMODB_PASS}
+      - MYSQL_PASSWORD=${MATOMODB_PASS}
+      - MYSQL_DATABASE=${MATOMO_DB}
+      - MYSQL_USER=${MATOMO_USER}
+
+  matomo:
+    image: matomo
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.matomo.entrypoints=${MATOMO_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.matomo.rule=Host(`${MATOMO_DOMAIN}`)'
+      - 'traefik.http.routers.matomo.tls=${MATOMO_ENABLE_SSL}'
+      - 'traefik.http.routers.matomo.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.matomo.loadbalancer.server.port=80'
+    volumes:
+      - ${DATA_PATH}/volumes/matomo/website:/var/www/html
+    environment:
+      - MATOMO_DATABASE_HOST=matomodb
+      - MATOMO_DATABASE_ADAPTER=mysql
+      - MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      - MATOMO_DATABASE_USERNAME=${MATOMO_USER}
+      - MATOMO_DATABASE_PASSWORD=${MATOMODB_PASS}
+      - MATOMO_DATABASE_DBNAME=${MATOMO_DB}
+    networks:
+      - proxy_network
+
+  cms:
+    image: rubemlrm/netlify-cms-auth-provider:v1.0.2
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.cms.entrypoints=${CMS_DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.cms.rule=Host(`${CMS_OAUTH_DOMAIN}`)'
+      - 'traefik.http.routers.cms.tls=${CMS_ENABLE_SSL}'
+      - 'traefik.http.routers.cms.tls.certresolver=letsencryptresolver'
+      - 'traefik.docker.network=proxy_network'
+      - 'traefik.http.services.cms.loadbalancer.server.port=3000'
+    volumes:
+      - ${DATA_PATH}/volumes/website/cms/.env:/.env
+    networks:
+      - proxy_network
+    ports:
+      - 3000:3000

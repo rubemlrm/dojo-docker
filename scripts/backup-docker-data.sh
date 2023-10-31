@@ -1,4 +1,4 @@
-#!/bin/bash
+w#!/bin/bash
 
 tar -zcvf /home/rubemlrm/docker/data/docker-backups/volumes/$(date +%s).tar.gz \
  --exclude="**/cache/**" \
