@@ -10,22 +10,23 @@ networks:
 services:
   emby:
     image: jellyfin/jellyfin
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.emby.entrypoints=${EMBY_DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.emby.rule=Host(`${EMBY_DOMAIN}`)'
-      - 'traefik.http.routers.emby.tls=${EMBY_ENABLE_SSL}'
+      - 'traefik.http.routers.emby.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.emby.rule=Host(`${DOMAIN}`)'
+      - 'traefik.http.routers.emby.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.emby.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.emby.loadbalancer.server.port=8096'
+      - 'com.centurylinklabs.watchtower.enable=true'
     container_name: embyserver
     environment:
-      - UID=1000
+      - UID=${PUID}
       - GID=100
       - GIDLIST=100
-      - JELLYFIN_PublishedServerUrl=http://${EMBY_DOMAIN}
+      - JELLYFIN_PublishedServerUrl=http://${DOMAIN}
     volumes:
       - ${DATA_PATH}/volumes/media/config:/config
       - ${DATA_PATH}/volumes/media/cache:/cache

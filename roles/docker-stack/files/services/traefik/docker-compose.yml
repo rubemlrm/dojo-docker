@@ -50,6 +50,7 @@ services:
       - '--tracing.jaeger.samplingServerURL=http://jaeger:5778/sampling'
       - '--tracing.jaeger.localAgentHostPort=jaeger:6831'
       - '--ping=true'
+      - 'com.centurylinklabs.watchtower.enable=true'
     networks:
       - proxy_network
       - torrents_network

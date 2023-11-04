@@ -1,7 +1,7 @@
 ### dotenv ###
 .env
 .env_*
-!.env_*.example
+!.env_example
 data
 secrets.yaml
 get-docker.sh

@@ -1,6 +1,5 @@
 ---
-# This deploy-services.yml tasks will be replaced with proper GitOps in future
-# https://github.com/veerendra2/raspberrypi-homeserver/issues/54
+
 
 - name: Create base directory
   file:
@@ -36,13 +35,20 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/duckdns/"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        DUCKDNS_DOMAINS: "{{ docker_services_secrets.duckdns.domains }}"
-        TOKEN: "{{ docker_services_secrets.duckdns.token }}"
-        UID: "{{ docker_configs.puid }}"
-        GID: "{{ docker_configs.pgid }}"
 
+- name: Deploy watchtower service stacks
+  block:
+    - name: Create watchtower service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ username }}"
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/watchtower"
+    - name: Setup watchtower service
+      community.docker.docker_compose:
+        state: present
+        project_src: "{{ role_path }}/files/services/watchtower/"
 
 - name: Deploy traefik service stacks
   block:
@@ -84,14 +90,8 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/traefik/"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        TRAEFIK_MAIL: "{{ docker_services_secrets.traefik.email }}"
-        TRAEFIK_DOMAIN: "{{ docker_services_secrets.traefik.domain }}"
-        TRAEFIK_DNS1: "{{ docker_services_secrets.traefik.dns_1 }}"
-        TRAEFIK_DNS2: "{{ docker_services_secrets.traefik.dns_2 }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
+
+
 
 - name: Deploy portainer service stacks
   block:
@@ -106,13 +106,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/portainer"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        PORTAINER_DOMAIN: "{{ docker_services_secrets.portainer.domain }}"
-        DEFAULT_ENDPOINT: "{{ docker_services_secrets.portainer.default_endpoint }}"
-        ENABLE_SSL: "{{ docker_services_secrets.portainer.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
 
 - name: Deploy irc service stacks
   block:
@@ -127,13 +120,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/irc"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        IRC_DOMAIN: "{{ docker_services_secrets.irc.domain }}"
-        IRC_DEFAULT_ENDPOINT: "{{ docker_services_secrets.irc.default_endpoint }}"
-        IRC_ENABLE_SSL: "{{ docker_services_secrets.irc.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
 
 
 - name: Deploy obsidian service stacks
@@ -149,15 +135,7 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/obsidian-sync"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        OBSIDIAN_DOMAIN: "{{ docker_services_secrets.obsidian_sync.domain }}"
-        OBSIDIAN_DEFAULT_ENDPOINT: "{{ docker_services_secrets.obsidian_sync.default_endpoint }}"
-        OBSIDIAN_ENABLE_SSL: "{{ docker_services_secrets.obsidian_sync.enable_ssl }}"
-        OBSIDIAN_USER: "{{ docker_services_secrets.obsidian_sync.user }}"
-        OBSIDIAN_PASSWORD: "{{ docker_services_secrets.obsidian_sync.password }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
+
 
 - name: Deploy freshrss service stacks
   block:
@@ -174,16 +152,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/freshrss"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        FRESHRSS_DOMAIN: "{{ docker_services_secrets.freshrss.domain }}"
-        FRESHRSS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.freshrss.default_endpoint }}"
-        FRESHRSS_ENABLE_SSL: "{{ docker_services_secrets.freshrss.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
-        FRESHRSS_DB: "{{ docker_services_secrets.freshrss.db_database }}"
-        FRESHRSS_DB_USER: "{{ docker_services_secrets.freshrss.db_user }}"
-        FRESHRSS_DB_PASSWORD: "{{ docker_services_secrets.freshrss.db_password }}"
 
 - name: Deploy kavita service stacks
   block:
@@ -198,14 +166,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/kavita"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        KAVITA_DOMAIN: "{{ docker_services_secrets.kavita.domain }}"
-        KAVITA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.kavita.default_endpoint }}"
-        KAVITA_ENABLE_SSL: "{{ docker_services_secrets.kavita.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
 
 - name: Deploy filebrowser service stacks
   block:
@@ -220,14 +180,7 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/filebrowser"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        FILEBROWSER_DOMAIN: "{{ docker_services_secrets.filebrowser.domain }}"
-        FILEBROWSER_DEFAULT_ENDPOINT: "{{ docker_services_secrets.filebrowser.default_endpoint }}"
-        FILEBROWSER_ENABLE_SSL: "{{ docker_services_secrets.filebrowser.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
+
 
 - name: Deploy backups service stacks
   block:
@@ -255,14 +208,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/backups"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
-        BACKUP_DOMAIN: "{{ docker_services_secrets.backup.domain }}"
-        DEFAULT_ENDPOINT: "{{ docker_services_secrets.backup.default_endpoint }}"
-        ENABLE_SSL: "{{ docker_services_secrets.backup.enable_ssl }}"
 
 - name: Deploy pihole service stacks
   block:
@@ -288,18 +233,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/pihole"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        PIHOLE_IP: "{{ docker_services_secrets.pihole.pihole_ip }}"
-        TIMEZONE: "{{ docker_configs.timezone }}"
-        PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
-        PIHOLE_DOMAIN: "{{ docker_services_secrets.pihole.pihole_domain }}"
-        PIHOLE_DNS1: "{{ docker_services_secrets.pihole.pihole_dns1 }}"
-        PIHOLE_DNS2: "{{ docker_services_secrets.pihole.pihole_dns2 }}"
-        DEFAULT_ENDPOINT: "{{ docker_services_secrets.pihole.default_endpoint }}"
-        ENABLE_SSL: "{{ docker_services_secrets.pihole.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
 
 
 - name: Deploy monitoring service stacks
@@ -308,20 +241,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/monitoring"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        PROMETHEUS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.prometheus.default_endpoint }}"
-        PROMETHEUS_DOMAIN: "{{ docker_services_secrets.prometheus.domain }}"
-        PROMETHEUS_ENABLE_SSL: "{{ docker_services_secrets.prometheus.enable_ssl }}"
-        JAEGER_DEFAULT_ENDPOINT: "{{ docker_services_secrets.jaeger.default_endpoint }}"
-        JAEGER_DOMAIN: "{{ docker_services_secrets.jaeger.domain }}"
-        JAEGER_ENABLE_SSL: "{{ docker_services_secrets.jaeger.enable_ssl }}"
-        GRAFANA_PASSWORD: "{{ docker_services_secrets.grafana.password }}"
-        GRAFANA_DOMAIN: "{{ docker_services_secrets.grafana.domain }}"
-        GRAFANA_ENABLE_SSL: "{{ docker_services_secrets.grafana.enable_ssl }}"
-        GRAFANA_DEFAULT_ENDPOINT: "{{ docker_services_secrets.grafana.default_endpoint }}"
-        PIHOLE_PASS: "{{ docker_services_secrets.pihole.pihole_pass }}"
-
 
 - name: Deploy media service stacks
   block:
@@ -349,13 +268,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/media"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        EMBY_DOMAIN: "{{ docker_services_secrets.emby.domain }}"
-        EMBY_ENABLE_SSL: "{{ docker_services_secrets.emby.enable_ssl }}"
-        EMBY_DEFAULT_ENDPOINT: "{{ docker_services_secrets.emby.default_endpoint }}"
-
 
 - name: Deploy torrents service stacks
   block:
@@ -388,26 +300,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/torrents"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        MEDIA_PATH: "{{ docker_configs.media_path }}"
-        TORRENTS_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.default_endpoint }}"
-        TORRENTS_ENABLE_SSL: "{{ docker_services_secrets.torrent.enable_ssl }}"
-        TORRENTS_DOMAIN: "{{ docker_services_secrets.torrent.domain }}"
-        SONARR_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.sonarr_default_endpoint }}"
-        SONARR_ENABLE_SSL: "{{ docker_services_secrets.torrent.sonarr_enable_ssl }}"
-        SONARR_DOMAIN: "{{ docker_services_secrets.torrent.sonarr_domain }}"
-        RADARR_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.radarr_default_endpoint }}"
-        RADARR_ENABLE_SSL: "{{ docker_services_secrets.torrent.radarr_enable_ssl }}"
-        RADARR_DOMAIN: "{{ docker_services_secrets.torrent.radarr_domain }}"
-        JACKET_DEFAULT_ENDPOINT: "{{ docker_services_secrets.torrent.jacket_default_endpoint }}"
-        JACKET_ENABLE_SSL: "{{ docker_services_secrets.torrent.jacket_enable_ssl }}"
-        JACKET_DOMAIN: "{{ docker_services_secrets.torrent.jacket_domain }}"
-        VPN_USER: "{{ docker_services_secrets.torrent.vpn_user }}"
-        VPN_PASSWORD: "{{ docker_services_secrets.torrent.vpn_password }}"
-        VPN_PROVIDER: "{{ docker_services_secrets.torrent.vpn_provider }}"
-        VPN_SERVER_COUNTRIES:  "{{ docker_services_secrets.torrent.vpn_server_countries }}"
-        CUSTOM_COMMAND:  "{{ docker_services_secrets.torrent.custom_command }}"
 
 - name: Deploy website service stacks
   block:
@@ -423,19 +315,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/website"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        CMS_OAUTH_DOMAIN: "{{ docker_services_secrets.cms.domain }}"
-        CMS_DEFAULT_ENDPOINT:  "{{ docker_services_secrets.cms.default_endpoint }}"
-        CMS_ENABLE_SSL:  "{{ docker_services_secrets.cms.enable_ssl }}"
-        MATOMO_DOMAIN:  "{{ docker_services_secrets.matomo.domain }}"
-        MATOMO_DEFAULT_ENDPOINT: "{{ docker_services_secrets.matomo.default_endpoint }}"
-        MATOMO_ENABLE_SSL: "{{ docker_services_secrets.matomo.enable_ssl }}"
-        MATOMODB_PASS: "{{ docker_services_secrets.matomo.db_password }}"
-        MATOMO_DB:  "{{ docker_services_secrets.matomo.db_database }}"
-        MATOMO_USER:  "{{ docker_services_secrets.matomo.db_user }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"
 
 - name: Deploy homeassistant service stacks
   block:
@@ -452,17 +331,3 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/homeassistant"
-      environment:
-        DATA_PATH: "{{ docker_configs.data_path }}"
-        HOMEASSISTANT_DB: "{{ docker_services_secrets.homeassistant.db_database }}"
-        HOMEASSISTANT_DB_USER: "{{ docker_services_secrets.homeassistant.db_user }}"
-        HOMEASSISTANT_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.db_password }}"
-        HOMEASSISTANT_INFLUX_DB: "{{ docker_services_secrets.homeassistant.influx_db }}"
-        HOMEASSISTANT_INFLUX_DB_USER: "{{ docker_services_secrets.homeassistant.influx_db_user }}"
-        HOMEASSISTANT_INFLUX_DB_PASSWORD: "{{ docker_services_secrets.homeassistant.influx_db_password }}"
-        DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ docker_services_secrets.homeassistant.influx_admin_token }}"
-        HOMEASSISTANT_DOMAIN:  "{{ docker_services_secrets.homeassistant.domain }}"
-        HOMEASSISTANT_DEFAULT_ENDPOINT: "{{ docker_services_secrets.homeassistant.default_endpoint }}"
-        HOMEASSISTANT_ENABLE_SSL: "{{ docker_services_secrets.homeassistant.enable_ssl }}"
-        UID: "{{ docker_configs.puid }}"
-        GID:  "{{ docker_configs.pgid }}"

@@ -13,9 +13,9 @@ services:
     restart: always
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.freshrss.entrypoints=${FRESHRSS_DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.freshrss.rule=Host(`${FRESHRSS_DOMAIN}`)'
-      - 'traefik.http.routers.freshrss.tls=${FRESHRSS_ENABLE_SSL}'
+      - 'traefik.http.routers.freshrss.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.freshrss.rule=Host(`${DOMAIN}`)'
+      - 'traefik.http.routers.freshrss.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.freshrss.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.freshrss.loadbalancer.server.port=80'
       - 'traefik.docker.network=proxy_network'
@@ -26,6 +26,7 @@ services:
       - traefik.http.middlewares.freshrssM2.headers.referrerPolicy=no-referrer-when-downgrade
       - traefik.http.middlewares.freshrssM2.headers.stsSeconds=31536000
       - traefik.http.routers.freshrss.middlewares=freshrssM1,freshrssM2
+      - 'com.centurylinklabs.watchtower.enable=true'
     container_name: freshrss
     domainname: freshrss
     networks:
@@ -34,8 +35,8 @@ services:
     environment:
       TZ: Europe/Lisbon
       CRON_MIN: '3,33'
-      PUID: ${UID}
-      PGID: ${GID}
+      PUID: ${PUID}
+      PGID: ${PGID}
     volumes:
       - ${DATA_PATH}/volumes/freshrss/data:/config
     links:
@@ -43,7 +44,7 @@ services:
 
   freshrss_db:
     image: postgres:16
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     container_name: freshrss-db
     networks:

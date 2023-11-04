@@ -9,16 +9,17 @@ networks:
 services:
   webirc:
     image: thelounge/thelounge:4.4.0
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.irc.entrypoints=${IRC_DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.irc.rule=Host(`${IRC_DOMAIN}`)'
-      - 'traefik.http.routers.irc.tls=${IRC_ENABLE_SSL}'
+      - 'traefik.http.routers.irc.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.irc.rule=Host(`${DOMAIN}`)'
+      - 'traefik.http.routers.irc.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.irc.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.irc.loadbalancer.server.port=9000'
       - 'traefik.docker.network=proxy_network'
+      - 'com.centurylinklabs.watchtower.enable=true'
     container_name: webirc
     domainname: webirc
     networks:

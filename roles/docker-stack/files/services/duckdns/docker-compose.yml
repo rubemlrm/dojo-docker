@@ -4,11 +4,13 @@ services:
   duckdns:
     image: lscr.io/linuxserver/duckdns:latest
     container_name: duckdns
+    labels:
+      - 'com.centurylinklabs.watchtower.enable=true'
     environment:
-      - PUID=${UID}
-      - PGID=${GID}
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=Etc/UTC
-      - SUBDOMAINS=${DUCKDNS_DOMAINS}
+      - SUBDOMAINS=${DOMAINS}
       - TOKEN=${DUCKDNS_TOKEN}
       - LOG_FILE=false
     volumes:

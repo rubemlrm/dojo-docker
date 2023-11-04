@@ -13,11 +13,11 @@ services:
       - "traefik.enable=true"
       # The Traefik Network
       - "traefik.docker.network=proxy_network"
-      - "traefik.http.routers.obsidian-livesync.rule=Host(`${OBSIDIAN_DOMAIN}`)"
-      - "traefik.http.routers.obsidian-livesync.entrypoints=${OBSIDIAN_DEFAULT_ENDPOINT}"
+      - "traefik.http.routers.obsidian-livesync.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.obsidian-livesync.entrypoints=${DEFAULT_ENDPOINT}"
       - "traefik.http.routers.obsidian-livesync.service=obsidian-livesync"
       - "traefik.http.services.obsidian-livesync.loadbalancer.server.port=5984"
-      - "traefik.http.routers.obsidian-livesync.tls=${OBSIDIAN_ENABLE_SSL}"
+      - "traefik.http.routers.obsidian-livesync.tls=${ENABLE_SSL}"
       - "traefik.http.routers.obsidian-livesync.tls.certresolver=letsencryptresolver"
       - "traefik.http.routers.obsidian-livesync.middlewares=obsidiancors"
       - "traefik.http.middlewares.obsidiancors.headers.accesscontrolallowmethods=GET,PUT,POST,HEAD,DELETE"
@@ -26,9 +26,10 @@ services:
       - "traefik.http.middlewares.obsidiancors.headers.accesscontrolmaxage=3600"
       - "traefik.http.middlewares.obsidiancors.headers.addvaryheader=true"
       - "traefik.http.middlewares.obsidiancors.headers.accessControlAllowCredentials=true"
+      - 'com.centurylinklabs.watchtower.enable=true'
     image: couchdb:latest
     container_name: obsidian-livesync
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     environment:
       - COUCHDB_USER=${OBSIDIAN_USER}
       - COUCHDB_PASSWORD=${OBSIDIAN_PASSWORD}

@@ -8,7 +8,7 @@ networks:
     external: true
 services:
   homeassistant:
-    image: "ghcr.io/home-assistant/home-assistant:stable"
+    image: "ghcr.io/home-assistant/home-assistant:2023.11"
     networks:
       - proxy_network
       - homeassistant_network
@@ -16,11 +16,12 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy_network'
-      - 'traefik.http.routers.homeassistant.entrypoints=${HOMEASSISTANT_DEFAULT_ENDPOINT}'
-      - 'traefik.http.routers.homeassistant.rule=Host(`${HOMEASSISTANT_DOMAIN}`)'
-      - 'traefik.http.routers.homeassistant.tls=${HOMEASSISTANT_ENABLE_SSL}'
+      - 'traefik.http.routers.homeassistant.entrypoints=${DEFAULT_ENDPOINT}'
+      - 'traefik.http.routers.homeassistant.rule=Host(`${DOMAIN}`)'
+      - 'traefik.http.routers.homeassistant.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
+      - 'com.centurylinklabs.watchtower.enable=true'
     volumes:
       - ${DATA_PATH}/volumes/homeassistant/homeassistant:/config
       - ./homeassistant/configuration.yaml:/config/configuration.yaml
@@ -37,7 +38,7 @@ services:
 
   homeassistant_postgres:
     image: postgres:14
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     environment:
       POSTGRES_DB: ${HOMEASSISTANT_DB}
@@ -71,7 +72,7 @@ services:
 
   homeassistant_influxdb:
     image: influxdb:latest
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup

@@ -35,7 +35,7 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -45,6 +45,7 @@ services:
       - 'traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
+      - 'com.centurylinklabs.watchtower.enable=true'
     networks:
       - monitoring_network
       - proxy_network
@@ -65,7 +66,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -75,6 +76,7 @@ services:
       - 'traefik.http.routers.grafana.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
+      - 'com.centurylinklabs.watchtower.enable=true'
     networks:
       - monitoring_network
       - proxy_network
@@ -91,7 +93,7 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     networks:
       - monitoring_network
@@ -106,9 +108,11 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|host|etc)($$|/)'
+    labels:
+      - 'com.centurylinklabs.watchtower.enable=true'
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     privileged: true
     networks:
@@ -122,17 +126,21 @@ services:
       - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+    labels:
+      - 'com.centurylinklabs.watchtower.enable=true'
   speedtest:
     tty: true
     stdin_open: true
     ports:
       - 9798:9798
     image: miguelndecarvalho/speedtest-exporter
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     networks:
       - monitoring_network
       - proxy_network
+    labels:
+      - 'com.centurylinklabs.watchtower.enable=true'
   blackbox:
     tty: true
     stdin_open: true
@@ -140,7 +148,7 @@ services:
     ports:
       - 9115:9115
     image: prom/blackbox-exporter
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     volumes:
       - ./blackbox/config:/config
     command:
@@ -150,7 +158,7 @@ services:
       - proxy_network
   jaeger:
     image: jaegertracing/all-in-one:latest
-    user: "${UID}:${GID}"
+    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -160,6 +168,7 @@ services:
       - 'traefik.http.routers.jaeger.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.jaeger.loadbalancer.server.port=16686'
+      - 'com.centurylinklabs.watchtower.enable=true'
     ports:
       - '6831:6831'
       - '16686:16686'
