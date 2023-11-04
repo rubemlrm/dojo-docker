@@ -10,7 +10,6 @@ networks:
 services:
   emby:
     image: jellyfin/jellyfin
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'

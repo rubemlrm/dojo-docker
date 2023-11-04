@@ -313,6 +313,7 @@
         - path: "{{ docker_configs.data_path }}/volumes/website/cms"
     - name: Setup website service
       community.docker.docker_compose:
+        build: true
         state: present
         project_src: "{{ role_path }}/files/services/website"
 

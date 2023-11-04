@@ -12,7 +12,6 @@ services:
 
   sonarr:
     image: linuxserver/sonarr:arm64v8-3.0.10
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -35,7 +34,6 @@ services:
 
   jacket:
     image: linuxserver/jackett:arm64v8-0.21.568
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -50,16 +48,12 @@ services:
     networks:
       - torrents_network
       - proxy_network
-    environment:
-      - PUID=1000
-      - PGID=1000
     volumes:
       - ${DATA_PATH}/volumes/torrents/jacket:/config
       - ${MEDIA_PATH}:/downloads
 
   radarr:
     image: linuxserver/radarr:arm64v8-4.6.4
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -81,7 +75,6 @@ services:
 
   torrentclient:
     image: ghcr.io/crazy-max/rtorrent-rutorrent
-    user: "${PUID}:${PGID}"
     restart: always
     container_name: torrentclient
     network_mode: "service:gluetun"
@@ -136,5 +129,4 @@ services:
     networks:
       - proxy_network
     dns:
-      - 192.168.2.6
-      - 192.168.2.7
+      - 192.168.2.4

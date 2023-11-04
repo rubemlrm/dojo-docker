@@ -17,6 +17,7 @@ networks:
 services:
   alertmanager:
     image: prom/alertmanager
+    restart: always
     ports:
       - 9093:9093
     volumes:
@@ -26,16 +27,10 @@ services:
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
-    deploy:
-      placement:
-        constraints:
-           - node.role==manager
-      restart_policy:
-        condition: on-failure
+
 
   prometheus:
     image: prom/prometheus:latest
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -66,7 +61,6 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    user: "${PUID}:${PGID}"
     restart: always
     labels:
       - 'traefik.enable=true'
@@ -93,7 +87,6 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
-    user: "${PUID}:${PGID}"
     restart: always
     networks:
       - monitoring_network
@@ -112,7 +105,6 @@ services:
       - 'com.centurylinklabs.watchtower.enable=true'
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
-    user: "${PUID}:${PGID}"
     restart: always
     privileged: true
     networks:

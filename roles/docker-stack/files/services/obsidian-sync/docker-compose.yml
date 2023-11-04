@@ -29,7 +29,6 @@ services:
       - 'com.centurylinklabs.watchtower.enable=true'
     image: couchdb:latest
     container_name: obsidian-livesync
-    user: "${PUID}:${PGID}"
     environment:
       - COUCHDB_USER=${OBSIDIAN_USER}
       - COUCHDB_PASSWORD=${OBSIDIAN_PASSWORD}
