@@ -1,0 +1,26 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(`traefik.dojo.lan`)"
+      service: "api@internal"
+      tls:
+        domains:
+          - main: "docker.localhost"
+            sans:
+              - "*.docker.localhost"
+          - main: "dojo.lan"
+            sans:
+              - "*.dojo.lan"
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: "/etc/certs/local-cert.pem"
+        keyFile: "/etc/certs/local-key.pem"
+
+  certificates:
+    - certFile: "/etc/certs/local-cert.pem"
+      keyFile: "/etc/certs/local-key.pem"
+    - certFile: "/etc/certs/rubemlrm.com.pem"
+      keyFile: "/etc/certs/rubemlrm.com.key"

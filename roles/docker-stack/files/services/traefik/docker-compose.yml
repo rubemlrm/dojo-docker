@@ -19,38 +19,16 @@ services:
       - 443:443
       - 8080:8080
     volumes:
-      - ${DATA_PATH}/volumes/traefik/certs:/letsencrypt/
+      - ${DATA_PATH}/volumes/traefik/certs:/etc/certs/
+      - ${DATA_PATH}/volumes/traefik/letsencrypt:/letsencrypt
       - ${DATA_PATH}/volumes/traefik/logs:/var/log
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-    command:
-      - '--metrics.prometheus=true'
-      - '--entryPoints.metrics.address=:8082'
-      - '--metrics.prometheus.entryPoint=metrics'
-      - '--api.dashboard=true'
-      - '--api.insecure=true'
-      - '--providers.docker=true'
-      - '--providers.docker.network=proxy_network'
-      - '--providers.docker.exposedbydefault=false'
-      # configure endpoints
-      - '--entrypoints.web.address=:80'
-      # '--entrypoints.web.http.redirections.entrypoint.to=websecure'
-      # '--entrypoints.web.http.redirections.entrypoint.scheme=https'
-      - '--entrypoints.websecure.address=:443'
-      # SSL configuration
-      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true'
-      - '--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web'
-      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
-      - '--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json'
-      - '--accesslog=true'
-      - '--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban'
-      - '--experimental.plugins.fail2ban.version=v0.6.6'
-      - '--accessLog.filePath=/var/log/access.log'
-      - '--accessLog.filters.statusCodes=400-499'
-      - '--tracing.jaeger=true'
-      - '--tracing.jaeger.samplingServerURL=http://jaeger:5778/sampling'
-      - '--tracing.jaeger.localAgentHostPort=jaeger:6831'
-      - '--ping=true'
+    labels:
       - 'com.centurylinklabs.watchtower.enable=true'
+    command:
+      - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'
     networks:
       - proxy_network
       - torrents_network

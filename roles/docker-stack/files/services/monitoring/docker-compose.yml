@@ -1,12 +1,6 @@
 ---
 version: '3.7'
 
-volumes:
-  dojo_prometheus_data:
-    external: true
-  dojo_grafana_data:
-    external: true
-
 networks:
   monitoring_network:
     name: monitoring_network
@@ -32,6 +26,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     restart: always
+    user: "${PUID}:${PGID}"
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.prometheus.entrypoints=${PROMETHEUS_DEFAULT_ENDPOINT}'
@@ -46,7 +41,7 @@ services:
       - proxy_network
     volumes:
       - ./prometheus/:/etc/prometheus/
-      - dojo_prometheus_data:/prometheus
+      - ${DATA_PATH}/volumes/monitoring/prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -62,6 +57,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     restart: always
+    user: "${PUID}:${PGID}"
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.grafana.entrypoints=${GRAFANA_DEFAULT_ENDPOINT}'
@@ -77,7 +73,7 @@ services:
     links:
       - prometheus:prometheus
     volumes:
-      - dojo_grafana_data:/var/lib/grafana
+      - ${DATA_PATH}/volumes/monitoring/grafana:/var/lib/grafana
       - ./grafana/:/etc/grafana/provisioning/
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}

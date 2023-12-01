@@ -36,6 +36,14 @@
         state: present
         project_src: "{{ role_path }}/files/services/duckdns/"
 
+
+- name: Deploy cloudflared service stacks
+  block:
+   - name: Setup cloudflared service
+     community.docker.docker_compose:
+        state: present
+        project_src: "{{ role_path }}/files/services/cloudflared/"
+
 - name: Deploy watchtower service stacks
   block:
     - name: Create watchtower service directories
@@ -120,22 +128,6 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/irc"
-
-
-- name: Deploy obsidian service stacks
-  block:
-    - name: Create obsidian service directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        owner: "{{ username }}"
-      with_items:
-        - "{{ docker_configs.data_path }}/volumes/obsidian-sync"
-    - name: Setup obsidian-sync service
-      community.docker.docker_compose:
-        state: present
-        project_src: "{{ role_path }}/files/services/obsidian-sync"
-
 
 - name: Deploy freshrss service stacks
   block:
@@ -326,7 +318,6 @@
         owner: "{{ username }}"
       with_items:
         - "{{ docker_configs.data_path }}/volumes/homeassistant/homeassistant"
-        - "{{ docker_configs.data_path }}/volumes/homeassistant/postgres"
         - "{{ docker_configs.data_path }}/volumes/homeassistant/influxdb"
     - name: Setup homeassistant service
       community.docker.docker_compose:
