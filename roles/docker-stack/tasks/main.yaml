@@ -44,6 +44,15 @@
         state: present
         project_src: "{{ role_path }}/files/services/cloudflared/"
 
+
+- name: Deploy kuma service stacks
+  block:
+   - name: Setup kuma service
+     community.docker.docker_compose:
+        state: present
+        project_src: "{{ role_path }}/files/services/kuma/"
+
+
 - name: Deploy watchtower service stacks
   block:
     - name: Create watchtower service directories
