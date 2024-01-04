@@ -9,6 +9,7 @@ networks:
 services:
   backup:
     image: lscr.io/linuxserver/duplicati:latest
+
     restart: always
     labels:
       - 'traefik.enable=true'

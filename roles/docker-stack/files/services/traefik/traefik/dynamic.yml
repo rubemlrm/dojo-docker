@@ -1,16 +1,42 @@
 http:
   routers:
-    traefik:
-      rule: "Host(`traefik.dojo.lan`)"
-      service: "api@internal"
-      tls:
-        domains:
-          - main: "docker.localhost"
-            sans:
-              - "*.docker.localhost"
-          - main: "dojo.lan"
-            sans:
-              - "*.dojo.lan"
+    pialert:
+        rule: "Host(`pialert.dojo.lan`)"
+        service: pialert
+        entryPoints:
+          - web
+          - websecure
+        tls:
+          certResolver: letsencryptresolver
+        middlewares:
+          - redirect-to-https
+    wireguard:
+        rule: "Host(`wireguard.dojo.lan`)"
+        service: wireguard
+        entryPoints:
+          - web
+          - websecure
+        tls:
+          certResolver: letsencryptresolver
+        middlewares:
+          - redirect-to-https
+
+  services:
+    pialert:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://192.168.2.4:20211
+    wireguard:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://192.168.2.4:5000
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
 
 tls:
   stores:

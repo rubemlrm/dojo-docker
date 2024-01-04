@@ -192,13 +192,7 @@
         owner: "{{ item.owner }}"
       with_items:
         - path: "{{ docker_configs.data_path }}/volumes/backups"
-          owner: "{{ username }}"
-        - path: "{{ docker_configs.data_path }}/docker-backups"
-          owner: "{{ username }}"
-        - path: "{{ docker_configs.data_path }}/docker-backups/databases"
-          owner: "999"
-        - path: "{{ docker_configs.data_path }}/docker-backups/volumes"
-          owner: "{{ username }}"
+          owner: "911"
         - path: "{{ docker_configs.media_path }}/docker-backups"
           owner: "{{ username }}"
         - path: "{{ docker_configs.media_path }}/docker-backups/databases"
@@ -257,6 +251,7 @@
         - "8920/tcp"
         - "7539/udp"
         - "1900/udp"
+        - "20211/tcp"
     - name: Create media service directories
       file:
         path: "{{ item }}"
@@ -269,6 +264,30 @@
       community.docker.docker_compose:
         state: present
         project_src: "{{ role_path }}/files/services/media"
+
+- name: Deploy wireguard service stacks
+  block:
+    - name: Setup Ports
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - "5000/tcp"
+        - "51820/udp"
+    - name: Create wireguard service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ docker_configs.data_path }}/volumes/wireguard-ui/"
+        - "{{ docker_configs.data_path }}/volumes/wireguard/"
+    - name: Setup media service
+      community.docker.docker_compose:
+        state: present
+        project_src: "{{ role_path }}/files/services/wireguard"
 
 - name: Deploy torrents service stacks
   block:
@@ -290,7 +309,6 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ username }}"
       with_items:
         - "{{ docker_configs.data_path }}/volumes/torrents/rtorrent"
         - "{{ docker_configs.data_path }}/volumes/torrents/deluge"

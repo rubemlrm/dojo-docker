@@ -55,3 +55,6 @@ device_tracker:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+
+homeassistant:
+  external_url: !secret external_url

@@ -22,7 +22,7 @@ services:
       - 'com.centurylinklabs.watchtower.enable=true'
 
   matomo:
-    image: matomo
+    image: matomo:5.0.0-apache
     restart: always
     labels:
       - 'traefik.enable=true'

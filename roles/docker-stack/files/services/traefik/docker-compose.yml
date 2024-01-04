@@ -26,6 +26,12 @@ services:
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:[a-z-.]+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.priority=1"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - 'com.centurylinklabs.watchtower.enable=true'
     command:
       - '--certificatesresolvers.letsencryptresolver.acme.email=${TRAEFIK_MAIL}'

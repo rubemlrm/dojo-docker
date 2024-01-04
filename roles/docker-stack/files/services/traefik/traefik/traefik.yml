@@ -15,11 +15,6 @@ entryPoints:
     address: ":8082"
   web:
     address: ":80"
-    http:
-      redirections:
-        entrypoint:
-          to: "websecure"
-          scheme: "https"
   websecure:
     address: ":443"
 
@@ -62,4 +57,4 @@ providers:
     watch: true
 
 log:
-  level: DEBUG
+  level: INFO

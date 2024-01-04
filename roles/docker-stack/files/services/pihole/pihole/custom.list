@@ -19,3 +19,5 @@
 192.168.2.4 books.dojo.lan
 192.168.2.4 vpn.dojo.lan
 192.168.2.4 status.dojo.lan
+192.168.2.4 pialert.dojo.lan
+192.168.2.4 wireguard.dojo.lan
