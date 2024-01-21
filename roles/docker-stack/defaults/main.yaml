@@ -123,3 +123,8 @@ services:
     directories:
       - path: "/volumes/backups"
         owner: "911"
+  - name: firefly
+    ports: []
+    services: []
+    directories:
+      - path: "/volumes/firefly"

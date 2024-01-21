@@ -99,28 +99,24 @@ services:
       - 'traefik.http.routers.torrentclient.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.torrentclient.rule=Host(`${TORRENTS_DOMAIN}`)'
       - 'traefik.http.routers.torrentclient.tls=${TORRENTS_ENABLE_SSL}'
-      - 'traefik.http.routers.torrentclient.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.torrentclient.loadbalancer.server.port=8080'
       - 'traefik.http.routers.torrentclient.service=torrentclient'
       # sonarr
       - 'traefik.http.routers.sonarr.entrypoints=${SONARR_DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.sonarr.rule=Host(`${SONARR_DOMAIN}`)'
       - 'traefik.http.routers.sonarr.tls=${SONARR_ENABLE_SSL}'
-      - 'traefik.http.routers.sonarr.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.sonarr.loadbalancer.server.port=8989'
       - 'traefik.http.routers.sonarr.service=sonarr'
       # jacket
       - 'traefik.http.routers.jacket.entrypoints=${JACKET_DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.jacket.rule=Host(`${JACKET_DOMAIN}`)'
       - 'traefik.http.routers.jacket.tls=${JACKET_ENABLE_SSL}'
-      - 'traefik.http.routers.jacket.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.jacket.loadbalancer.server.port=9117'
       - 'traefik.http.routers.jacket.service=jacket'
       # radarr
       - 'traefik.http.routers.radarr.entrypoints=${RADARR_DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.radarr.rule=Host(`${RADARR_DOMAIN}`)'
       - 'traefik.http.routers.radarr.tls=${RADARR_ENABLE_SSL}'
-      - 'traefik.http.routers.radarr.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.radarr.loadbalancer.server.port=7878'
       - 'traefik.http.routers.radarr.service=radarr'
       # general

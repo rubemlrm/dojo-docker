@@ -5,38 +5,28 @@ services:
   wireguard:
     image: linuxserver/wireguard:latest
     container_name: wireguard
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
     volumes:
       - ${DATA_PATH}/volumes/wireguard/wireguard/config:/config
+      - /lib/modules:/lib/modules #optional
     ports:
-      - "5000:5000"
       - "51820:51820/udp"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - SERVERURL=${VPN_SERVER_URL} #optional
+      - SERVERPORT=51820 #optional
+      - PEERS=${PEERS} #optional
+      - PEERDNS=${PEERDNS} #optional
+      - INTERNAL_SUBNET=10.13.13.0 #optional
+      - ALLOWEDIPS=0.0.0.0/0 #optional
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
     env_file:
       - .env
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
-
-  wireguard-ui:
-    image: ngoduykhanh/wireguard-ui:latest
-    container_name: wireguard-ui
-    depends_on:
-      - wireguard
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    # use the network of the 'wireguard' service. this enables to show active clients in the status page
-    network_mode: service:wireguard
-    logging:
-      driver: json-file
-      options:
-        max-size: 50m
-    volumes:
-      - ${DATA_PATH}/volumes/wireguard/wireguard-ui/db:/app/db
-      - ${DATA_PATH}/volumes/wireguard/wireguard/config:/etc/wireguard
-    labels:
-      - 'com.centurylinklabs.watchtower.enable=true'
-    env_file:
-      - .env

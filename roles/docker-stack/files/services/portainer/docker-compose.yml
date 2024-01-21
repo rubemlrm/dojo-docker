@@ -14,7 +14,6 @@ services:
       - 'traefik.http.routers.portainer-secure.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.portainer-secure.rule=Host(`${DOMAIN}`)'
       - 'traefik.http.routers.portainer-secure.tls=${ENABLE_SSL}'
-      - 'traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver'
       - 'traefik.http.routers.portainer-secure.service=portainer'
       - 'traefik.http.services.portainer.loadbalancer.server.port=9000'
       - 'traefik.docker.network=proxy_network'

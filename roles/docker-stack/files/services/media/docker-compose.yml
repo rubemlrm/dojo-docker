@@ -16,7 +16,6 @@ services:
       - 'traefik.http.routers.media.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.media.rule=Host(`${DOMAIN}`)'
       - 'traefik.http.routers.media.tls=${ENABLE_SSL}'
-      - 'traefik.http.routers.media.tls.certresolver=letsencryptresolver'
       - 'traefik.http.routers.media.priority=2'
       - 'traefik.docker.network=proxy_network'
       - 'traefik.http.services.media.loadbalancer.server.port=8096'
