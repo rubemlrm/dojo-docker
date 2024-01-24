@@ -22,6 +22,7 @@ services:
       - 'traefik.http.routers.homeassistant.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.homeassistant.rule=Host(`${DOMAIN}`)'
       - 'traefik.http.routers.homeassistant.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.homeassistant.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.homeassistant.loadbalancer.server.port=8123'
       - 'com.centurylinklabs.watchtower.enable=true'
     volumes:

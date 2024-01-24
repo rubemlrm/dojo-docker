@@ -943,7 +943,7 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "editorMode": "code",
-          "expr": "node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sdb1\", fstype=\"ext4\"}",
+          "expr": "node_filesystem_size_bytes{job=\"docker\",device=\"/dev/sdb1\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -2073,6 +2073,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2108,7 +2109,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2334,7 +2336,7 @@
         "auto_count": 50,
         "auto_min": "50s",
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "5m",
           "value": "5m"
         },
@@ -2439,6 +2441,6 @@
   "timezone": "",
   "title": "overview-dashboard",
   "uid": "a0c16225-1836-4e7b-92f9-61b980f62999",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

@@ -21,8 +21,13 @@ entryPoints:
 certificatesResolvers:
   letsencryptresolver:
     acme:
-      httpChallenge:
-        entrypoint: web
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 0
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
       storage: "/letsencrypt/acme.json"
 
 
@@ -57,4 +62,4 @@ providers:
     watch: true
 
 log:
-  level: INFO
+  level: DEBUG

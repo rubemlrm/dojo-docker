@@ -128,3 +128,7 @@ services:
     services: []
     directories:
       - path: "/volumes/firefly"
+  - name: nextcloud
+    ports: []
+    services: []
+    directories: []

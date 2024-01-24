@@ -10,4 +10,4 @@ tar -zcvf /home/rubemlrm/docker/data/docker-backups/volumes/$(date +%s).tar.gz \
  /home/rubemlrm/docker/data/volumes
 
 chown -R rubemlrm:rubemlrm /home/rubemlrm/docker/data/docker-backups/
-find /home/rubemlrm/docker/data/docker-backups/ -type f -mtime +30 -delete 
+find /home/rubemlrm/docker/data/docker-backups/ -type f -mtime +30 -delete
