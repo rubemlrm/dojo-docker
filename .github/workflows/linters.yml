@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  lint_yaml:
+  lint_code:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
