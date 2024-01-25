@@ -17,6 +17,7 @@ services:
       - 'traefik.http.routers.backup.rule=Host(`${DOMAIN}`)'
       - 'traefik.http.routers.backup.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.backup.service=backup'
+      - 'traefik.http.routers.backup.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.backup.loadbalancer.server.port=8200'
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'

@@ -25,6 +25,7 @@ services:
       - 'traefik.http.routers.firefly.entrypoints=${DEFAULT_ENDPOINT}'
       - 'traefik.http.routers.firefly.rule=Host(`${DOMAIN}`)'
       - 'traefik.http.routers.firefly.tls=${ENABLE_SSL}'
+      - 'traefik.http.routers.firefly.tls.certresolver=letsencryptresolver'
       - 'traefik.http.services.firefly.loadbalancer.server.port=8080'
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'

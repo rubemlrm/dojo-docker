@@ -17,6 +17,7 @@ services:
       - 'traefik.http.routers.uptime.tls=${ENABLE_SSL}'
       - 'traefik.http.routers.uptime.service=uptime'
       - 'traefik.http.services.uptime.loadbalancer.server.port=3001'
+      - 'traefik.http.routers.uptime.tls.certresolver=letsencryptresolver'
       - 'traefik.docker.network=proxy_network'
       - 'com.centurylinklabs.watchtower.enable=true'
     networks:
