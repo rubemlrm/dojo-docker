@@ -16,7 +16,7 @@
       when: service_facts.ansible_facts.services['firewalld.service']['state'] != 'enabled'
       ansible.builtin.systemd:
         name: firewalld
-        enabled: yes
+        enabled: true
     - name: Set running firewall
       ansible.builtin.systemd:
         name: firewalld

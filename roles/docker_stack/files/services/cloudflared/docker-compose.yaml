@@ -1,0 +1,20 @@
+---
+version: "3.7"
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    networks:
+      - proxy_network
+    env_file:
+      - .env
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    command: tunnel run
+    restart: always

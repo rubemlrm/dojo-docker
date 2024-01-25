@@ -1,0 +1,181 @@
+---
+version: "3.7"
+
+networks:
+  monitoring_network:
+    name: monitoring_network
+    external: true
+  proxy_network:
+    external: true
+    name: proxy_network
+services:
+  alertmanager:
+    image: prom/alertmanager
+    restart: always
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    networks:
+      - monitoring_network
+    command:
+      - --config.file=/etc/alertmanager/config.yml
+      - --storage.path=/alertmanager
+
+  pialert:
+    container_name: pialert
+    image: jokobsk/pi.alert:latest
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ${DATA_PATH}/volumes/monitoring/pialert/config:/home/pi/pialert/config
+      - ${DATA_PATH}/volumes/monitoring/pialert/db:/home/pi/pialert/db
+      - ${DATA_PATH}/volumes/monitoring/logs:/home/pi/pialert/front/log
+      - ${DATA_PATH}/volumes/pihole/data/pihole-FTL.db:/etc/pihole/pihole-FTL.db
+    environment:
+      - TZ=Europe/Lisbon
+      - HOST_USER_ID=${PUID}
+      - HOST_USER_GID=${PGID}
+      - PORT=20211
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    user: ${PUID}:${PGID}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prometheus.entrypoints=${PROMETHEUS_DEFAULT_ENDPOINT}
+      - traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_DOMAIN}`)
+      - traefik.http.routers.prometheus.tls=${PROMETHEUS_ENABLE_SSL}
+      - traefik.docker.network=proxy_network
+      - traefik.http.routers.prometheus.tls.certresolver=letsencryptresolver
+      - traefik.http.services.prometheus.loadbalancer.server.port=9090
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - ${DATA_PATH}/volumes/monitoring/prometheus:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+      - --query.lookback-delta=90m
+    links:
+      - cadvisor:cadvisor
+      - node-exporter:node-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    user: ${PUID}:${PGID}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.entrypoints=${GRAFANA_DEFAULT_ENDPOINT}
+      - traefik.http.routers.grafana.rule=Host(`${GRAFANA_DOMAIN}`)
+      - traefik.http.routers.grafana.tls=${GRAFANA_ENABLE_SSL}
+      - traefik.http.routers.grafana.tls.certresolver=letsencryptresolver
+      - traefik.docker.network=proxy_network
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - monitoring_network
+      - proxy_network
+    links:
+      - prometheus:prometheus
+    volumes:
+      - ${DATA_PATH}/volumes/monitoring/grafana:/var/lib/grafana
+      - ./grafana/:/etc/grafana/provisioning/
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${GRAFANA_DOMAIN}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: always
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /home/rubemlrm/external-data:/external-data:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|host|etc)($$|/)
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    restart: always
+    privileged: true
+    networks:
+      - monitoring_network
+      - proxy_network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - ${DATA_PATH}/system/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+  speedtest:
+    tty: true
+    stdin_open: true
+    ports:
+      - 9798:9798
+    image: miguelndecarvalho/speedtest-exporter
+    user: ${PUID}:${PGID}
+    restart: always
+    networks:
+      - monitoring_network
+      - proxy_network
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+  blackbox:
+    tty: true
+    stdin_open: true
+    restart: always
+    ports:
+      - 9115:9115
+    image: prom/blackbox-exporter
+    user: ${PUID}:${PGID}
+    volumes:
+      - ./blackbox/config:/config
+    command:
+      - --config.file=/config/blackbox.yml
+    networks:
+      - monitoring_network
+      - proxy_network
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    user: ${PUID}:${PGID}
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jaeger.entrypoints=${JAEGER_DEFAULT_ENDPOINT}
+      - traefik.http.routers.jaeger.rule=Host(`${JAEGER_DOMAIN}`)
+      - traefik.http.routers.jaeger.tls=${JAEGER_ENABLE_SSL}
+      - traefik.http.routers.jaeger.tls.certresolver=letsencryptresolver
+      - traefik.docker.network=proxy_network
+      - traefik.http.services.jaeger.loadbalancer.server.port=16686
+      - com.centurylinklabs.watchtower.enable=true
+    ports:
+      - 6831:6831
+      - 16686:16686
+    networks:
+      - monitoring_network
+      - proxy_network

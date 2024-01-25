@@ -1,64 +1,66 @@
 ---
-- name: "Common cli test - check package status"
+- name: Common cli test - check package status
   ansible.builtin.package:
-    name: "docker-ce"
-    state: "present"
-  check_mode: yes
+    name: docker-ce
+    state: present
+  check_mode: true
   register: pkg_status
 
 - name: Install docker pages
   become: true
-  block:
-  - name: Download scripts
-    get_url:
-      url: "https://get.docker.com/"
-      dest: "/tmp/get-docker.sh"
-      mode: "0776"
-  - name: Install docker
-    command: "/tmp/get-docker.sh"
-    environment:
-      CHANNEL: stable
-
-  - name: Install containers packages
-    ansible.builtin.package:
-      name: '{{ item }}'
-      state: present
-      update_cache: true
-    with_items:
-      - docker-compose
-  - name: 'Just force systemd to reread configs'
-    ansible.builtin.systemd:
-      daemon_reload: true
-
-  - name: Copy docker custom configs
-    ansible.builtin.template:
-      src: '{{ item.origin_name }}'
-      dest: '{{ item.dest }}'
-      mode: 0644
-    with_items:
-      - origin_name: daemon.json.j2
-        dest: /etc/docker/daemon.json
-
-  - name: 'Start docker'
-    ansible.builtin.systemd:
-      name: docker
-      state: started
-      enabled: true
-  - name: 'Add user to docker group'
-    ansible.builtin.user:
-      name: '{{ username }}'
-      groups: docker
-      append: true
-
-  - name: Setup Ports
-    ansible.posix.firewalld:
-      port: "{{ item }}"
-      permanent: true
-      immediate: true
-      state: enabled
-    with_items:
-      - "2376/tcp"
-      - "7946/tcp"
-      - "7946/udp"
-      - "4789/udp"
   when: pkg_status is not succeeded
+  block:
+    - name: Download scripts
+      ansible.builtin.get_url:
+        url: https://get.docker.com/
+        dest: /tmp/get-docker.sh
+        mode: "0776"
+    - name: Install docker
+      ansible.builtin.command: /tmp/get-docker.sh
+      environment:
+        CHANNEL: stable
+      tags:
+        - skip_ansible_lint
+
+    - name: Install containers packages
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - docker-compose
+    - name: Just force systemd to reread configs
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Copy docker custom configs
+      ansible.builtin.template:
+        src: "{{ item.origin_name }}"
+        dest: "{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - origin_name: daemon.json.j2
+          dest: /etc/docker/daemon.json
+
+    - name: Start docker
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ username }}"
+        groups: docker
+        append: true
+
+    - name: Setup Ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items:
+        - 2376/tcp
+        - 7946/tcp
+        - 7946/udp
+        - 4789/udp

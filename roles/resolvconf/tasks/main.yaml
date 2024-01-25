@@ -1,6 +1,7 @@
 ---
 # https://github.com/pi-hole/docker-pi-hole#installing-on-ubuntu-or-fedora
 - name: Configure systemd-resolved for PiHole
+  become: true
   block:
     - name: Disable stub resolver in systemd-resolved config
       community.general.ini_file:
@@ -8,6 +9,7 @@
         section: Resolve
         option: DNSStubListener
         value: "no"
+        mode: "0644"
         backup: true
 
     - name: Remove /etc/resolv.conf
@@ -19,7 +21,6 @@
       ansible.builtin.template:
         src: resolved.j2
         dest: /etc/resolv.conf
-        mode: 0644
+        mode: "0644"
       notify:
         - Restart Resolved server
-  become: true

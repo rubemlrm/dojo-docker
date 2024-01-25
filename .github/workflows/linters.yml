@@ -7,18 +7,21 @@ on:
       - main
 
 jobs:
-  lint_yaml:
-    # The type of runner that the job will run on
+  lint_code:
     runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.x"
-    - name: Install test dependencies.
-      run: pip3 install yamllint
-    - name: Lint code.
-      run: yamllint .
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Install test dependencies.
+        run: pip3 install yamllint ansible molecule-plugins[docker] ansible-lint
+      - name: Install dependencies (collections)
+        run: ansible-galaxy install -r requirements.yml
+      - name: Lint code.
+        run: yamllint .
+      - name: Run ansible-lint
+        run: ansible-lint
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master

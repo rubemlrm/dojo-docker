@@ -1,15 +1,14 @@
 ---
-
 - name: Homeserver Setup
   hosts: all
   gather_facts: true
   pre_tasks:
     - name: Load default vars file
       ansible.builtin.include_vars:
-        dir: "host_vars/"
+        dir: host_vars/
         files_matching: all.yml
     - name: Load default vault file
       ansible.builtin.include_vars:
         file: secrets.yaml
   roles:
-    - docker-stack
+    - docker_stack

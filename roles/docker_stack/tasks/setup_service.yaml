@@ -1,0 +1,30 @@
+---
+- name: setup_service | Deploy Service {{ outer_item.name }}
+  become: true
+  block:
+    - name: setup_service | Setup Ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items: "{{ outer_item.ports }}"
+    - name: setup_service | Permit traffic in default zone for service
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      with_items: "{{ outer_item.services }}"
+    - name: setup_service | Create service directories for {{ outer_item.name }}
+      ansible.builtin.file:
+        path: "{{ docker_configs.data_path }}{{ item.path }}"
+        state: directory
+        owner: "{{ (item.owner is defined and item.owner != '') | ternary(item.owner, username) }}"
+        mode: "0775"
+      with_items: "{{ outer_item.directories }}"
+    - name: setup_service | Setup service {{ outer_item.name }}
+      community.docker.docker_compose:
+        state: present
+        build: true
+        project_src: "{{ role_path }}/files/services/{{ outer_item.name }}"
