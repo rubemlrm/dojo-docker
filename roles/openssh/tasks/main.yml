@@ -4,13 +4,13 @@
   block:
     - name: Install openssh
       ansible.builtin.package:
-        name: 'openssh-server'
+        name: openssh-server
         state: present
     - name: Copy ssh custom configs
       ansible.builtin.template:
-        src: '{{ item.origin_name }}'
+        src: "{{ item.origin_name }}"
         dest: /etc/ssh/{{ item.file_name }}
-        mode: 0644
+        mode: "0644"
       with_items:
         - origin_name: ssh_config.j2
           file_name: ssh_config
@@ -28,6 +28,6 @@
             state: disabled
         - name: Enable firewall rule
           ansible.posix.firewalld:
-            port: '{{ ssh_port }}/tcp'
+            port: "{{ ssh_port }}/tcp"
             permanent: true
             state: enabled

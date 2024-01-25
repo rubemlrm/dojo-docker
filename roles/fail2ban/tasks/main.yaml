@@ -2,26 +2,26 @@
 - name: Setup Fail2ban
   become: true
   block:
-    - name: 'Install fail2ban'
+    - name: Install fail2ban
       ansible.builtin.package:
         name: fail2ban
         state: present
-    - name: 'Apply sshd config'
+    - name: Apply sshd config
       ansible.builtin.template:
-        src:  '{{ item.src }}'
-        dest: '{{ item.dest }}'
-        mode: '0644'
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0644"
         owner: root
         group: root
       with_items:
-        - src: 'jail.d/ssh.j2'
-          dest: '/etc/fail2ban/jail.d/ssh.conf'
-        - src: 'jail.d/traefik.j2'
-          dest: '/etc/fail2ban/jail.d/traefik.conf'
-        - src: 'filter.d/traefik-auth.j2'
-          dest: '/etc/fail2ban/filter.d/traefik-auth.conf'
-        - src: 'filter.d/traefik.j2'
-          dest: '/etc/fail2ban/filter.d/traefik.conf'
+        - src: jail.d/ssh.j2
+          dest: /etc/fail2ban/jail.d/ssh.conf
+        - src: jail.d/traefik.j2
+          dest: /etc/fail2ban/jail.d/traefik.conf
+        - src: filter.d/traefik-auth.j2
+          dest: /etc/fail2ban/filter.d/traefik-auth.conf
+        - src: filter.d/traefik.j2
+          dest: /etc/fail2ban/filter.d/traefik.conf
       notify:
         - Enable fail2ban server
         - Restart fail2ban server

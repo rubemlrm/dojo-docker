@@ -1,0 +1,29 @@
+---
+version: "3.7"
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.portainer-secure.entrypoints=${DEFAULT_ENDPOINT}
+      - traefik.http.routers.portainer-secure.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.portainer-secure.tls=${ENABLE_SSL}
+      - traefik.http.routers.portainer-secure.service=portainer
+      - traefik.http.routers.portainer-secure.tls.certresolver=letsencryptresolver
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+      - traefik.docker.network=proxy_network
+      - com.centurylinklabs.watchtower.enable=true
+    container_name: portainer
+    domainname: portainer
+    networks:
+      - proxy_network
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_PATH}/volumes/portainer:/data

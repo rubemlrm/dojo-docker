@@ -3,7 +3,7 @@
   become: true
   block:
     - name: Configure disk mounts in /etc/fstab
-      mount:
+      ansible.posix.mount:
         path: "{{ item.dest }}"
         src: "{{ item.src }}"
         fstype: ext4
@@ -12,7 +12,7 @@
       with_items: "{{ storage_configs }}"
 
     - name: Change mount directories ownership
-      file:
+      ansible.builtin.file:
         path: "{{ item.dest }}"
         owner: "{{ username }}"
         group: "{{ username }}"

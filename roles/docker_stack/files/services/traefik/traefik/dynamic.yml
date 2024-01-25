@@ -1,0 +1,38 @@
+---
+http:
+  routers:
+    pialert:
+      rule: Host(`pialert.box.rubemlrm.com`)
+      service: pialert
+      entryPoints:
+        - web
+        - websecure
+      tls:
+        certResolver: letsencryptresolver
+      middlewares:
+        - redirect-to-https
+
+  services:
+    pialert:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://192.168.2.4:20211
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        keyFile: /etc/certs/dojo.lan.key
+        certFile: /etc/certs/dojo.lan.crt
+
+  certificates:
+    - keyFile: /etc/certs/rubemlrm.com.key
+      certFile: /etc/certs/rubemlrm.com.pem
+    - keyFile: /etc/certs/dojo-priv.key
+      certFile: /etc/certs/dojo.lan.crt

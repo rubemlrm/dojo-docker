@@ -1,5 +1,5 @@
 ---
-base_packages:
+cli_base_packages:
   - aspell
   - aspell-pt
   - automake
@@ -35,7 +35,7 @@ base_packages:
   - neovim
   - fzf
 
-font_packages:
+cli_font_packages:
   - fonts-firacode
   - fonts-font-awesome
   - fonts-hack-ttf

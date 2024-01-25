@@ -1,0 +1,81 @@
+---
+version: "3.7"
+
+volumes:
+  dojo_pihole_data:
+    external: true
+  dojo_pihole_dns_data:
+    external: true
+networks:
+  monitoring_network:
+    external: true
+  pihole_network:
+  proxy_network:
+    name: proxy_network
+    external: true
+services:
+  pihole:
+    image: pihole/pihole:latest
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pihole.entrypoints=${DEFAULT_ENDPOINT}
+      - traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)
+      - traefik.http.routers.pihole.tls=${ENABLE_SSL}
+      - traefik.docker.network=proxy_network
+      - traefik.http.routers.pihole.tls.certresolver=letsencryptresolver
+      - traefik.http.services.pihole.loadbalancer.server.port=80
+      - com.centurylinklabs.watchtower.enable=true
+    container_name: pihole
+    domainname: pihole
+    networks:
+      - pihole_network
+      - proxy_network
+    ports:
+      - target: 53
+        published: 53
+        protocol: tcp
+        mode: host
+      - target: 53
+        published: 53
+        protocol: udp
+        mode: host
+      - target: 67
+        published: 67
+        protocol: udp
+        mode: host
+    expose:
+      - 80
+    volumes:
+      - ./pihole/custom.list:/etc/pihole/custom.list
+      - ${DATA_PATH}/volumes/pihole/data:/etc/pihole/
+      - ${DATA_PATH}/volumes/pihole/dns:/etc/dnsmasq.d/
+    environment:
+      - ServerIP=${PIHOLE_IP}
+      - TZ=${TIMEZONE}
+      - WEBPASSWORD=${PIHOLE_PASS}
+      - VIRTUAL_HOST=${PIHOLE_DOMAIN}
+      - DNS1=${PIHOLE_DNS1}
+      - DNS2=${PIHOLE_DNS2}
+      - DNSSEC=true
+      - WEBTHEME=default-dark
+    dns:
+      - 127.0.0.1
+      - ${PIHOLE_DNS1}
+      - ${PIHOLE_DNS2}
+  pihole-exporter:
+    image: ekofr/pihole-exporter:latest
+    user: ${PUID}:${PGID}
+    restart: always
+    networks:
+      - monitoring_network
+      - pihole_network
+    environment:
+      - PIHOLE_HOSTNAME=pihole
+      - PIHOLE_PASSWORD=${PIHOLE_PASS}
+    expose:
+      - 9617
+    ports:
+      - 9617:9617
+    labels:
+      - com.centurylinklabs.watchtower.enable=true

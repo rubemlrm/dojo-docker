@@ -1,0 +1,91 @@
+---
+version: "3.7"
+
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+  firefly:
+services:
+  firefly:
+    image: fireflyiii/core:latest
+    hostname: app
+    container_name: firefly_iii_core
+    restart: always
+    volumes:
+      - ${DATA_PATH}/volumes/firefly/app:/var/www/html/storage/upload
+    env_file: .env
+    networks:
+      - firefly
+      - proxy_network
+    depends_on:
+      - firefly_db
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.firefly.entrypoints=${DEFAULT_ENDPOINT}
+      - traefik.http.routers.firefly.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.firefly.tls=${ENABLE_SSL}
+      - traefik.http.routers.firefly.tls.certresolver=letsencryptresolver
+      - traefik.http.services.firefly.loadbalancer.server.port=8080
+      - traefik.docker.network=proxy_network
+      - com.centurylinklabs.watchtower.enable=true
+
+  firefly_db:
+    image: postgres:16
+    user: ${PUID}:${PGID}
+    restart: always
+    container_name: firefly-db
+    networks:
+      - firefly
+    logging:
+      options:
+        max-size: 10m
+    volumes:
+      - ${DATA_PATH}/volumes/firefly/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command:
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - work_mem=32MB
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  firefly_postgres_backups:
+    image: prodrigestivill/postgres-backup-local
+    restart: always
+    user: postgres:postgres # Optional: see below
+    volumes:
+      - ${DATA_PATH}/docker-backups/databases:/backups
+    links:
+      - firefly_db
+    networks:
+      - firefly
+    environment:
+      - POSTGRES_HOST=firefly_db
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+  cron:
+    #
+    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace REPLACEME below
+    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
+    #
+    image: alpine
+    restart: always
+    container_name: firefly_iii_cron
+    command: sh -c "echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/REPLACEME\" | crontab - && crond -f -L /dev/stdout"
+    networks:
+      - firefly
+    labels:
+      - com.centurylinklabs.watchtower.enable=true

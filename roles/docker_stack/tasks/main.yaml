@@ -1,0 +1,28 @@
+---
+- name: Create base directory
+  ansible.builtin.file:
+    path: "{{ docker_stacks_path }}"
+    state: directory
+    owner: "{{ username }}"
+    mode: "0775"
+
+  become: true
+
+- name: Create volumes
+  community.docker.docker_volume:
+    name: "{{ item.name }}"
+  with_items: "{{ docker_volumes }}"
+
+- name: Create networks
+  community.general.docker_network:
+    name: "{{ item.name }}"
+    attachable: true
+    ipam_config:
+      - subnet: "{{ item.subnet }}"
+  with_items: "{{ docker_networks }}"
+
+- name: Setup Services
+  ansible.builtin.include_tasks: setup_service.yaml
+  loop: "{{ docker_stack_services }}"
+  loop_control:
+    loop_var: outer_item
