@@ -16,7 +16,9 @@ jobs:
         with:
           python-version: 3.x
       - name: Install test dependencies.
-        run: pip3 install yamllint
+        run: pip3 install yamllint ansible molecule-plugins[docker] ansible-lint
+      - name: Install dependencies (collections)
+        run: ansible-galaxy install -r requirements.yml
       - name: Lint code.
         run: yamllint .
       - name: Run ansible-lint
