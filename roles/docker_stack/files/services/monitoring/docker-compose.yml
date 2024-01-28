@@ -100,6 +100,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     restart: always
+    user: ${PUID}:${PGID}
     networks:
       - monitoring_network
       - proxy_network
@@ -118,6 +119,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
     restart: always
+    user: ${PUID}:${PGID}
     privileged: true
     networks:
       - monitoring_network

@@ -10,7 +10,8 @@ volumes:
   filebrowser_volume:
 services:
   filebrowser:
-    image: filebrowser/filebrowser:s6
+    image: filebrowser/filebrowser
+    user: ${PUID}:${PGID}
     labels:
       - traefik.enable=true
       - traefik.http.routers.filebrowser.entrypoints=${DEFAULT_ENDPOINT}
@@ -25,7 +26,9 @@ services:
     domainname: filebrowser
     networks:
       - proxy_network
+    env_file:
+      - .env
     volumes:
-      - filebrowser_volume:/database
+      - ${DATA_PATH}/volumes/filebrowser:/database
       - ./config/filebrowser.json:/.filebrowser.json
       - ${MEDIA_PATH}:/srv/external-data

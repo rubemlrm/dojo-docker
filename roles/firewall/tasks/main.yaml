@@ -9,11 +9,7 @@
       with_items:
         - firewalld
         - python3-firewall
-    - name: Return service state information as fact data
-      ansible.builtin.service_facts:
-      register: service_facts
     - name: Start firewall
-      when: service_facts.ansible_facts.services['firewalld.service']['state'] != 'enabled'
       ansible.builtin.systemd:
         name: firewalld
         enabled: true

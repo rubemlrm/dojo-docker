@@ -9,6 +9,7 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     restart: always
+    user: ${PUID}:${PGID}
     labels:
       - traefik.enable=true
       - traefik.http.routers.portainer-secure.entrypoints=${DEFAULT_ENDPOINT}

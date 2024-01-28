@@ -23,7 +23,7 @@ services:
     container_name: mediaserver
     environment:
       - UID=${PUID}
-      - GID=100
+      - GID=${PGID}
       - GIDLIST=100
       - JELLYFIN_PublishedServerUrl=http://${DOMAIN}
     volumes:

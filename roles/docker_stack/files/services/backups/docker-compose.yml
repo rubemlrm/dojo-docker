@@ -9,7 +9,8 @@ networks:
 services:
   backup:
     image: lscr.io/linuxserver/duplicati:latest
-
+    env_file:
+      - .env
     restart: always
     labels:
       - traefik.enable=true

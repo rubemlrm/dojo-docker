@@ -4,8 +4,6 @@ version: "3.7"
 volumes:
   dojo_pihole_data:
     external: true
-  dojo_pihole_dns_data:
-    external: true
 networks:
   monitoring_network:
     external: true
@@ -17,6 +15,7 @@ services:
   pihole:
     image: pihole/pihole:latest
     restart: always
+    user: ${PUID}:${PGID}
     labels:
       - traefik.enable=true
       - traefik.http.routers.pihole.entrypoints=${DEFAULT_ENDPOINT}
@@ -47,7 +46,6 @@ services:
     expose:
       - 80
     volumes:
-      - ./pihole/custom.list:/etc/pihole/custom.list
       - ${DATA_PATH}/volumes/pihole/data:/etc/pihole/
       - ${DATA_PATH}/volumes/pihole/dns:/etc/dnsmasq.d/
     environment:
