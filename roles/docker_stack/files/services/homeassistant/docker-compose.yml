@@ -12,6 +12,7 @@ networks:
 services:
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:2023.11
+    user: ${PUID}:${PGID}
     networks:
       - proxy_network
       - homeassistant_network

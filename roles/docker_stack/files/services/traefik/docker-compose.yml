@@ -5,8 +5,6 @@ networks:
   proxy_network:
     name: proxy_network
     external: true
-  torrents_network:
-    external: true
 services:
   # Web Reverse Proxy
   traefik:
@@ -54,7 +52,6 @@ services:
       - --entrypoints.websecure.http.tls.domains[0].sans=${DOMAIN_WILDCARD_SANS}
     networks:
       - proxy_network
-      - torrents_network
     dns:
       - ${TRAEFIK_DNS1}
       - ${TRAEFIK_DNS2}

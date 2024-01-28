@@ -10,6 +10,8 @@ services:
   nextcloud_db:
     image: postgres
     restart: always
+    env_file:
+      - .env
     volumes:
       - ${DATA_PATH}/volumes/nextcloud/postgres:/var/lib/postgresql/data
     networks:
@@ -18,8 +20,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    env_file:
-      - .env
   nextcloud_postgres_backups:
     image: prodrigestivill/postgres-backup-local
     restart: always

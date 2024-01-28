@@ -1,6 +1,4 @@
 ---
-
-
 docker_networks:
   - name: monitoring_network
     internal: false
@@ -14,24 +12,8 @@ docker_networks:
   - name: proxy_network
     internal: false
     subnet: 10.11.0.0/24
-  - name: torrents_network
-    internal: true
-    subnet: 10.12.0.0/24
 
-docker_volumes:
-  - name: dojo_prometheus_data
-    internal: false
-  - name: dojo_grafana_data
-    internal: false
-  - name: dojo_pihole_data
-    internal: false
-  - name: dojo_pihole_dns_data
-    internal: false
-
-docker_swarm_advertise_addr: 192.168.2.4
-enable_docker_swarm_mode: true
-host_management: true
-host_worker: false
+docker_volumes: {}
 ssh_port: 22
 
 username: rubemlrm

@@ -10,6 +10,8 @@ services:
   uptime:
     image: louislam/uptime-kuma:1
     restart: always
+    env_file:
+      - .env
     labels:
       - traefik.enable=true
       - traefik.http.routers.uptime.entrypoints=${DEFAULT_ENDPOINT}

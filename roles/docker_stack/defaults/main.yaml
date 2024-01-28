@@ -68,7 +68,7 @@ docker_stack_services:
     ports: []
     directories:
       - path: /volumes/pihole/data
-        owner: "999"
+        owner: "1000"
       - path: /volumes/pihole/dns
         owner: "1000"
     services:
@@ -98,11 +98,8 @@ docker_stack_services:
       - path: /volumes/torrents/rtorrent
       - path: /volumes/torrents/deluge
       - path: /volumes/torrents/sonarr
-        owner: "911"
       - path: /volumes/torrents/radarr
-        owner: "911"
       - path: /volumes/torrents/jacket
-        owner: "911"
   - name: website
     ports: []
     services: []
@@ -123,7 +120,6 @@ docker_stack_services:
     services: []
     directories:
       - path: /volumes/backups
-        owner: "911"
   - name: firefly
     ports: []
     services: []

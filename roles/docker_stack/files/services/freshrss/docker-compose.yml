@@ -36,6 +36,8 @@ services:
       CRON_MIN: 3,33
       PUID: ${PUID}
       PGID: ${PGID}
+    env_file:
+      - .env
     volumes:
       - ${DATA_PATH}/volumes/freshrss/data:/config
     links:
