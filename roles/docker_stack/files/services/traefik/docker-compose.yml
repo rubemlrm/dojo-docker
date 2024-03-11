@@ -21,6 +21,8 @@ services:
       - 80:80
       - 443:443
       - 8080:8080
+      - 1883:1883
+      - 9001:9001
     volumes:
       - ${DATA_PATH}/volumes/traefik/certs:/etc/certs/
       - ${DATA_PATH}/volumes/traefik/letsencrypt:/letsencrypt

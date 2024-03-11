@@ -68,7 +68,10 @@ docker_stack_services:
     directories:
       - path: /volumes/filebrowser
   - name: pihole
-    ports: []
+    ports:
+      - 53/udp
+      - 53/tcp
+      - 67/udp
     directories:
       - path: /volumes/pihole/data
         owner: "1000"

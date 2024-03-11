@@ -55,7 +55,7 @@ services:
 
   radarr:
     image: linuxserver/radarr:arm64v8-latest
-    restart: always
+    restart: unless-stopped
     labels:
       - traefik.enable=true
       - com.centurylinklabs.watchtower.enable=true
@@ -78,7 +78,7 @@ services:
       - jacket
 
   torrentclient:
-    image: ghcr.io/linuxserver/qbittorrent
+    image: linuxserver/qbittorrent:latest
     restart: always
     container_name: torrentclient
     network_mode: service:gluetun
@@ -88,9 +88,9 @@ services:
       - PUID=${PUID}
       - GUID=${GUID}
       - TZ=Etc/UTC
-      - WEBUI_PORT=6011
+      - WEBUI_PORT=8383
     volumes:
-      - ${DATA_PATH}/volumes/torrents/qbittorrent:/data
+      - ${DATA_PATH}/volumes/torrents/qbittorrent:/config
       - ${MEDIA_PATH}:/downloads
     labels:
       - com.centurylinklabs.watchtower.enable=true
@@ -101,6 +101,21 @@ services:
       dockerfile: ./cronjob.Dockerfile
     restart: always
     network_mode: service:gluetun
+
+  port-forward:
+    image: ceramicwhite/gluetun-port-forward-qbit-cron:latest
+    container_name: port-forward
+    restart: always
+    environment:
+      - QBT_USERNAME=${QBT_USERNAME}
+      - QBT_PASSWORD=${QBT_PASSWORD}
+      - QBT_ADDR=http://gluetun:8383
+      - GTN_ADDR=http://gluetun:8000
+    depends_on:
+      - gluetun
+      - torrentclient
+    networks:
+      - proxy_network
 
   gluetun:
     image: qmcgaw/gluetun:latest
@@ -114,7 +129,7 @@ services:
       - 8888:8888/tcp # HTTP proxy
       - 8388:8388/tcp # Shadowsocks
       - 8388:8388/udp # Shadowsocks
-      - 8282:8080/tcp
+      - 8282:8080
       - 8001:8000/tcp
       - 8010:8010
       - 54386:54386/udp
@@ -126,21 +141,27 @@ services:
       - ${DATA_PATH}/volumes/torrents/vpn:/gluetun
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
-      - VPN_TYPE=wireguard
+      - VPN_TYPE=openvpn
+      - OPENVPN_PROTOCOL=tcp
       - VPN_PORT_FORWARDING_PROVIDER=protonvpn
-      - VPN_PORT_FORWARDING=true
+      - VPN_PORT_FORWARDING=on
       - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
-      - VPN_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
+      #- HTTP_CONTROL_SERVER_ADDRESS=${HTTP_CONTROL_SERVER_ADDRESS}
+      #- VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
+      #- VPN_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES}
+      - SERVER_HOSTNAMES=${SERVER_HOSTNAMES}
     labels:
       - traefik.enable=true
       # torrentclient
       - traefik.http.routers.torrentclient.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}
       - traefik.http.routers.torrentclient.rule=Host(`${TORRENTS_DOMAIN}`)
       - traefik.http.routers.torrentclient.tls=${TORRENTS_ENABLE_SSL}
-      - traefik.http.services.torrentclient.loadbalancer.server.port=6011
+      - traefik.http.services.torrentclient.loadbalancer.server.port=8383
       - traefik.http.routers.torrentclient.service=torrentclient
       # general
       - traefik.docker.network=proxy_network

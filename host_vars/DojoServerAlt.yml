@@ -1,0 +1,31 @@
+---
+docker_stack_services:
+  - name: traefik
+    ports:
+      - 8080/tcp
+      - 80/tcp
+      - 443/tcp
+      - 1183/tcp
+      - 1883/udp
+      - 9001/tcp
+    services: []
+    directories:
+      - path: /volumes/traefik/certs
+      - path: /volumes/traefik/logs
+  - name: watchtower
+    ports: []
+    services: []
+    directories:
+      - path: /volumes/watchtower
+  - name: pihole
+    ports:
+      - 53/udp
+      - 53/tcp
+      - 67/udp
+    directories:
+      - path: /volumes/pihole/data
+        owner: "1000"
+      - path: /volumes/pihole/dns
+        owner: "1000"
+    services:
+      - dns

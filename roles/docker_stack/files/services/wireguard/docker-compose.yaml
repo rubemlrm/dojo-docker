@@ -1,6 +1,10 @@
 ---
 version: "3.7"
 
+networks:
+  ipvlan2:
+
+
 services:
   wireguard:
     image: linuxserver/wireguard:latest
