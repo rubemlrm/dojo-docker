@@ -14,9 +14,9 @@
     - apt
     #- storage
     - resolvconf
+    - firewall
     - openssh
     - fail2ban
-    - firewall
     - cli
     - docker
     - docker_stack

@@ -1,9 +1,7 @@
 ---
 version: "3.7"
 
-volumes:
-  dojo_pihole_data:
-    external: true
+
 networks:
   monitoring_network:
     external: true

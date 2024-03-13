@@ -7,6 +7,17 @@
     mode: "0775"
   become: true
 
+- name: Synchronize services directories
+  ansible.posix.synchronize:
+    src: "services/"
+    dest: "{{ docker_stacks_services_path }}"
+    delete: false
+    recursive: true
+    perms: false
+    rsync_opts:
+      - "--no-motd"
+      - "--exclude=.env"
+
 - name: Create volumes
   community.docker.docker_volume:
     name: "{{ item.name }}"

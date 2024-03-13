@@ -18,6 +18,10 @@ entryPoints:
     address: :80
   websecure:
     address: :443
+  mqtt:
+    address: :1883
+  mqtt_websocket:
+    address: :9001
 
 certificatesResolvers:
   letsencryptresolver:

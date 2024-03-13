@@ -26,5 +26,6 @@ services:
       - proxy_network
     volumes:
       - ${DATA_PATH}/volumes/backups/:/config
+      - ${DATA_PATH}/volumes/homeassistant:/backups-homeassistant
       - ${DATA_PATH}/docker-backups/:/source
       - ${MEDIA_PATH}/docker-backups:/backups

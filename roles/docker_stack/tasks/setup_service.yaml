@@ -2,7 +2,7 @@
 - name: setup_service | Deploy Service {{ outer_item.name }}
   become: true
   block:
-    - name: setup_service | Setup Ports
+    - name: setup_service | Setup Ports {{ outer_item.name }}
       ansible.posix.firewalld:
         port: "{{ item }}"
         permanent: true
@@ -27,4 +27,4 @@
       community.docker.docker_compose:
         state: present
         build: true
-        project_src: "{{ role_path }}/files/services/{{ outer_item.name }}"
+        project_src: "{{ docker_stacks_services_path }}/{{ outer_item.name }}"

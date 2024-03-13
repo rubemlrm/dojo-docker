@@ -4,6 +4,8 @@
     name: docker-ce
     state: present
   check_mode: true
+  ignore_errors: true
+
   register: pkg_status
 
 - name: Install docker pages

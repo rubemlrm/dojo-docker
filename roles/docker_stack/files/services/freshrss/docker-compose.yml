@@ -33,9 +33,9 @@ services:
       - freshrss
     environment:
       TZ: Europe/Lisbon
-      CRON_MIN: 3,33
       PUID: ${PUID}
       PGID: ${PGID}
+      CRON_MIN: ${CRON_MIN}
     env_file:
       - .env
     volumes:
@@ -45,7 +45,6 @@ services:
 
   freshrss_db:
     image: postgres:16
-    user: ${PUID}:${PGID}
     restart: always
     container_name: freshrss-db
     networks:

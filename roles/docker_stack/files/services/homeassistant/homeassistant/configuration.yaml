@@ -24,8 +24,8 @@ http:
     - 10.0.15.21
     - ::1
     - fe80::/64
-    - fe00::/64
-    - fd00::/64
+    - fe00::/65
+    - fd01::/64
     - 10.0.15.0/24
     - 10.0.4.0/24
     - 10.11.0.0/24
@@ -57,3 +57,5 @@ scene: !include scenes.yaml
 
 homeassistant:
   external_url: !secret external_url
+
+python_script:
