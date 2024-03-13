@@ -99,20 +99,9 @@ services:
     networks:
       - homeassistant_network
       - proxy_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.homeassistant_mosquitto.rule=Host(`${MQTT_DOMAIN}`)"
-      - "traefik.http.routers.homeassistant_mosquitto.entrypoints=${DEFAULT_ENDPOINT}"
-      - "traefik.http.routers.homeassistant_mosquitto.tls.certresolver=letsencryptresolver"
-      - "traefik.tcp.routers.homeassistant_mosquitto.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.homeassistant_mosquitto.tls.certresolver=letsencryptresolver"
-      - "traefik.tcp.services.homeassistant_mosquitto.loadbalancer.server.port=1883"
-      - "traefik.tcp.routers.homeassistant_mosquitto.entrypoints=mqtt"
-      - "traefik.http.services.homeassistant_mosquitto.loadbalancer.server.port=9001"
-    expose:
-      - 1883
-      - 9001
-
+    ports:
+      - 1883:1883
+      - 9001:9001
   databases_backups:
     image: huacnlee/gobackup
     volumes:
