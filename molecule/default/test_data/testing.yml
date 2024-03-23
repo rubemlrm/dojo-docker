@@ -24,3 +24,8 @@ cli_base_packages:
 
 cli_font_packages:
   - fonts-firacode
+
+docker_networks: {}
+
+docker_volumes: {}
+ssh_port: 22
