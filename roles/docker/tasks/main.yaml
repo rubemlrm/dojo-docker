@@ -5,7 +5,7 @@
     state: present
   check_mode: true
   ignore_errors: true
-
+  changed_when: false
   register: pkg_status
 
 - name: Install docker pages
