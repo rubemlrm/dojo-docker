@@ -51,8 +51,8 @@
         enabled: true
 
 - name: Get group membership
-  getent:
-    database: docker
+  ansible.builtin.getent.getent:
+    database: groups
   check_mode: true
   ignore_errors: true
   changed_when: false
