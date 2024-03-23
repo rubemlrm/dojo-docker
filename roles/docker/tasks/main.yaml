@@ -49,9 +49,18 @@
         name: docker
         state: started
         enabled: true
+
+- name: Check if user is in the group
+  command: "getent group docker | grep -w '{{ username }}'"
+  register: group_check
+  ignore_errors: true
+  tags:
+    - skip_ansible_lint
+
 - name: Add user to docker group
   become: true
   ansible.builtin.user:
     name: "{{ username }}"
     groups: docker
     append: true
+  when: group_check.rc == 1
