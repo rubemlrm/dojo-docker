@@ -54,15 +54,3 @@
         name: "{{ username }}"
         groups: docker
         append: true
-
-    - name: Setup Ports
-      ansible.posix.firewalld:
-        port: "{{ item }}"
-        permanent: true
-        immediate: true
-        state: enabled
-      with_items:
-        - 2376/tcp
-        - 7946/tcp
-        - 7946/udp
-        - 4789/udp
