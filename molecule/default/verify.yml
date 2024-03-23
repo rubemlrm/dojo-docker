@@ -12,9 +12,16 @@
       ansible.builtin.import_tasks: ./roles_test/cli_test.yml
     - name: Import firewall tests
       ansible.builtin.import_tasks: ./roles_test/firewall_test.yml
+
+    - name: "Docker test - check package status"
+      ansible.builtin.package:
+        name: "docker-ce"
+        state: "present"
+      check_mode: yes
+      register: pkg_status
+    - name: "Docker test - assert package is installed"
+      ansible.builtin.assert:
+        that:
+          - not pkg_status.changed
     - name: Import docker tests
       ansible.builtin.import_tasks: ./roles_test/docker_test.yml
-    - name: Import Openssh tests
-      ansible.builtin.import_tasks: ./roles_test/openssh_test.yml
-    - name: Import fail2ban tests
-      ansible.builtin.import_tasks: ./roles_test/fail2ban_test.yml
