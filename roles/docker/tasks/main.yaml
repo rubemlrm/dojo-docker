@@ -50,12 +50,18 @@
         state: started
         enabled: true
 
-- name: Check if user is in the group
-  command: "getent group docker | grep -w '{{ username }}'"
-  register: group_check
+- name: Get group membership
+  getent:
+    database: docker
+  check_mode: true
   ignore_errors: true
-  tags:
-    - skip_ansible_lint
+  changed_when: false
+  register: group_info
+
+- name: Check if user is in group
+  set_fact:
+    user_in_group: "{{ group_info.entries | selectattr('users', 'search', username) | list }}"
+
 
 - name: Add user to docker group
   become: true
@@ -63,4 +69,4 @@
     name: "{{ username }}"
     groups: docker
     append: true
-  when: group_check.rc == 1
+  when: not in user_in_group
