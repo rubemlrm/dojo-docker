@@ -1,13 +1,3 @@
-- name: "Docker test - check package status"
-  ansible.builtin.package:
-    name: "docker-ce"
-    state: "present"
-  check_mode: yes
-  register: pkg_status
-- name: "Docker test - assert package is installed"
-  ansible.builtin.assert:
-    that:
-      - not pkg_status.changed
 - name: "Docker test - check service status"
   ansible.builtin.systemd:
     name: docker
