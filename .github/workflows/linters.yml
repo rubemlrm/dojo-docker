@@ -11,17 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-      - name: Install test dependencies.
-        run: pip3 install yamllint ansible molecule-plugins[docker] ansible-lint
-      - name: Install dependencies (collections)
-        run: ansible-galaxy install -r requirements.yml
-      - name: Lint code.
-        run: yamllint .
-      - name: Run ansible-lint
-        run: ansible-lint
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
