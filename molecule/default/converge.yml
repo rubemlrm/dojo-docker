@@ -11,11 +11,8 @@
         files_matching: all.yml
   roles:
     - apt
-    #- storage
-    - resolvconf
     - firewall
     - openssh
     - fail2ban
     - cli
     - docker
-    - docker_stack
