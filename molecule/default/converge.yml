@@ -1,0 +1,24 @@
+---
+- name: Converge
+  hosts: instance
+  become: true
+  vars_files:
+    - test_data/testing.yml
+  pre_tasks:
+    - name: Load default vars file
+      ansible.builtin.include_vars:
+        dir: host_vars/
+        files_matching: all.yml
+    - name: Load default vault file
+      ansible.builtin.include_vars:
+        file: secrets.yaml
+  roles:
+    - apt
+    #- storage
+    - resolvconf
+    - firewall
+    - openssh
+    - fail2ban
+    - cli
+    - docker
+    - docker_stack
