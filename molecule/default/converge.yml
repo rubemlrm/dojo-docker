@@ -11,8 +11,8 @@
         files_matching: all.yml
   roles:
     - apt
+    - cli
     - firewall
     - openssh
     - fail2ban
-    - cli
     - docker

@@ -1,5 +1,5 @@
 ---
-- name: "APT test - check copr repo"
+- name: "APT test - check installed package"
   ansible.builtin.package:
     name: ["gnupg"]
     state: present

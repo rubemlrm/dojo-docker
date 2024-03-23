@@ -20,6 +20,7 @@ cli_base_packages:
   - cmake
   - exuberant-ctags
   - gcc
+  - tmux
 
 cli_font_packages:
   - fonts-firacode
