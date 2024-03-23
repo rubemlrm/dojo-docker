@@ -12,3 +12,14 @@ docker_configs:
   puid: 1000
   server_ip: 192.168.2.7
   timezone: Europe/Lisbon
+
+cli_base_packages:
+  - aspell
+  - aspell-pt
+  - automake
+  - cmake
+  - exuberant-ctags
+  - gcc
+
+cli_font_packages:
+  - fonts-firacode
