@@ -1,0 +1,32 @@
+- name: "Docker test - check package status"
+  ansible.builtin.package:
+    name: "docker-ce"
+    state: "present"
+  check_mode: yes
+  register: pkg_status
+- name: "Docker test - assert package is installed"
+  ansible.builtin.assert:
+    that:
+      - not pkg_status.changed
+- name: "Docker test - check service status"
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  check_mode: yes
+  register: service_status
+- name: "Docker test - assert service is started"
+  ansible.builtin.assert:
+    that:
+      - not service_status.changed
+- name: "Docker test - check if user is on docker group"
+  ansible.builtin.user:
+    name: '{{ username }}'
+    groups: docker
+    append: yes
+  check_mode: yes
+  register: user_in_group_status
+- name: "Docker test - assert if user is on docker group"
+  ansible.builtin.assert:
+    that:
+      - not user_in_group_status.changed

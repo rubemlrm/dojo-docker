@@ -1,0 +1,20 @@
+- name: "Firewall test - check package status"
+  ansible.builtin.package:
+    name: "firewalld"
+    state: "present"
+  check_mode: yes
+  register: pkg_status
+- name: "Firewall test - assert package is installed"
+  ansible.builtin.assert:
+    that:
+      - not pkg_status.changed
+- name: "Firewall test - check service status"
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: yes
+  check_mode: yes
+  register: service_status
+- name: "Firewall test - assert service is started"
+  ansible.builtin.assert:
+    that:
+      - not service_status.changed

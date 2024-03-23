@@ -1,0 +1,11 @@
+---
+- name: "APT test - check copr repo"
+  ansible.builtin.package:
+    name: ["gnupg"]
+    state: present
+  check_mode: yes
+  register: apt_pkg_status
+- name: "APT test - assert apt_pkg_status"
+  ansible.builtin.assert:
+    that:
+      - not apt_pkg_status.changed

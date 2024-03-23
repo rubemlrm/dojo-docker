@@ -1,0 +1,11 @@
+---
+- name: "Fail2ban Test - check package status"
+  ansible.builtin.package:
+    name: "fail2ban"
+    state: "present"
+  check_mode: yes
+  register: pkg_status
+- name: "Fail2ban Test - assert package is installed"
+  ansible.builtin.assert:
+    that:
+      - pkg_status.changed
