@@ -50,19 +50,6 @@
         state: started
         enabled: true
 
-- name: Get group membership
-  ansible.builtin.getent.getent:
-    database: groups
-  check_mode: true
-  ignore_errors: true
-  changed_when: false
-  register: group_info
-
-- name: Check if user is in group
-  set_fact:
-    user_in_group: "{{ group_info.entries | selectattr('users', 'search', username) | list }}"
-
-
 - name: Add user to docker group
   become: true
   ansible.builtin.user:
