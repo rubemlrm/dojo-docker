@@ -1,0 +1,14 @@
+---
+- name: "Docker test - check if user is created"
+  ansible.builtin.user:
+    name: "{{ username }}"
+    shell: "/usr/bin/zsh"
+    groups: "users"
+    append: yes
+  no_log: false
+  check_mode: yes
+  register: user_create_status
+- name: "Docker test - assert if user was changed"
+  ansible.builtin.assert:
+    that:
+      - not user_create_status.changed

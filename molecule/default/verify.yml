@@ -16,5 +16,7 @@
       ansible.builtin.import_tasks: ./roles_test/openssh_test.yml
     - name: Import fail2ban tests
       ansible.builtin.import_tasks: ./roles_test/fail2ban_test.yml
+    - name: Import users tests
+      ansible.builtin.import_tasks: ./roles_test/users_test.yml
     - name: Import docker tests
       ansible.builtin.import_tasks: ./roles_test/docker_test.yml
