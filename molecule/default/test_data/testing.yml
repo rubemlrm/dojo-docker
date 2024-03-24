@@ -1,6 +1,6 @@
 ---
 username: testing
-usergroup: testing
+user_group: testing
 home_dir: /home/testing/
 docker_stacks_path: /home/testing/docker/
 docker_stacks_services_path: /home/testing/docker/services
