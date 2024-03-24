@@ -19,4 +19,4 @@
 - name: "Docker test - assert if user is on docker group"
   ansible.builtin.assert:
     that:
-      - not user_in_group_status.changed
+      - user_in_group_status.changed
