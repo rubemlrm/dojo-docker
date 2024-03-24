@@ -56,4 +56,3 @@
     name: "{{ username }}"
     groups: docker
     append: true
-  when: not in user_in_group
