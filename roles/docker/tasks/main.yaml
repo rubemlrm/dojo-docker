@@ -5,7 +5,7 @@
     state: present
   check_mode: true
   ignore_errors: true
-
+  changed_when: false
   register: pkg_status
 
 - name: Install docker pages
@@ -49,20 +49,10 @@
         name: docker
         state: started
         enabled: true
+
     - name: Add user to docker group
+      become: true
       ansible.builtin.user:
         name: "{{ username }}"
         groups: docker
         append: true
-
-    - name: Setup Ports
-      ansible.posix.firewalld:
-        port: "{{ item }}"
-        permanent: true
-        immediate: true
-        state: enabled
-      with_items:
-        - 2376/tcp
-        - 7946/tcp
-        - 7946/udp
-        - 4789/udp

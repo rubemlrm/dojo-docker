@@ -1,0 +1,40 @@
+# This is a basic workflow to help you get started with Actions
+
+name: molecule testing
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  integration:
+    name: Molecule
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Check out the codebase.
+        uses: actions/checkout@v3
+      - name: Set up Python 3.
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install test dependencies.
+        run: pip3 install ansible molecule-plugins[docker] yamllint ansible-lint
+      - name: Install dependencies (collections)
+        run: ansible-galaxy install -r requirements.yml
+      - name: Run Molecule tests.
+        run: molecule test
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"

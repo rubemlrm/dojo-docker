@@ -1,0 +1,32 @@
+---
+username: testing
+user_group: testing
+home_dir: /home/testing/
+docker_stacks_path: /home/testing/docker/
+docker_stacks_services_path: /home/testing/docker/services
+
+docker_configs:
+  data_path: /home/testing/docker/data
+  media_path: /home/testing/external-data
+  pgid: 1000
+  puid: 1000
+  server_ip: 192.168.2.7
+  timezone: Europe/Lisbon
+
+cli_base_packages:
+  - aspell
+  - aspell-pt
+  - automake
+  - cmake
+  - exuberant-ctags
+  - gcc
+  - tmux
+  - zsh
+
+cli_font_packages:
+  - fonts-firacode
+
+docker_networks: {}
+
+docker_volumes: {}
+ssh_port: 22

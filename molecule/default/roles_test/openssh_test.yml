@@ -1,0 +1,22 @@
+- name: "Openssh - check service port"
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    line: "Port {{ ssh_port }}"
+  check_mode: yes
+  register: service_port_status
+- name: "Openssh test - assert service port"
+  ansible.builtin.assert:
+    that:
+      - not service_port_status.changed
+
+- name: "Openssh test- check firewall status"
+  ansible.posix.firewalld:
+    port: '{{ ssh_port }}/tcp'
+    permanent: yes
+    state: enabled
+  check_mode: yes
+  register: firewall_port_status
+- name: "Openssh test - assert firewall status"
+  ansible.builtin.assert:
+    that:
+      - not firewall_port_status.changed

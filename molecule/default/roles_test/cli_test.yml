@@ -1,0 +1,10 @@
+- name: "Common cli test - check package status"
+  ansible.builtin.package:
+    name: "tmux"
+    state: "present"
+  check_mode: yes
+  register: pkg_status
+- name: "Common cli test - package is installed"
+  ansible.builtin.assert:
+    that:
+      - not pkg_status.changed
