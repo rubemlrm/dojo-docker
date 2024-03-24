@@ -5,7 +5,7 @@
       ansible.builtin.user:
         name: "{{ username }}"
         shell: "/usr/bin/zsh"
-        groups: "wheel"
+        groups: "users"
         append: yes
       no_log: false
     - name: Created base folders for configs
