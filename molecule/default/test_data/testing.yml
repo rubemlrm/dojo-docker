@@ -1,6 +1,6 @@
 ---
 username: testing
-user_group: testing
+usergroup: testing
 home_dir: /home/testing/
 docker_stacks_path: /home/testing/docker/
 docker_stacks_services_path: /home/testing/docker/services
@@ -21,6 +21,7 @@ cli_base_packages:
   - exuberant-ctags
   - gcc
   - tmux
+  - zsh
 
 cli_font_packages:
   - fonts-firacode

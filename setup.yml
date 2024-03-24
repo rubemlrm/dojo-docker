@@ -18,5 +18,6 @@
     - openssh
     - fail2ban
     - cli
+    - users
     - docker
     - docker_stack

@@ -15,4 +15,5 @@
     - firewall
     - openssh
     - fail2ban
+    - users
     - docker

@@ -1,0 +1,5 @@
+users_directories:
+  - "tools"
+  - ".bin"
+  - ".local/share/fonts"
+  - ".ssh"
