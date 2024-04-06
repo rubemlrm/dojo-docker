@@ -16,6 +16,22 @@ docker_networks:
 docker_volumes: {}
 ssh_port: 22
 
+docker_configs:
+  data_path: /home/rubemlrm/docker/data
+  media_path: /home/rubemlrm/external-data
+  pgid: 1000
+  puid: 1000
+  server_ip: 192.168.2.7
+  timezone: Europe/Lisbon
+
+storage_configs:
+  - src: "/dev/sda1"
+    dest: /home/rubemlrm/external-data
+  - src: "/dev/sdb1"
+    dest: /home/rubemlrm/docker/data
+
+git_email: rubemmota89@gmail.com
+
 username: rubemlrm
 usergroup: rubemlrm
 home_dir: /home/rubemlrm/
