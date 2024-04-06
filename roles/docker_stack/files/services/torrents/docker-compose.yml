@@ -4,8 +4,73 @@ version: "3.7"
 networks:
   proxy_network:
     external: true
-
+  kaizoku_network:
 services:
+  kaizoku:
+    container_name: kaizoku
+    image: ghcr.io/oae/kaizoku:latest
+    environment:
+      - DATABASE_URL=${KAIZOKU_DATABASE_URL}
+      - KAIZOKU_PORT=3000
+      - REDIS_HOST=kaizoku_redis
+      - REDIS_PORT=6379
+      - PUID=${PUID}
+      - GUID=${GUID}
+      - TZ=Europe/Lisbon
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/kaizoku:/config
+      - ${MEDIA_PATH}/ebooks/manga:/data
+    labels:
+      - traefik.enable=true
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.routers.kaizoku.entrypoints=${KAIZOKU_DEFAULT_ENDPOINT}
+      - traefik.http.routers.kaizoku.rule=Host(`${KAIZOKU_DOMAIN}`)
+      - traefik.http.routers.kaizoku.tls=${KAIZOKU_ENABLE_SSL}
+      - traefik.http.services.kaizoku.loadbalancer.server.port=3000
+      - traefik.http.routers.kaizoku.service=kaizoku
+    networks:
+      - proxy_network
+      - kaizoku_network
+    depends_on:
+      - kaizoku_db
+  kaizoku_redis:
+    image: redis:7-alpine
+    volumes:
+     - ${DATA_PATH}/volumes/torrents/kaizoku_redis:/config:/data
+    networks:
+     - kaizoku_network
+  kaizoku_db:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${KAIZOKU_POSTGRES_USER}
+      - POSTGRES_DB=${KAIZOKU_POSTGRES_DB}
+      - POSTGRES_PASSWORD=${KAIZOKU_POSTGRES_PASSWORD}
+    networks:
+      - kaizoku_network
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/kaizoku_db:/config:/var/lib/postgresql/data
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - GUID=${GUID}
+    labels:
+      - traefik.enable=true
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.routers.bazarr.entrypoints=${BAZARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.bazarr.rule=Host(`${BAZARR_DOMAIN}`)
+      - traefik.http.routers.bazarr.tls=${BAZARR_ENABLE_SSL}
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
+      - traefik.http.routers.bazarr.service=bazarr
+    networks:
+      - proxy_network
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/bazarr:/config
+      - ${MEDIA_PATH}:/downloads
+    restart: unless-stopped
+
   sonarr:
     image: linuxserver/sonarr:arm64v8-latest
     restart: always
