@@ -24,7 +24,7 @@ services:
 
   pialert:
     container_name: pialert
-    image: jokobsk/pi.alert:latest
+    image: jokobsk/pi.alert:24
     network_mode: host
     restart: unless-stopped
     volumes:
@@ -40,7 +40,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.51.2
     restart: always
     user: ${PUID}:${PGID}
     labels:
@@ -71,7 +71,7 @@ services:
       - node-exporter:node-exporter
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.4.2
     restart: always
     user: ${PUID}:${PGID}
     labels:
@@ -98,7 +98,7 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.7.0
     restart: always
     user: ${PUID}:${PGID}
     networks:
@@ -163,7 +163,7 @@ services:
       - monitoring_network
       - proxy_network
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.56
     user: ${PUID}:${PGID}
     restart: always
     labels:

@@ -8,7 +8,7 @@ networks:
 
 services:
   kavita:
-    image: kizaing/kavita:latest
+    image: jvmilazz0/kavita:nightly-0.8.0.7
     user: ${PUID}:${PGID}
     restart: always
     labels:

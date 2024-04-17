@@ -1,11 +1,14 @@
 ---
-all:
+local:
+  hosts:
+    localhost:
+      ansible_connection: local
+
+servers:
   hosts:
     DojoServer:
       ansible_connection: ssh
       ansible_host: 192.168.2.4
-    localhost:
-      ansible_connection: local
     DojoServerAlt:
       ansible_connection: ssh
       ansible_host: 192.168.2.6

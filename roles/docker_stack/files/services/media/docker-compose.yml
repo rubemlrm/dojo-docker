@@ -9,7 +9,7 @@ networks:
     external: true
 services:
   media:
-    image: jellyfin/jellyfin
+    image: jellyfin/jellyfin:2024031105
     restart: always
     labels:
       - traefik.enable=true

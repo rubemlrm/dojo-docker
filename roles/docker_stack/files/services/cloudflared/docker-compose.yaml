@@ -8,7 +8,7 @@ networks:
 
 services:
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2024.4.0
     container_name: cloudflared
     networks:
       - proxy_network

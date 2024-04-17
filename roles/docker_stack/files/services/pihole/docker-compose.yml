@@ -11,7 +11,7 @@ networks:
     external: true
 services:
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:2024.03.2
     restart: always
     user: ${PUID}:${PGID}
     labels:
@@ -60,7 +60,7 @@ services:
       - ${PIHOLE_DNS1}
       - ${PIHOLE_DNS2}
   pihole-exporter:
-    image: ekofr/pihole-exporter:latest
+    image: ekofr/pihole-exporter:v0.4.0
     user: ${PUID}:${PGID}
     restart: always
     networks:
@@ -69,9 +69,5 @@ services:
     environment:
       - PIHOLE_HOSTNAME=pihole
       - PIHOLE_PASSWORD=${PIHOLE_PASS}
-    expose:
-      - 9617
-    ports:
-      - 9617:9617
     labels:
       - com.centurylinklabs.watchtower.enable=true

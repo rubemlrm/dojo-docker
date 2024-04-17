@@ -1,137 +1,42 @@
 ---
-docker_stack_services:
+docker_stack_services_custom:
   - name: media
-    ports:
-      - 8096/tcp
-      - 8920/tcp
-      - 7539/udp
-      - 1900/udp
-      - 20211/tcp
-    services: []
-    directories:
-      - path: /volumes/media/jellyfin
+    enabled: true
   - name: duckdns
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/duckdns
+    enabled: true
   - name: cloudflared
-    ports: []
-    services: []
-    directories: []
+    enabled: true
   - name: kuma
-    ports: []
-    services: []
-    directories: []
+    enabled: true
   - name: traefik
-    ports:
-      - 8080/tcp
-      - 80/tcp
-      - 443/tcp
-      - 1183/tcp
-      - 1883/udp
-      - 9001/tcp
-    services: []
-    directories:
-      - path: /volumes/traefik/certs
-      - path: /volumes/traefik/logs
+    enabled: true
   - name: watchtower
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/watchtower
+    enabled: true
   - name: portainer
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/portainer
-  #- name: irc
-  #  ports: []
-  #  services: []
-  #  directories:
-  #    - path: /volumes/webirc
-  #- name: freshrss
-  #  ports: []
-  #  services: []
-  #  directories:
-  #    - path: /volumes/freshrss/data
-  #    - path: /volumes/freshrss/extensions
-  #    - path: /volumes/freshrss/postgres
+    enabled: true
+  - name: irc
+    enabled: false
+  - name: freshrss
+    enabled: true
   - name: kavita
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/kavita
+    enabled: true
   - name: filebrowser
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/filebrowser
+    enabled: true
   - name: pihole
-    ports:
-      - 53/udp
-      - 53/tcp
-      - 67/udp
-    directories:
-      - path: /volumes/pihole/data
-        owner: "1000"
-      - path: /volumes/pihole/dns
-        owner: "1000"
-    services:
-      - dns
+    enabled: true
   - name: monitoring
-    ports: []
-    directories: []
-    services: []
+    enabled: true
   - name: wireguard
-    ports:
-      - 5000/tcp
-      - 51820/udp
-    directories:
-      - path: /volumes/wireguard/
-        owner: "911"
-    services: []
+    enabled: true
   - name: torrents
-    ports:
-      - 8096/tcp
-      - 8920/tcp
-      - 7539/udp
-      - 1900/udp
-      - 8282/tcp
-      - 8001/tcp
-    services: []
-    directories:
-      - path: /volumes/torrents/rtorrent
-      - path: /volumes/torrents/deluge
-      - path: /volumes/torrents/sonarr
-      - path: /volumes/torrents/radarr
-      - path: /volumes/torrents/jacket
+    enabled: true
   - name: homeassistant
-    services: []
-    ports: []
-    directories:
-      - path: /volumes/homeassistant/homeassistant
-      - path: /volumes/homeassistant/influxdb
+    enabled: true
   - name: backups
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/backups
+    enabled: true
   - name: firefly
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/firefly
+    enabled: true
   - name: nextcloud
-    ports: []
-    services: []
-    directories: []
+    enabled: false
   - name: website
-    ports: []
-    services: []
-    directories:
-      - path: /volumes/matomo/database
-        owner: "100"
-      - path: /volumes/matomo/website
-        owner: "33"
-      - path: /volumes/website/cms
+    enabled: true

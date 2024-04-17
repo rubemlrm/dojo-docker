@@ -44,18 +44,6 @@ api:
   dashboard: true
   insecure: true
 
-tracing:
-  jaeger:
-    samplingServerUrl: http://jaeger:5778/sampling
-    localAgentHostPort: jaeger:6831
-
-ping: {}
-experimental:
-  plugins:
-    fail2ban:
-      modulename: github.com/tomMoulard/fail2ban
-      version: v0.6.6
-
 providers:
   docker:
     network: proxy_network

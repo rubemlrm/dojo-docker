@@ -7,7 +7,7 @@ networks:
 
 services:
   wireguard:
-    image: linuxserver/wireguard:latest
+    image: linuxserver/wireguard:1.0.20210914
     container_name: wireguard
     restart: unless-stopped
     cap_add:

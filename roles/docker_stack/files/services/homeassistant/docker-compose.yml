@@ -74,7 +74,7 @@ services:
       - HEALTHCHECK_PORT=8080
 
   homeassistant_influxdb:
-    image: influxdb:latest
+    image: influxdb:2.7.6-alpine
     restart: always
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
@@ -91,7 +91,7 @@ services:
       - monitoring_network
 
   homeassistant_mosquitto:
-    image: eclipse-mosquitto:latest
+    image: eclipse-mosquitto:2.0.18-openssl
     restart: unless-stopped
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
