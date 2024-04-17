@@ -7,7 +7,7 @@ networks:
     name: proxy_network
 services:
   matomodb:
-    image: yobasystems/alpine-mariadb
+    image: yobasystems/alpine-mariadb:10
     restart: always
     networks:
       - proxy_network
@@ -22,7 +22,7 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 
   matomo:
-    image: matomo:5.0.0-apache
+    image: matomo:5.0.3-apache
     restart: always
     labels:
       - traefik.enable=true

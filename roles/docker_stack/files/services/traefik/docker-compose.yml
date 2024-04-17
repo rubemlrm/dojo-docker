@@ -8,7 +8,7 @@ networks:
 services:
   # Web Reverse Proxy
   traefik:
-    image: traefik:v2.8
+    image: traefik:v3.0
     restart: always
     container_name: traefik
     domainname: ${TRAEFIK_DOMAIN}

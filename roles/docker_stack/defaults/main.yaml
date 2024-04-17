@@ -1,6 +1,7 @@
 ---
 docker_stack_services:
   - name: media
+    enabled: false
     ports:
       - 8096/tcp
       - 8920/tcp
@@ -11,19 +12,23 @@ docker_stack_services:
     directories:
       - path: /volumes/media/jellyfin
   - name: duckdns
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/duckdns
   - name: cloudflared
+    enabled: false
     ports: []
     services: []
     directories: []
   - name: kuma
+    enabled: false
     ports: []
     services: []
     directories: []
   - name: traefik
+    enabled: false
     ports:
       - 8080/tcp
       - 80/tcp
@@ -36,39 +41,49 @@ docker_stack_services:
       - path: /volumes/traefik/certs
       - path: /volumes/traefik/logs
   - name: watchtower
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/watchtower
   - name: portainer
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/portainer
-  #- name: irc
-  #  ports: []
-  #  services: []
-  #  directories:
-  #    - path: /volumes/webirc
-  #- name: freshrss
-  #  ports: []
-  #  services: []
-  #  directories:
-  #    - path: /volumes/freshrss/data
-  #    - path: /volumes/freshrss/extensions
-  #    - path: /volumes/freshrss/postgres
+  - name: irc
+    enabled: false
+    ports: []
+    services: []
+    directories:
+      - path: /volumes/webirc
+  - name: freshrss
+    enabled: false
+    ports: []
+    services: []
+    directories:
+      - path: /volumes/freshrss/data
+      - path: /volumes/freshrss/extensions
+      - path: /volumes/freshrss/postgres
   - name: kavita
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/kavita
   - name: filebrowser
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/filebrowser
   - name: pihole
-    ports: []
+    enabled: false
+    ports:
+      - 53/udp
+      - 53/tcp
+      - 67/udp
     directories:
       - path: /volumes/pihole/data
         owner: "1000"
@@ -77,10 +92,12 @@ docker_stack_services:
     services:
       - dns
   - name: monitoring
+    enabled: false
     ports: []
     directories: []
     services: []
   - name: wireguard
+    enabled: false
     ports:
       - 5000/tcp
       - 51820/udp
@@ -89,6 +106,7 @@ docker_stack_services:
         owner: "911"
     services: []
   - name: torrents
+    enabled: false
     ports:
       - 8096/tcp
       - 8920/tcp
@@ -104,26 +122,31 @@ docker_stack_services:
       - path: /volumes/torrents/radarr
       - path: /volumes/torrents/jacket
   - name: homeassistant
+    enabled: false
     services: []
     ports: []
     directories:
       - path: /volumes/homeassistant/homeassistant
       - path: /volumes/homeassistant/influxdb
   - name: backups
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/backups
   - name: firefly
+    enabled: false
     ports: []
     services: []
     directories:
       - path: /volumes/firefly
   - name: nextcloud
+    enabled: false
     ports: []
     services: []
     directories: []
   - name: website
+    enabled: false
     ports: []
     services: []
     directories:

@@ -8,7 +8,7 @@ networks:
 
 services:
   uptime:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:1.23.11-debian
     restart: always
     env_file:
       - .env

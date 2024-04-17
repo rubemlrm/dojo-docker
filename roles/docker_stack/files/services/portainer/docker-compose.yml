@@ -7,7 +7,7 @@ networks:
     external: true
 services:
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.20.1
     restart: always
     user: ${PUID}:${PGID}
     labels:

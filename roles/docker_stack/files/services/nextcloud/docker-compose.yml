@@ -21,7 +21,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
   nextcloud_postgres_backups:
-    image: prodrigestivill/postgres-backup-local
+    image: prodrigestivill/postgres-backup-local:16
     restart: always
     user: postgres:postgres # Optional: see below
     volumes:
@@ -43,7 +43,7 @@ services:
     env_file:
       - .env
   nextcloud:
-    image: nextcloud
+    image: nextcloud:28.0.4
     restart: always
     volumes:
       - ${DATA_PATH}/volumes/nextcloud/nextcloud:/var/www/html

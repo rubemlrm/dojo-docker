@@ -2,6 +2,16 @@
 - name: setup_service | Deploy Service {{ outer_item.name }}
   become: true
   block:
+    - name: setup_service | Synchronize services directories
+      ansible.posix.synchronize:
+        src: "services/{{ outer_item.name }}"
+        dest: "{{ docker_stacks_services_path }}"
+        delete: false
+        recursive: true
+        perms: false
+        rsync_opts:
+          - "--no-motd"
+          - "--exclude=.env"
     - name: setup_service | Setup Ports {{ outer_item.name }}
       ansible.posix.firewalld:
         port: "{{ item }}"
@@ -9,13 +19,6 @@
         immediate: true
         state: enabled
       with_items: "{{ outer_item.ports }}"
-    - name: setup_service | Permit traffic in default zone for service
-      ansible.posix.firewalld:
-        service: "{{ item }}"
-        permanent: true
-        immediate: true
-        state: enabled
-      with_items: "{{ outer_item.services }}"
     - name: setup_service | Create service directories for {{ outer_item.name }}
       ansible.builtin.file:
         path: "{{ docker_configs.data_path }}{{ item.path }}"
@@ -28,3 +31,4 @@
         state: present
         build: true
         project_src: "{{ docker_stacks_services_path }}/{{ outer_item.name }}"
+  when: outer_item.enabled is true

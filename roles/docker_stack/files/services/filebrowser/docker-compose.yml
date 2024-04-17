@@ -10,7 +10,7 @@ volumes:
   filebrowser_volume:
 services:
   filebrowser:
-    image: filebrowser/filebrowser
+    image: filebrowser/filebrowser:s6
     user: ${PUID}:${PGID}
     labels:
       - traefik.enable=true

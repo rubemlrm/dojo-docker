@@ -1,2 +1,6 @@
 [defaults]
 inventory = inventory.yml
+
+[ssh_connection]
+scp_if_ssh = smart
+transfer_method = smart

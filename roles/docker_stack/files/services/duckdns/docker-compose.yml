@@ -2,7 +2,7 @@
 version: "3.7"
 services:
   duckdns:
-    image: lscr.io/linuxserver/duckdns:latest
+    image: lscr.io/linuxserver/duckdns:version-cf3b81f0
     container_name: duckdns
     env_file:
       - .env

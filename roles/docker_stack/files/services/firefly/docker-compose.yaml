@@ -8,7 +8,7 @@ networks:
   firefly:
 services:
   firefly:
-    image: fireflyiii/core:latest
+    image: fireflyiii/core:version-6.1.13
     hostname: app
     container_name: firefly_iii_core
     restart: always

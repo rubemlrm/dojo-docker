@@ -8,7 +8,7 @@ networks:
   freshrss:
 services:
   freshrss:
-    image: lscr.io/linuxserver/freshrss:latest
+    image: lscr.io/linuxserver/freshrss:1.23.1
     restart: always
     labels:
       - traefik.enable=true
