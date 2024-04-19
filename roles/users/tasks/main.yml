@@ -1,5 +1,6 @@
 ---
 - name: Setup User
+  become: true
   block:
     - name: Add system user
       ansible.builtin.user:

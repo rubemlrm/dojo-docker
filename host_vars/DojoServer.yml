@@ -1,4 +1,11 @@
 ---
+
+storage_configs:
+  - src: "PARTUUID=eb6d65c3-3b33-409b-87f5-5cf09f81b964"
+    dest: /home/rubemlrm/external-data
+    filetype: ext4
+    opts: rw,async
+
 docker_stack_services_custom:
   - name: media
     enabled: true

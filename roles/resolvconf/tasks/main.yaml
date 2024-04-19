@@ -1,5 +1,13 @@
 ---
-# https://github.com/pi-hole/docker-pi-hole#installing-on-ubuntu-or-fedora
+- name: Check if resolv.conf have the correct dns
+  lineinfile:
+    path: /etc/resolv.conf
+    line: "nameserver {{ resolvconf_nameservers | first}}"
+    state: present
+  check_mode: yes
+  register: resolv_configured
+  failed_when: resolv_configured is changed
+
 - name: Configure systemd-resolved for PiHole
   become: true
   block:
@@ -24,3 +32,4 @@
         mode: "0644"
       notify:
         - Restart Resolved server
+  when: resolv_configured is changed

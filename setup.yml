@@ -9,7 +9,7 @@
         files_matching: all.yml
   roles:
     - apt
-    #- storage
+    - storage
     - resolvconf
     - firewall
     - openssh

@@ -155,3 +155,22 @@ docker_stack_services:
       - path: /volumes/matomo/website
         owner: "33"
       - path: /volumes/website/cms
+
+docker_networks:
+  - name: monitoring_network
+    internal: false
+    subnet: 10.13.0.0/24
+  - name: pihole_network
+    internal: true
+    subnet: 10.14.0.0/24
+  - name: homeassistant_network
+    internal: true
+    subnet: 10.15.0.0/24
+  - name: proxy_network
+    internal: false
+    subnet: 10.11.0.0/24
+
+docker_volumes: {}
+
+docker_stacks_path: /home/rubemlrm/docker/
+docker_stacks_services_path: /home/rubemlrm/docker/services

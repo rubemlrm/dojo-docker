@@ -6,8 +6,8 @@
       ansible.posix.mount:
         path: "{{ item.dest }}"
         src: "{{ item.src }}"
-        fstype: ext4
-        opts: rw,async
+        fstype: "{{ item.filetype }}"
+        opts: "{{ item.opts }}"
         state: mounted
       with_items: "{{ storage_configs }}"
 
@@ -17,4 +17,4 @@
         owner: "{{ username }}"
         group: "{{ username }}"
         mode: "0744"
-      loop: "{{ storage_configs }}"
+      with_items: "{{ storage_configs }}"

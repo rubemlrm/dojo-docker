@@ -1,19 +1,4 @@
 ---
-docker_networks:
-  - name: monitoring_network
-    internal: false
-    subnet: 10.13.0.0/24
-  - name: pihole_network
-    internal: true
-    subnet: 10.14.0.0/24
-  - name: homeassistant_network
-    internal: true
-    subnet: 10.15.0.0/24
-  - name: proxy_network
-    internal: false
-    subnet: 10.11.0.0/24
-
-docker_volumes: {}
 ssh_port: 22
 
 docker_configs:
@@ -24,16 +9,8 @@ docker_configs:
   server_ip: 192.168.2.7
   timezone: Europe/Lisbon
 
-storage_configs:
-  - src: "/dev/sda1"
-    dest: /home/rubemlrm/external-data
-  - src: "/dev/sdb1"
-    dest: /home/rubemlrm/docker/data
-
 git_email: rubemmota89@gmail.com
 
 username: rubemlrm
 usergroup: rubemlrm
 home_dir: /home/rubemlrm/
-docker_stacks_path: /home/rubemlrm/docker/
-docker_stacks_services_path: /home/rubemlrm/docker/services
