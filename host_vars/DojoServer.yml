@@ -24,11 +24,11 @@ docker_stack_services_custom:
   - name: irc
     enabled: false
   - name: freshrss
-    enabled: true
+    enabled: false
   - name: kavita
     enabled: true
   - name: filebrowser
-    enabled: true
+    enabled: false
   - name: pihole
     enabled: true
   - name: monitoring
@@ -42,7 +42,7 @@ docker_stack_services_custom:
   - name: backups
     enabled: true
   - name: firefly
-    enabled: true
+    enabled: false
   - name: nextcloud
     enabled: false
   - name: website

@@ -1,0 +1,16 @@
+---
+- name: remove_service | Remove Service {{ outer_item.name }}
+  become: true
+  block:
+    - name: remove_service | Disable Ports {{ outer_item.name }}
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: disabled
+      with_items: "{{ outer_item.ports }}"
+    - name: remove_service | Disable service {{ outer_item.name }}
+      community.docker.docker_compose_v2:
+        state: absent
+        project_src: "{{ role_path }}/files/services/{{ outer_item.name }}"
+        remove_images: all
