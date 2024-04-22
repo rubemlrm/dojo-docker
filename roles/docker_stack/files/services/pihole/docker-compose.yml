@@ -1,5 +1,4 @@
 ---
-version: "3.7"
 
 
 networks:
@@ -13,7 +12,6 @@ services:
   pihole:
     image: pihole/pihole:2024.03.2
     restart: always
-    user: ${PUID}:${PGID}
     labels:
       - traefik.enable=true
       - traefik.http.routers.pihole.entrypoints=${DEFAULT_ENDPOINT}
@@ -61,7 +59,6 @@ services:
       - ${PIHOLE_DNS2}
   pihole-exporter:
     image: ekofr/pihole-exporter:v0.4.0
-    user: ${PUID}:${PGID}
     restart: always
     networks:
       - monitoring_network

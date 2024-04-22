@@ -42,7 +42,8 @@ docker_stack_services:
       - path: /volumes/traefik/logs
   - name: watchtower
     enabled: false
-    ports: []
+    ports:
+      - 8989/tcp
     services: []
     directories:
       - path: /volumes/watchtower

@@ -1,5 +1,10 @@
 ---
-version: "3"
+
+networks:
+  monitoring_network:
+    name: monitoring_network
+    external: true
+
 services:
   watchtower:
     image: containrrr/watchtower:1.7.1
@@ -10,6 +15,9 @@ services:
       - com.centurylinklabs.watchtower.enable=true
     environment:
       - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_TOKEN}
-    command: --label-enable --cleanup --interval 36000 --http-api-update
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL}
+    networks:
+      - monitoring_network
+    command: --label-enable --cleanup --http-api-periodic-polls --http-api-metrics --interval 43200
     ports:
       - 8989:8080
