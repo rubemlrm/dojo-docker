@@ -2,7 +2,7 @@
 - name: setup_service | Deploy Service {{ outer_item.name }}
   become: true
   block:
-    - name: setup_service | Synchronize services directories
+    - name: setup_service | Synchronize {{ outer_item.name }} directories
       ansible.posix.synchronize:
         src: "services/{{ outer_item.name }}"
         dest: "{{ docker_stacks_services_path }}"

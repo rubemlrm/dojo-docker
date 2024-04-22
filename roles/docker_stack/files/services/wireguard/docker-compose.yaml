@@ -1,9 +1,6 @@
 ---
-version: "3.7"
-
 networks:
   ipvlan2:
-
 
 services:
   wireguard:
