@@ -1,0 +1,27 @@
+services:
+  worker1:
+    image: myoung34/github-runner:latest
+    restart: always
+    environment:
+      REPO_URL: ${REPO_URL}
+      RUNNER_NAME: dojo-shinobi
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RUNNER_SCOPE: 'repo'
+      LABELS: linux,arm64
+      EPHEMERAL: 1
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/tmp/runner:/tmp/runner'
+  worker2:
+    image: myoung34/github-runner:latest
+    restart: always
+    environment:
+      REPO_URL: ${REPO_URL_2}
+      RUNNER_NAME: dojo-samurai
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RUNNER_SCOPE: 'repo'
+      LABELS: linux,arm64
+      EPHEMERAL: 1
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/tmp/runner:/tmp/runner'

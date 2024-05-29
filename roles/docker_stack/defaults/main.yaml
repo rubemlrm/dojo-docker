@@ -156,6 +156,18 @@ docker_stack_services:
       - path: /volumes/matomo/website
         owner: "33"
       - path: /volumes/website/cms
+  - name: github_runners
+    enabled: false
+    ports: []
+    services: []
+    directories: []
+  - name: webdav
+    enabled: false
+    ports: []
+    services: []
+    directories:
+      - path: /volumes/webdav
+        owner: "1000"
 
 docker_networks:
   - name: monitoring_network
