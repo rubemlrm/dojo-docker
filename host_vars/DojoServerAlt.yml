@@ -6,3 +6,5 @@ docker_stack_services_custom:
     enabled: true
   - name: pihole
     enabled: true
+  - name: kuma
+    enabled: true

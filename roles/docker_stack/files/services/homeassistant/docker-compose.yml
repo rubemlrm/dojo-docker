@@ -51,27 +51,6 @@ services:
     networks:
       - homeassistant_network
 
-  homeassistant_postgres_backups:
-    image: prodrigestivill/postgres-backup-local
-    restart: always
-    user: postgres:postgres # Optional: see below
-    volumes:
-      - ${DATA_PATH}/docker-backups/databases:/backups
-    links:
-      - homeassistant_postgres
-    networks:
-      - homeassistant_network
-    environment:
-      - POSTGRES_HOST=homeassistant_postgres
-      - POSTGRES_DB=${HOMEASSISTANT_DB}
-      - POSTGRES_USER=${HOMEASSISTANT_DB_USER}
-      - POSTGRES_PASSWORD=${HOMEASSISTANT_DB_PASSWORD}
-      - SCHEDULE=@daily
-      - BACKUP_KEEP_DAYS=7
-      - BACKUP_KEEP_WEEKS=4
-      - BACKUP_KEEP_MONTHS=6
-      - HEALTHCHECK_PORT=8080
-
   homeassistant_influxdb:
     image: influxdb:2.7.6-alpine
     restart: always
