@@ -20,3 +20,5 @@
       ansible.builtin.import_tasks: ./roles_test/users_test.yml
     - name: Import docker tests
       ansible.builtin.import_tasks: ./roles_test/docker_test.yml
+    - name: Import docker tests
+      ansible.builtin.import_tasks: ./roles_test/docker_stack_test.yml

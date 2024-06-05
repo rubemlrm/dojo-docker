@@ -1,0 +1,21 @@
+- name: "Docker stack - check directory"
+  ansible.builtin.stat:
+    path: "{{ docker_configs.data_path }}pihole"
+  register: service_directory_status
+
+- name: "Docker stack - assert directory already exists"
+  ansible.builtin.assert:
+    that:
+      - not service_directory_status.changed
+
+- name: "Docker stack - check open port"
+  ansible.posix.firewalld:
+    port: '53/udp'
+    permanent: yes
+    state: enabled
+  check_mode: yes
+  register: firewall_port_status
+- name: "Docker stack - assert firewall port status"
+  ansible.builtin.assert:
+    that:
+      - not firewall_port_status.changed

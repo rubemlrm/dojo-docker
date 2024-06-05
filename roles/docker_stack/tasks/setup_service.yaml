@@ -31,3 +31,5 @@
         state: present
         build: policy
         project_src: "{{ docker_stacks_services_path }}/{{ outer_item.name }}"
+        check_mode: "{{ docker_compose_check_mode }}"
+  when: outer_item.enabled is true

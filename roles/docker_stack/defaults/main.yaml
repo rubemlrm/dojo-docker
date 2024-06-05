@@ -187,3 +187,5 @@ docker_volumes: {}
 
 docker_stacks_path: /home/rubemlrm/docker/
 docker_stacks_services_path: /home/rubemlrm/docker/services
+
+docker_compose_check_mode: false
