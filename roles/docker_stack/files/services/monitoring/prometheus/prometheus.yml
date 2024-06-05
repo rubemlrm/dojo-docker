@@ -41,6 +41,13 @@ scrape_configs:
     static_configs:
       - targets:
           - traefik:8082
+  - job_name: watchtower
+    scrape_interval: 5s
+    metrics_path: /v1/metrics
+    bearer_token_file: /prometheus/config/watchtower
+    static_configs:
+      - targets:
+        - 'watchtower:8080'
   - job_name: blackbox
     scrape_interval: 5s
     metrics_path: /probe

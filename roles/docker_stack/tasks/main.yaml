@@ -20,35 +20,28 @@
       - subnet: "{{ item.subnet }}"
   with_items: "{{ docker_networks }}"
 
-- name: Setup services to be running
+- name: Setup services properties
   ansible.builtin.set_fact:
     services: "{{ [docker_stack_services, docker_stack_services_custom]|
            community.general.lists_mergeby('name',
                                            recursive=true) }}"
 
-- name: Setup Services
+- name: Setup services by state
+  ansible.builtin.set_fact:
+    enabled_services: "{{  services | selectattr('enabled', 'true') | list }}"
+    disabled_services: "{{  services | selectattr('enabled', 'false') | list }}"
+
+
+
+
+- name: Setup enabled Services
   ansible.builtin.include_tasks: setup_service.yaml
-  loop: "{{ services }}"
+  loop: "{{ enabled_services }}"
   loop_control:
     loop_var: outer_item
 
-- name: Gather facts on listening ports
-  community.general.listen_ports_facts:
-
-- name: Set system declared firewall ports
-  ansible.builtin.set_fact:
-    system_declared_ports: "{{ (ansible_facts.tcp_listen + ansible_facts.udp_listen ) }}"
-
-- name: Setup current used firewall ports
-  ansible.builtin.set_fact:
-    used_service_ports: "{{ services | selectattr('enabled', 'true') | map(attribute='ports') | select() | flatten | sort() + [\"{{ ssh_port }}/tcp\"] }}"
-    system_current_ports: "{{ system_declared_ports | map(attribute='port') | zip(system_declared_ports | map(attribute='protocol')) | map('join', '/') | list | unique }}"
-
-- name: Remove unused docker service ports
-  ansible.posix.firewalld:
-    port: "{{ item }}"
-    permanent: true
-    immediate: true
-    state: disabled
-  with_items: "{{ system_current_ports | difference(used_service_ports) }}"
-  become: true
+- name: Clean disabled services
+  ansible.builtin.include_tasks: remove_service.yaml
+  loop: "{{ disabled_services }}"
+  loop_control:
+    loop_var: outer_item

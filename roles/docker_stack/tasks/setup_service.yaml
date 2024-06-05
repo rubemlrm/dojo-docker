@@ -2,7 +2,7 @@
 - name: setup_service | Deploy Service {{ outer_item.name }}
   become: true
   block:
-    - name: setup_service | Synchronize services directories
+    - name: setup_service | Synchronize {{ outer_item.name }} directories
       ansible.posix.synchronize:
         src: "services/{{ outer_item.name }}"
         dest: "{{ docker_stacks_services_path }}"
@@ -29,7 +29,7 @@
     - name: setup_service | Setup service {{ outer_item.name }}
       community.docker.docker_compose_v2:
         state: present
-        build: true
+        build: policy
         project_src: "{{ docker_stacks_services_path }}/{{ outer_item.name }}"
         check_mode: "{{ docker_compose_check_mode }}"
   when: outer_item.enabled is true

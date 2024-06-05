@@ -1,5 +1,4 @@
 ---
-version: "3.7"
 
 networks:
   proxy_network:
@@ -13,11 +12,11 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.irc.entrypoints=${DEFAULT_ENDPOINT}
-      - traefik.http.routers.irc.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.irc.tls=${ENABLE_SSL}
-      - traefik.http.services.irc.loadbalancer.server.port=9000
-      - traefik.http.routers.irc.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.webirc.entrypoints=${DEFAULT_ENDPOINT}
+      - traefik.http.routers.webirc.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.webirc.tls=${ENABLE_SSL}
+      - traefik.http.services.webirc.loadbalancer.server.port=9000
+      - traefik.http.routers.webirc.tls.certresolver=letsencryptresolver
       - traefik.docker.network=proxy_network
       - com.centurylinklabs.watchtower.enable=true
     container_name: webirc

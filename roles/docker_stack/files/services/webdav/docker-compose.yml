@@ -1,0 +1,41 @@
+---
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true
+services:
+  webdav:
+    image: ugeek/webdav:arm
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.webdav.entrypoints=${DEFAULT_ENDPOINT}
+      - traefik.http.routers.webdav.rule=Host(`${WEBDAV_DOMAIN}`)
+      - traefik.http.routers.webdav.tls=${ENABLE_SSL}
+      - traefik.docker.network=proxy_network
+      - traefik.http.routers.webdav.tls.certresolver=letsencryptresolver
+      - traefik.http.services.webdav.loadbalancer.server.port=80
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.middlewares.webdav.headers.forcestsheader=true
+      - traefik.http.middlewares.webdav.headers.sslRedirect=true
+      - traefik.http.middlewares.webdav.headers.STSPreload=true
+      - traefik.http.middlewares.webdav.headers.ContentTypeNosniff=true
+      - traefik.http.middlewares.webdav.headers.BrowserXssFilter=true
+      - traefik.http.middlewares.webdav.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.webdav.headers.stsSeconds=63072000
+      - traefik.http.middlewares.webdav.headers.frameDeny=true
+      - traefik.http.middlewares.webdav.headers.browserXssFilter=true
+      - traefik.http.middlewares.webdav.headers.contentTypeNosniff=true
+    container_name: webdav
+    networks:
+      - proxy_network
+    env_file:
+      - .env
+    volumes:
+      - ${DATA_PATH}/volumes/webdav/:/media
+    environment:
+      - TZ=${TIMEZONE}
+      - UID=${PUID}
+      - GID=${GUID}
+      - USERNAME=${USERNAME}
+      - PASSWORD=${PASSWORD}

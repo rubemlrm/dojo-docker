@@ -1,5 +1,4 @@
 ---
-version: "3.7"
 
 networks:
   monitoring_network:
@@ -22,23 +21,6 @@ services:
       - --config.file=/etc/alertmanager/config.yml
       - --storage.path=/alertmanager
 
-  pialert:
-    container_name: pialert
-    image: jokobsk/pi.alert:24
-    network_mode: host
-    restart: unless-stopped
-    volumes:
-      - ${DATA_PATH}/volumes/monitoring/pialert/config:/home/pi/pialert/config
-      - ${DATA_PATH}/volumes/monitoring/pialert/db:/home/pi/pialert/db
-      - ${DATA_PATH}/volumes/monitoring/logs:/home/pi/pialert/front/log
-      - ${DATA_PATH}/volumes/pihole/data/pihole-FTL.db:/etc/pihole/pihole-FTL.db
-    environment:
-      - TZ=Europe/Lisbon
-      - HOST_USER_ID=${PUID}
-      - HOST_USER_GID=${PGID}
-      - PORT=20211
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
   prometheus:
     image: prom/prometheus:v2.51.2
     restart: always

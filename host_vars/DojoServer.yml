@@ -9,31 +9,17 @@ storage_configs:
 docker_stack_services_custom:
   - name: media
     enabled: true
-  - name: duckdns
-    enabled: true
   - name: cloudflared
-    enabled: true
-  - name: kuma
     enabled: true
   - name: traefik
     enabled: true
   - name: watchtower
     enabled: true
-  - name: portainer
-    enabled: true
-  - name: irc
-    enabled: false
-  - name: freshrss
-    enabled: true
   - name: kavita
-    enabled: true
-  - name: filebrowser
     enabled: true
   - name: pihole
     enabled: true
   - name: monitoring
-    enabled: true
-  - name: wireguard
     enabled: true
   - name: torrents
     enabled: true
@@ -41,9 +27,7 @@ docker_stack_services_custom:
     enabled: true
   - name: backups
     enabled: true
-  - name: firefly
-    enabled: true
-  - name: nextcloud
-    enabled: false
   - name: website
+    enabled: true
+  - name: github_runners
     enabled: true

@@ -1,58 +1,14 @@
 ---
-version: "3.7"
 
 networks:
   proxy_network:
     external: true
   kaizoku_network:
 services:
-  kaizoku:
-    container_name: kaizoku
-    image: ghcr.io/oae/kaizoku:latest
-    environment:
-      - DATABASE_URL=${KAIZOKU_DATABASE_URL}
-      - KAIZOKU_PORT=3000
-      - REDIS_HOST=kaizoku_redis
-      - REDIS_PORT=6379
-      - PUID=${PUID}
-      - GUID=${GUID}
-      - TZ=Europe/Lisbon
-    volumes:
-      - ${DATA_PATH}/volumes/torrents/kaizoku:/config
-      - ${MEDIA_PATH}/ebooks/manga:/data
-    labels:
-      - traefik.enable=true
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.http.routers.kaizoku.entrypoints=${KAIZOKU_DEFAULT_ENDPOINT}
-      - traefik.http.routers.kaizoku.rule=Host(`${KAIZOKU_DOMAIN}`)
-      - traefik.http.routers.kaizoku.tls=${KAIZOKU_ENABLE_SSL}
-      - traefik.http.services.kaizoku.loadbalancer.server.port=3000
-      - traefik.http.routers.kaizoku.service=kaizoku
-    networks:
-      - proxy_network
-      - kaizoku_network
-    depends_on:
-      - kaizoku_db
-  kaizoku_redis:
-    image: redis:7-alpine
-    volumes:
-     - ${DATA_PATH}/volumes/torrents/kaizoku_redis:/config
-    networks:
-     - kaizoku_network
-  kaizoku_db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${KAIZOKU_POSTGRES_USER}
-      - POSTGRES_DB=${KAIZOKU_POSTGRES_DB}
-      - POSTGRES_PASSWORD=${KAIZOKU_POSTGRES_PASSWORD}
-    networks:
-      - kaizoku_network
-    volumes:
-      - ${DATA_PATH}/volumes/torrents/kaizoku_db:/var/lib/postgresql/data
   bazarr:
     image: linuxserver/bazarr:1.4.3-development
     container_name: bazarr
+    restart: unless-stopped
     environment:
       - PUID=${PUID}
       - GUID=${GUID}
@@ -69,11 +25,10 @@ services:
     volumes:
       - ${DATA_PATH}/volumes/torrents/bazarr:/config
       - ${MEDIA_PATH}:/downloads
-    restart: unless-stopped
 
   sonarr:
     image: linuxserver/sonarr:4.0.4
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     environment:
@@ -98,7 +53,7 @@ services:
 
   jacket:
     image: linuxserver/jackett:0.21.2387
-    restart: always
+    restart: unless-stopped
     labels:
       - traefik.enable=true
       - com.centurylinklabs.watchtower.enable=true
