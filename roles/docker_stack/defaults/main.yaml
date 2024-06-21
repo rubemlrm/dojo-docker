@@ -94,7 +94,14 @@ docker_stack_services:
       - dns
   - name: monitoring
     enabled: false
-    ports: []
+    ports:
+      - 6831/udp
+      - 5775/udp
+      - 6832/udp
+      - 14268/tcp
+      - 9411/tcp
+      - 4318/tcp
+      - 4317/tcp
     directories: []
     services: []
   - name: wireguard

@@ -21,6 +21,20 @@ services:
       - --config.file=/etc/alertmanager/config.yml
       - --storage.path=/alertmanager
 
+  loki:
+    image: grafana/loki:2.4.1
+    container_name: loki
+    restart: always
+    ports:
+      - 3100:3100
+    expose:
+      - 3100
+    volumes:
+      - ./loki/:/etc/loki/
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring_network
+
   prometheus:
     image: prom/prometheus:v2.51.2
     restart: always
@@ -110,7 +124,7 @@ services:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - ${DATA_PATH}/system/:/var/lib/docker:ro
+      - /var/lib/docker/system/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
@@ -148,6 +162,8 @@ services:
     image: jaegertracing/all-in-one:1.56
     user: ${PUID}:${PGID}
     restart: always
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
     labels:
       - traefik.enable=true
       - traefik.http.routers.jaeger.entrypoints=${JAEGER_DEFAULT_ENDPOINT}
@@ -160,6 +176,13 @@ services:
     ports:
       - 6831:6831
       - 16686:16686
+      - 5775:5775
+      - 6832:6832
+      - 14268:14268
+      - 9411:9411
+      - 4318:4318
+      - 4317:4317
+
     networks:
       - monitoring_network
       - proxy_network

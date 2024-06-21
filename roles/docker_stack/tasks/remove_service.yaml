@@ -12,6 +12,7 @@
         rsync_opts:
           - "--no-motd"
           - "--exclude=.env"
+      become_user: "{{ username }}"
     - name: remove_service | Disable Ports {{ outer_item.name }}
       ansible.posix.firewalld:
         port: "{{ item }}"

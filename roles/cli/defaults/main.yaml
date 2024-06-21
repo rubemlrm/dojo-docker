@@ -15,7 +15,6 @@ cli_base_packages:
   - zsh
   - numlockx
   - wget
-  - exfat-utils
   - screenfetch
   - python3-pip
   - python3-oauth2client
