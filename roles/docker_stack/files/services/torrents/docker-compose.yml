@@ -5,6 +5,32 @@ networks:
     external: true
   kaizoku_network:
 services:
+  readarr:
+    image: lscr.io/linuxserver/readarr:nightly
+    container_name: readlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${GUID}
+      - TZ=Etc/UTC
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/readarr/data:/config 
+      - ${MEDIA_PATH}:/downloads
+    network_mode: service:vpn
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${GUID}
+      - TZ=Etc/UTC
+    volumes:
+      - ${DATA_PATH}/volumes/torrents/prowlarr/data:/config
+    network_mode: service:vpn
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
   bazarr:
     image: linuxserver/bazarr:1.4.3-development
     container_name: bazarr
@@ -15,13 +41,7 @@ services:
     labels:
       - traefik.enable=true
       - com.centurylinklabs.watchtower.enable=true
-      - traefik.http.routers.bazarr.entrypoints=${BAZARR_DEFAULT_ENDPOINT}
-      - traefik.http.routers.bazarr.rule=Host(`${BAZARR_DOMAIN}`)
-      - traefik.http.routers.bazarr.tls=${BAZARR_ENABLE_SSL}
-      - traefik.http.services.bazarr.loadbalancer.server.port=6767
-      - traefik.http.routers.bazarr.service=bazarr
-    networks:
-      - proxy_network
+    network_mode: service:vpn
     volumes:
       - ${DATA_PATH}/volumes/torrents/bazarr:/config
       - ${MEDIA_PATH}:/downloads
@@ -37,40 +57,9 @@ services:
     labels:
       - traefik.enable=true
       - com.centurylinklabs.watchtower.enable=true
-      # sonarr
-      - traefik.http.routers.sonarr.entrypoints=${SONARR_DEFAULT_ENDPOINT}
-      - traefik.http.routers.sonarr.rule=Host(`${SONARR_DOMAIN}`)
-      - traefik.http.routers.sonarr.tls=${SONARR_ENABLE_SSL}
-      - traefik.http.services.sonarr.loadbalancer.server.port=8989
-      - traefik.http.routers.sonarr.service=sonarr
-    networks:
-      - proxy_network
+    network_mode:  service:vpn
     volumes:
       - ${DATA_PATH}/volumes/torrents/sonarr:/config
-      - ${MEDIA_PATH}:/downloads
-    depends_on:
-      - jacket
-
-  jacket:
-    image: linuxserver/jackett:0.21.2387
-    restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.http.routers.jacket.entrypoints=${JACKET_DEFAULT_ENDPOINT}
-      - traefik.http.routers.jacket.rule=Host(`${JACKET_DOMAIN}`)
-      - traefik.http.routers.jacket.tls=${JACKET_ENABLE_SSL}
-      - traefik.http.services.jacket.loadbalancer.server.port=9117
-      - traefik.http.routers.jacket.service=jacket
-    networks:
-      - proxy_network
-    env_file:
-      - .env
-    environment:
-      - PUID=${PUID}
-      - GUID=${GUID}
-    volumes:
-      - ${DATA_PATH}/volumes/torrents/jacket:/config
       - ${MEDIA_PATH}:/downloads
 
   radarr:
@@ -79,23 +68,15 @@ services:
     labels:
       - traefik.enable=true
       - com.centurylinklabs.watchtower.enable=true
-      - traefik.http.routers.radarr.entrypoints=${RADARR_DEFAULT_ENDPOINT}
-      - traefik.http.routers.radarr.rule=Host(`${RADARR_DOMAIN}`)
-      - traefik.http.routers.radarr.tls=${RADARR_ENABLE_SSL}
-      - traefik.http.services.radarr.loadbalancer.server.port=7878
-      - traefik.http.routers.radarr.service=radarr
     env_file:
       - .env
     environment:
       - PUID=${PUID}
       - GUID=${GUID}
-    networks:
-      - proxy_network
+    network_mode: service:vpn
     volumes:
       - ${DATA_PATH}/volumes/torrents/radarr:/config
       - ${MEDIA_PATH}:/downloads
-    depends_on:
-      - jacket
 
   torrentclient:
     image: linuxserver/qbittorrent:4.6.4
@@ -121,22 +102,19 @@ services:
       dockerfile: ./cronjob.Dockerfile
     restart: always
     network_mode: service:vpn
-
+  
   vpn:
-    image: azinchen/nordvpn:3.7.0
+    image: qmcgaw/gluetun:latest
     cap_add:
-      - net_admin
+      - NET_ADMIN
     devices:
       - /dev/net/tun
     environment:
-      - USER=${OPENVPN_USER}
-      - PASS=${OPENVPN_PASSWORD}
-      - COUNTRY=${VPN_SERVER_COUNTRIES}
-      - RECREATE_VPN_CRON=5 */3 * * *
-      - NETWORK=192.168.2.0/24
-      - OPENVPN_OPTS=--mute-replay-warnings
-      - CHECK_CONNECTION_URL="https://www.google.com/"
-      - TECHNOLOGY=${VPN_TECHNOLOGY}
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_HOSTNAMES=${SERVER_HOSTNAMES}
     ports:
       - 8282:8080
       - 8001:8000/tcp
@@ -146,9 +124,51 @@ services:
       - 6081:6881
       - 6081:6881/udp
       - 6011:6011
+      - 7878:7878
+      - 9696:9696
+      - 8787:8787
     restart: unless-stopped
     labels:
       - traefik.enable=true
+      
+      # readarr 
+      - traefik.http.routers.readarr.entrypoints=${READARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.readarr.rule=Host(`${READARR_DOMAIN}`)
+      - traefik.http.routers.readarr.tls=${READARR_ENABLE_SSL}
+      - traefik.http.services.readarr.loadbalancer.server.port=8787
+      - traefik.http.routers.readarr.service=readarr
+
+
+
+      # prowlarr 
+      - traefik.http.routers.prowlarr.entrypoints=${PROWLARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.prowlarr.rule=Host(`${PROWLARR_DOMAIN}`)
+      - traefik.http.routers.prowlarr.tls=${PROWLARR_ENABLE_SSL}
+      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
+      - traefik.http.routers.prowlarr.service=prowlarr
+
+
+      # bazzar 
+      - traefik.http.routers.bazarr.entrypoints=${BAZARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.bazarr.rule=Host(`${BAZARR_DOMAIN}`)
+      - traefik.http.routers.bazarr.tls=${BAZARR_ENABLE_SSL}
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
+      - traefik.http.routers.bazarr.service=bazarr
+
+      # sonarr
+      - traefik.http.routers.sonarr.entrypoints=${SONARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.sonarr.rule=Host(`${SONARR_DOMAIN}`)
+      - traefik.http.routers.sonarr.tls=${SONARR_ENABLE_SSL}
+      - traefik.http.services.sonarr.loadbalancer.server.port=8989
+      - traefik.http.routers.sonarr.service=sonarr
+
+      # radarr
+      - traefik.http.routers.radarr.entrypoints=${RADARR_DEFAULT_ENDPOINT}
+      - traefik.http.routers.radarr.rule=Host(`${RADARR_DOMAIN}`)
+      - traefik.http.routers.radarr.tls=${RADARR_ENABLE_SSL}
+      - traefik.http.services.radarr.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr.service=radarr
+
       # torrentclient
       - traefik.http.routers.torrentclient.entrypoints=${TORRENTS_DEFAULT_ENDPOINT}
       - traefik.http.routers.torrentclient.rule=Host(`${TORRENTS_DOMAIN}`)

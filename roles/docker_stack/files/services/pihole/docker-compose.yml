@@ -43,7 +43,8 @@ services:
       - 80
     volumes:
       - ${DATA_PATH}/volumes/pihole/data:/etc/pihole/
-      - ${DATA_PATH}/volumes/pihole/dns:/etc/dnsmasq.d/
+      - ${DATA_PATH}/volumes/pihole/dns:/etc/dnsmasq.d/ 
+      - ./configs/02-local-wildcard-dns.conf:/etc/dnsmasq.d/02-local-wildcard-dns.conf
     environment:
       - ServerIP=${PIHOLE_IP}
       - TZ=${TIMEZONE}

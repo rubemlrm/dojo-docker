@@ -31,3 +31,7 @@ docker_stack_services_custom:
     enabled: true
   - name: github_runners
     enabled: true
+  - name: nextcloud
+    enabled: true
+  - name: portainer
+    enabled: true
