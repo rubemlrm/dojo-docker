@@ -121,7 +121,8 @@ docker_stack_services:
       - path: /volumes/torrents/deluge
       - path: /volumes/torrents/sonarr
       - path: /volumes/torrents/radarr
-      - path: /volumes/torrents/jacket
+      - path: /volumes/torrents/prowlarr
+      - path: /volumes/torrents/readarr
   - name: homeassistant
     enabled: false
     services: []
